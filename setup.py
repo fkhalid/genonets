@@ -7,7 +7,7 @@ setup(	name='genonets',
 		description='Framework for creating and analyzing genotype networks from data.',
 		author='Fahad Khalid',
 		author_email='fahad.khalid@ieu.uzh.ch',
-		url='',
+		url='https://github.com/fkhalid/genonets',
 		license='MIT',
 		classifiers=[
 			'Development Status :: 4 - Beta',

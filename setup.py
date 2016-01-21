@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(	name='genonets',
-		version='1.0.0b3',
+		version='1.0.0b5',
 		description='Framework for creating and analyzing genotype networks from data.',
 		author='Fahad Khalid',
 		author_email='fahad.khalid@ieu.uzh.ch',
@@ -18,7 +18,7 @@ setup(	name='genonets',
 			'Natural Language :: English',
 			'Topic :: Scientific/Engineering :: Bio-Informatics',			
 		],
-		keywords='genonets genotype phenotype',
+		keywords='genonets genotype phenotype network',
 		packages=['genonets'],
 		package_data={'genonets': ['sample/*.py', 'sample/*.txt', 'sample/data/*.txt']},
 		install_requires=['python-igraph>=0.6', 'numpy>=1.8.2']

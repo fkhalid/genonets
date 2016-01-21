@@ -14,11 +14,11 @@ Linux and Mac OS
 
 Using pip,
 
-``pip install genonets-1.0.0-py2-none-any.whl``
+``pip install genonets``
 
 In case you get a 'permission' related error, try the following:
 
-``sudo pip install genonets-1.0.0-py2-none-any.whl``
+``sudo pip install genonets``
 
 You can also install Genonets directly from the source package.
 
@@ -31,7 +31,7 @@ Again, in case you run into permission related errors,
 Windows
 ~~~~~~~
 
-Instructions for are basically the same, except in certain case installation of dependencies fails. In case that happens, follow these steps:
+Instructions for Windows are basically the same, except in certain cases installation of dependencies fails. If that happens, follow these steps:
 
 1. Download the 'whl' files for numpy and igraph from http://www.lfd.uci.edu/~gohlke/pythonlibs/. E.g.,
     i. numpy-1.10.2+mkl-cp27-none-win32.whl 
@@ -39,7 +39,7 @@ Instructions for are basically the same, except in certain case installation of 
 
 3. ``pip install python_igraph-0.7.1.post6-cp27-none-win32.whl``
 4. ``pip install numpy-1.10.2+mkl-cp27-none-win32.whl``
-5. And finally, ``pip install genonets-1.0.0-py2-none-any.whl``
+5. And finally, ``pip install genonets``
 
 Using Genonets as a command line tool
 -------------------------------------

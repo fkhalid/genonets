@@ -47,6 +47,9 @@ class StructureAnalyzer :
 	def getAvgClstrCoeff(self) :
 		return self.giant.transitivity_avglocal_undirected()
 
+	def getAssortativity(self) :
+		return self.giant.assortativity_degree()
+
 	def getDiameter(self) :
 		return self.giant.diameter()
 

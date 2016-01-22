@@ -274,6 +274,7 @@ class AnalysisHandler :
 		giant["Edge_density"] = structAnalyzer.getEdgeDensity()
 		giant["Diameter"] = structAnalyzer.getDiameter()		
 		giant["Average_clustering_coefficient_of_dominant_genotype_network"] = structAnalyzer.getAvgClstrCoeff()
+		giant["Assortativity"] = structAnalyzer.getAssortativity()
 		
 		# The list of vertex Ids needs to be stringified, since otherwise these
 		# cannot be written to GML.

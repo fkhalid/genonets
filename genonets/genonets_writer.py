@@ -49,8 +49,7 @@ class Writer :
 			raise GenonetsError(ErrorCodes.CANNOT_WRITE_TO_FILE)
 
 	@staticmethod
-	def writeNetsToFile(repToNetDict, repToGiantDict, netBuilder, path, 
-		attrsToIgnore, repertoires=gc.ALL) :
+	def writeNetsToFile(repToNetDict, repToGiantDict, netBuilder, path,  attrsToIgnore, repertoires=gc.ALL) :
 		# If all repertoires should be considered,
 		if repertoires == gc.ALL :
 			# Get a list of all repertoires
@@ -98,11 +97,14 @@ class Writer :
 			if attr in vtxAttrs :
 				del netToWrite.vs[attr]
 
-		# Rename 'sequences' and 'escores'
-		netToWrite.vs["genotype"] = netToWrite.vs["sequences"]
-		netToWrite.vs["score"] = netToWrite.vs["escores"]
-		del netToWrite.vs["sequences"]
-		del netToWrite.vs["escores"]
+		# If the given network is a genotype network, and not a
+		# phenotype network,
+		if not network.is_directed() :
+			# Rename 'sequences' and 'escores'
+			netToWrite.vs["genotype"] = netToWrite.vs["sequences"]
+			netToWrite.vs["score"] = netToWrite.vs["escores"]
+			del netToWrite.vs["sequences"]
+			del netToWrite.vs["escores"]
 
 		# Write network to file in GML format, while ignoring 'igraph'
 		# related warnings.
@@ -114,8 +116,7 @@ class Writer :
 			netToWrite.write(fileName, format="gml")
 
 	@staticmethod
-	def writeNetAttribs(repToNetDict, repToGiantDict, netBuilder, path, 
-			attrsToIgnore, repertoires=gc.ALL) :
+	def writeNetAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=gc.ALL) :
 		# If all repertoires should be considered,
 		if repertoires == gc.ALL :
 			# Get a list of all repertoires
@@ -170,8 +171,7 @@ class Writer :
 		dataFile.close()
 
 	@staticmethod
-	def writeSeqAttribs(repToNetDict, repToGiantDict, netBuilder, path, 
-			attrsToIgnore, repertoires=gc.ALL) :
+	def writeSeqAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=gc.ALL) :
 		# If all repertoires should be considered,
 		if repertoires == gc.ALL :
 			# Get a list of all repertoires

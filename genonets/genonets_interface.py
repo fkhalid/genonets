@@ -259,6 +259,14 @@ class Genonets :
 			self.netBuilder, self.cmdArgs.outPath,
 			WriterFilter.seqAttribsToIgnore, repertoires)
 
+	# Description:	Save the phenotype network as a GML file.
+	# Arguments:
+	#	'phenotypeNetwork':	igraph object corresponding to the phenotype 
+	#						network.
+	def saveEvoNet(self, phenotypeNetwork) :
+		Writer.writeNetToFile(phenotypeNetwork, self.cmdArgs.outPath, 
+			WriterFilter.gmlAttribsToIgnore)
+
 	# Plots the given network.
 	def plot(self, network, layout="auto") :
 		self.netBuilder.plotNetwork(network, layout, self.cmdArgs.outPath)

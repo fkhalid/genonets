@@ -235,6 +235,7 @@ class NetworkBuilder :
 		network.vs["label"]		= labels	# TODO: Remove this from the tool ...
 		# Add repertoire names to all vertices
 		network.vs["Repertoires"] = repertoires
+		network.vs["GenotypeSet"] = repertoires # Redundant; added for GML
 		network.vs["Evolvability"] = evolvability
 	
 		# Get a list of pairs of indices which represent paris of

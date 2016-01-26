@@ -76,7 +76,7 @@ class AnalysisConstants :
 					   EVOLVABILITY : "Evolvability",
 					   ACCESSIBILITY : "Accessibility",
 					   NEIGHBOR_ABUNDANCE : "Neighbor Abundance",
-					   PHENOTYPIC_DIVERSITY : "Phenotypic Diversity",
+					   PHENOTYPIC_DIVERSITY : "Diversity Index",
 					   STRUCTURE : "Structure",
 					   OVERLAP : "Overlap" }
 

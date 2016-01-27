@@ -15,11 +15,11 @@ Linux and Mac OS
 
 Using ``pip``,
 
-``pip install --pre genonets``
+``pip install genonets``
 
 In case you get a 'permission' related error, try the following:
 
-``sudo pip install --pre genonets``
+``sudo pip install genonets``
 
 You can also install Genonets directly from the source package.
 
@@ -36,7 +36,7 @@ When trying to install genonets on a machine with ``Ubuntu 14.04 LTS`` that does
 3. ``sudo apt-get install libxml2-dev``
 4. ``sudo apt-get install libz-dev``
 5. ``sudo pip uninstall genonets``
-6. Finally, ``sudo pip install --pre genonets``
+6. Finally, ``sudo pip install genonets``
 
 Windows
 ~~~~~~~
@@ -49,7 +49,7 @@ Instructions for Windows are basically the same, except in certain cases install
 
 3. ``pip install python_igraph-0.7.1.post6-cp27-none-win32.whl``
 4. ``pip install numpy-1.10.2+mkl-cp27-none-win32.whl``
-5. And finally, ``pip install --pre genonets``
+5. And finally, ``pip install genonets``
 
 Genonets quick start
 --------------------

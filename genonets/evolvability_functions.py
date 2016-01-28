@@ -69,8 +69,7 @@ class EvolvabilityAnalyzer :
 		try :
 			evolvability = float(len(targets)) / float(len(self.dataDict) - 1)
 
-			return evolvability, targets
-			#return float(len(targets)) / float(len(self.dataDict) - 1)
+			return evolvability, targets			
 		except ZeroDivisionError :
 			return 0, targets
 	
@@ -129,14 +128,11 @@ class EvolvabilityAnalyzer :
 			if extNeighSeq in self.seqToRepDict :
 				# For each repertoire that contains the external neighbor,
 				for repertoire in self.seqToRepDict[extNeighSeq] :
-					# If the current repertoire does not contain the given sequence,
-					if repertoire not in self.seqToRepDict[sequence] :
-						# We have found a repertoire with a genotype network of which
-						# the given sequence is not a part, yet has a 1-neighbor
-						# to which it can evolve.
-						if repertoire not in targetReps :
-							targetReps[repertoire] = []
+					# We have found a repertoire with a genotype network that
+					# has a 1-neighbor to which  the sequence can evolve.
+					if repertoire not in targetReps :
+						targetReps[repertoire] = []
 
-						targetReps[repertoire].append(extNeighSeq)
+					targetReps[repertoire].append(extNeighSeq)
 
 		return targetReps

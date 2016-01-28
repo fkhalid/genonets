@@ -148,5 +148,5 @@ class AccessibilityAnalyzer :
 
 			# Add the fraction to the total diversity value
 			diversity += (fraction * fraction)
-
-		return (1 - diversity)
+		
+		return diversity

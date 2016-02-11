@@ -4,7 +4,7 @@
     __init__
     ~~~~~~~~
 
-    Package intialization.
+    Package initialization.
 
     :author: Fahad Khalid
     :license: MIT, see LICENSE for more details.

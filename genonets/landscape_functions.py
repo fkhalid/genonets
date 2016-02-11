@@ -18,68 +18,68 @@ from genonets_utils import Utils
 
 
 class Landscape :
-	# Constructor
-	def __init__(self, network, netUtils, seqToEscrDict, delta, bitManip) :
-		# Store reference to the network object
-		self.network = network
+    # Constructor
+    def __init__(self, network, netUtils, seqToEscrDict, delta, bitManip) :
+        # Store reference to the network object
+        self.network = network
 
-		# Store reference to the netUtils object
-		self.netUtils = netUtils
-		
-		# Create the peak analyzer
-		self.peakAnalyzer = PeakAnalyzer(network, netUtils, delta)
+        # Store reference to the netUtils object
+        self.netUtils = netUtils
 
-		# Create the path analyzer
-		self.pathAnalyzer = PathAnalyzer(network, netUtils, delta)
+        # Create the peak analyzer
+        self.peakAnalyzer = PeakAnalyzer(network, netUtils, delta)
 
-		# Create the epistasis analyzer
-		self.epiAnalyzer = EpistasisAnalyzer(network, netUtils, 
-			seqToEscrDict, delta, bitManip)
+        # Create the path analyzer
+        self.pathAnalyzer = PathAnalyzer(network, netUtils, delta)
 
-		# Get a reference to the BitSeqManipulator in use
-		self.bitManip = self.netUtils.bitManip
+        # Create the epistasis analyzer
+        self.epiAnalyzer = EpistasisAnalyzer(network, netUtils,
+            seqToEscrDict, delta, bitManip)
 
-	# ----------------------------------------------------------------
-	# Peak analysis methods
-	# ----------------------------------------------------------------
-	
-	def getPeaks(self, recompute) :
-		return self.peakAnalyzer.getPeaks(recompute)
+        # Get a reference to the BitSeqManipulator in use
+        self.bitManip = self.netUtils.bitManip
 
-	# ----------------------------------------------------------------
-	# Path analysis methods
-	# ----------------------------------------------------------------
+    # ----------------------------------------------------------------
+    # Peak analysis methods
+    # ----------------------------------------------------------------
 
-	def getAccessiblePaths(self, pathLength) :
-		return self.pathAnalyzer.getAccessiblePaths(pathLength)
+    def getPeaks(self, recompute) :
+        return self.peakAnalyzer.getPeaks(recompute)
 
-	# ----------------------------------------------------------------
-	# Epistasis analysis methods
-	# ----------------------------------------------------------------
+    # ----------------------------------------------------------------
+    # Path analysis methods
+    # ----------------------------------------------------------------
 
-	def getEpistasis(self) :
-		return self.epiAnalyzer.getEpiAll()
+    def getAccessiblePaths(self, pathLength) :
+        return self.pathAnalyzer.getAccessiblePaths(pathLength)
 
-	# ----------------------------------------------------------------
-	# Calculate mutational distances from summit for all vertices
-	# ----------------------------------------------------------------
+    # ----------------------------------------------------------------
+    # Epistasis analysis methods
+    # ----------------------------------------------------------------
 
-	def populateDistsToSummit(self) :
-		# Convenient handle for bitManip
-		bm = self.bitManip
+    def getEpistasis(self) :
+        return self.epiAnalyzer.getEpiAll()
 
-		# Get the summit sequence
-		summit = Utils.getSeqWithMaxScore(self.network, 
-			self.bitManip.seqLength)
+    # ----------------------------------------------------------------
+    # Calculate mutational distances from summit for all vertices
+    # ----------------------------------------------------------------
 
-		# Get vertex that represents summit
-		trgtVrtx = self.netUtils.getVertex(summit, self.network)
+    def populateDistsToSummit(self) :
+        # Convenient handle for bitManip
+        bm = self.bitManip
 
-		# Reference to the list of sequences in the network
-		vertices = [ self.netUtils.getVertex(seq, self.network) \
-					 for seq in self.network.vs["sequences"] ]
+        # Get the summit sequence
+        summit = Utils.getSeqWithMaxScore(self.network,
+            self.bitManip.seqLength)
 
-		self.network.vs["Distance from Summit"] = \
-			[ 	len(self.network.get_shortest_paths(srcVrtx, to=trgtVrtx, \
-						weights=None, mode=igraph.OUT, output="epath")[0]) \
-			  	for srcVrtx in vertices ]
+        # Get vertex that represents summit
+        trgtVrtx = self.netUtils.getVertex(summit, self.network)
+
+        # Reference to the list of sequences in the network
+        vertices = [ self.netUtils.getVertex(seq, self.network) \
+                     for seq in self.network.vs["sequences"] ]
+
+        self.network.vs["Distance from Summit"] = \
+            [ 	len(self.network.get_shortest_paths(srcVrtx, to=trgtVrtx, \
+                        weights=None, mode=igraph.OUT, output="epath")[0]) \
+                for srcVrtx in vertices ]

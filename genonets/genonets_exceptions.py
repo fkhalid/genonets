@@ -1,4 +1,3 @@
-
 """
     genonets_exceptions
     ~~~~~~~~~~~~~~~~~~~
@@ -9,10 +8,11 @@
     :license: MIT, see LICENSE for more details.
 """
 
-class GenonetsError(Exception) :
-	def __init__(self, errId, info="") :
-		self.errId = errId
-		self.info = info
 
-	def __str__(self) :
-		return repr(self.errId)
+class GenonetsError(Exception):
+    def __init__(self, errId, info=""):
+        self.errId = errId
+        self.info = info
+
+    def __str__(self):
+        return repr(self.errId)

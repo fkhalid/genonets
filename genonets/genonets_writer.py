@@ -18,237 +18,237 @@ from genonets_exceptions import GenonetsError
 from genonets_constants import GenonetsConstants as gc
 
 class Writer :
-	@staticmethod
-	def writeInParamsToFile(paramsDict, path) :
-		fileName = path + "in_params.txt"
+    @staticmethod
+    def writeInParamsToFile(paramsDict, path) :
+        fileName = path + "in_params.txt"
 
-		# If the required directories have not already been created
-		if not os.path.exists(os.path.dirname(path)):
-			# Create the directories
-			try :
-				os.makedirs(os.path.dirname(path))
-			except os.error :
-				print("Error: " + 
-						ErrorCodes.getErrDescription(ErrorCodes.CANNOT_CREATE_DIRECTORY) +
-							": Path - " + path)
-								
-				raise GenonetsError(ErrorCodes.CANNOT_CREATE_DIRECTORY,
-					"Path - " + path)
+        # If the required directories have not already been created
+        if not os.path.exists(os.path.dirname(path)):
+            # Create the directories
+            try :
+                os.makedirs(os.path.dirname(path))
+            except os.error :
+                print("Error: " +
+                        ErrorCodes.getErrDescription(ErrorCodes.CANNOT_CREATE_DIRECTORY) +
+                            ": Path - " + path)
 
-		# Open the file
-		try :
-			with open(fileName, "w") as outFile :
-				# For each input parameter,
-				for param in paramsDict.keys() :
-					outFile.write(param + ": " + paramsDict[param] + "\n")
-		except Exception :
-			print("Error: " + 
-					ErrorCodes.getErrDescription(ErrorCodes.CANNOT_WRITE_TO_FILE) +
-						": Path - " + path)
-			
-			raise GenonetsError(ErrorCodes.CANNOT_WRITE_TO_FILE)
+                raise GenonetsError(ErrorCodes.CANNOT_CREATE_DIRECTORY,
+                    "Path - " + path)
 
-	@staticmethod
-	def writeNetsToFile(repToNetDict, repToGiantDict, netBuilder, path,  attrsToIgnore, repertoires=gc.ALL) :
-		# If all repertoires should be considered,
-		if repertoires == gc.ALL :
-			# Get a list of all repertoires
-			repertoires = repToNetDict.keys()
+        # Open the file
+        try :
+            with open(fileName, "w") as outFile :
+                # For each input parameter,
+                for param in paramsDict.keys() :
+                    outFile.write(param + ": " + paramsDict[param] + "\n")
+        except Exception :
+            print("Error: " +
+                    ErrorCodes.getErrDescription(ErrorCodes.CANNOT_WRITE_TO_FILE) +
+                        ": Path - " + path)
 
-		# If the required directories have not already been created
-		if not os.path.exists(os.path.dirname(path)):
-			# Create the directories
-			os.makedirs(os.path.dirname(path))
+            raise GenonetsError(ErrorCodes.CANNOT_WRITE_TO_FILE)
 
-		# For each repertoire
-		for repertoire in repertoires :
-			# Write the entire network to file in GML format
-			Writer.writeNetToFile(repToNetDict[repertoire], path, attrsToIgnore)
+    @staticmethod
+    def writeNetsToFile(repToNetDict, repToGiantDict, netBuilder, path,  attrsToIgnore, repertoires=gc.ALL) :
+        # If all repertoires should be considered,
+        if repertoires == gc.ALL :
+            # Get a list of all repertoires
+            repertoires = repToNetDict.keys()
 
-			# Get the number of components in the network
-			numComponents = len(netBuilder.getComponents(repToNetDict[repertoire]))
+        # If the required directories have not already been created
+        if not os.path.exists(os.path.dirname(path)):
+            # Create the directories
+            os.makedirs(os.path.dirname(path))
 
-			# If the network as more than one components,
-			if numComponents > 1 :
-				#  Write the giant component to the file in GML format
-				Writer.writeNetToFile(repToGiantDict[repertoire], path, attrsToIgnore)
+        # For each repertoire
+        for repertoire in repertoires :
+            # Write the entire network to file in GML format
+            Writer.writeNetToFile(repToNetDict[repertoire], path, attrsToIgnore)
 
-	@staticmethod
-	def writeNetToFile(network, path, attrsToIgnore) :
-		# File name		
-		fileName = path + network["name"] + ".gml"
+            # Get the number of components in the network
+            numComponents = len(netBuilder.getComponents(repToNetDict[repertoire]))
 
-		# Create a deep copy of the network
-		netToWrite = copy.deepcopy(network)
+            # If the network as more than one components,
+            if numComponents > 1 :
+                #  Write the giant component to the file in GML format
+                Writer.writeNetToFile(repToGiantDict[repertoire], path, attrsToIgnore)
 
-		# Get a list of network attributes
-		netAttrs = netToWrite.attributes()
+    @staticmethod
+    def writeNetToFile(network, path, attrsToIgnore) :
+        # File name
+        fileName = path + network["name"] + ".gml"
 
-		# Remove the network attributes that need not be written to file
-		for attr in attrsToIgnore(level="network") :
-			if attr in netAttrs :
-				del netToWrite[attr]
+        # Create a deep copy of the network
+        netToWrite = copy.deepcopy(network)
 
-		# Get a list of vertex attributes
-		vtxAttrs = netToWrite.vs.attributes()
+        # Get a list of network attributes
+        netAttrs = netToWrite.attributes()
 
-		# Remove the vertex attributes that need not be written to file
-		for attr in attrsToIgnore(level="vertex") :
-			if attr in vtxAttrs :
-				del netToWrite.vs[attr]
+        # Remove the network attributes that need not be written to file
+        for attr in attrsToIgnore(level="network") :
+            if attr in netAttrs :
+                del netToWrite[attr]
 
-		# If the given network is a genotype network, and not a
-		# phenotype network,
-		if not network.is_directed() :
-			# Rename 'sequences' and 'escores'
-			netToWrite.vs["genotype"] = netToWrite.vs["sequences"]
-			netToWrite.vs["score"] = netToWrite.vs["escores"]
-			del netToWrite.vs["sequences"]
-			del netToWrite.vs["escores"]
+        # Get a list of vertex attributes
+        vtxAttrs = netToWrite.vs.attributes()
 
-		# Write network to file in GML format, while ignoring 'igraph'
-		# related warnings.
-		with warnings.catch_warnings() :
-			# Create a filter for 'igraph' warnings
-			warnings.simplefilter("ignore")
-			
-			# Write GML file
-			netToWrite.write(fileName, format="gml")
+        # Remove the vertex attributes that need not be written to file
+        for attr in attrsToIgnore(level="vertex") :
+            if attr in vtxAttrs :
+                del netToWrite.vs[attr]
 
-	@staticmethod
-	def writeNetAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=gc.ALL) :
-		# If all repertoires should be considered,
-		if repertoires == gc.ALL :
-			# Get a list of all repertoires
-			repertoires = repToNetDict.keys()
+        # If the given network is a genotype network, and not a
+        # phenotype network,
+        if not network.is_directed() :
+            # Rename 'sequences' and 'escores'
+            netToWrite.vs["genotype"] = netToWrite.vs["sequences"]
+            netToWrite.vs["score"] = netToWrite.vs["escores"]
+            del netToWrite.vs["sequences"]
+            del netToWrite.vs["escores"]
 
-		# Construct the list of attributes to be written to file
-		attributes = repToNetDict[repertoires[0]].attributes()
-		attributes.remove("name")
+        # Write network to file in GML format, while ignoring 'igraph'
+        # related warnings.
+        with warnings.catch_warnings() :
+            # Create a filter for 'igraph' warnings
+            warnings.simplefilter("ignore")
 
-		# Get the number of components in the network
-		numComponents = len(netBuilder.getComponents(repToNetDict[repertoires[0]]))
+            # Write GML file
+            netToWrite.write(fileName, format="gml")
 
-		# If the network as more than one components,
-		if numComponents > 1 :
-			# Get attributes from giant as well
-			attributes.extend(repToGiantDict[repertoires[0]].attributes())
+    @staticmethod
+    def writeNetAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=gc.ALL) :
+        # If all repertoires should be considered,
+        if repertoires == gc.ALL :
+            # Get a list of all repertoires
+            repertoires = repToNetDict.keys()
 
-		# Remove the attributes that need not be written to file
-		for attr in attrsToIgnore() :
-			if attr in attributes :
-				attributes.remove(attr)
+        # Construct the list of attributes to be written to file
+        attributes = repToNetDict[repertoires[0]].attributes()
+        attributes.remove("name")
 
-		# If the required directories have not already been created
-		if not os.path.exists(os.path.dirname(path)):
-			# Create the directories
-			os.makedirs(os.path.dirname(path))
+        # Get the number of components in the network
+        numComponents = len(netBuilder.getComponents(repToNetDict[repertoires[0]]))
 
-		fileName = path + "Genotype_set_measures.txt"
-		dataFile = open(fileName, 'w')
+        # If the network as more than one components,
+        if numComponents > 1 :
+            # Get attributes from giant as well
+            attributes.extend(repToGiantDict[repertoires[0]].attributes())
 
-		# Write the row of headers
-		dataFile.write("Genotype_set" + "\t")
-		for attribute in attributes :
-			dataFile.write(attribute + "\t")
+        # Remove the attributes that need not be written to file
+        for attr in attrsToIgnore() :
+            if attr in attributes :
+                attributes.remove(attr)
 
-		dataFile.write("\n")
+        # If the required directories have not already been created
+        if not os.path.exists(os.path.dirname(path)):
+            # Create the directories
+            os.makedirs(os.path.dirname(path))
 
-		# For each repertoire,
-		for repertoire in repertoires :
-			# Write the network name
-			dataFile.write(repToNetDict[repertoire]["name"] + "\t")
-			# For each attribute,
-			for attribute in attributes :
-				# If the attribute is in the main network,
-				if attribute in repToNetDict[repertoire].attributes() :
-					dataFile.write(str(repToNetDict[repertoire][attribute]) + "\t")
-				else :
-					dataFile.write(str(repToGiantDict[repertoire][attribute]) + "\t")
+        fileName = path + "Genotype_set_measures.txt"
+        dataFile = open(fileName, 'w')
 
-			dataFile.write("\n")
+        # Write the row of headers
+        dataFile.write("Genotype_set" + "\t")
+        for attribute in attributes :
+            dataFile.write(attribute + "\t")
 
-		dataFile.close()
+        dataFile.write("\n")
 
-	@staticmethod
-	def writeSeqAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=gc.ALL) :
-		# If all repertoires should be considered,
-		if repertoires == gc.ALL :
-			# Get a list of all repertoires
-			repertoires = repToGiantDict.keys()
+        # For each repertoire,
+        for repertoire in repertoires :
+            # Write the network name
+            dataFile.write(repToNetDict[repertoire]["name"] + "\t")
+            # For each attribute,
+            for attribute in attributes :
+                # If the attribute is in the main network,
+                if attribute in repToNetDict[repertoire].attributes() :
+                    dataFile.write(str(repToNetDict[repertoire][attribute]) + "\t")
+                else :
+                    dataFile.write(str(repToGiantDict[repertoire][attribute]) + "\t")
 
-		# If the required directories have not already been created
-		if not os.path.exists(os.path.dirname(path)):
-			# Create the directories
-			os.makedirs(os.path.dirname(path))
+            dataFile.write("\n")
 
-		for repertoire in repertoires :
-			# Create the file name
-			fileName = path + repertoire + "_genotype_measures.txt"
+        dataFile.close()
 
-			# Open file to write
-			with open(fileName, 'w') as dataFile :
-				Writer.writeSeqAttribsFor(repertoire, repToGiantDict[repertoire], 
-					dataFile, attrsToIgnore)
+    @staticmethod
+    def writeSeqAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=gc.ALL) :
+        # If all repertoires should be considered,
+        if repertoires == gc.ALL :
+            # Get a list of all repertoires
+            repertoires = repToGiantDict.keys()
 
-	@staticmethod
-	def writeSeqAttribsFor(repertoire, network, dataFile, attrsToIgnore) :
-		# Get vertex level attributes
-		attributes = network.vs.attributes()
+        # If the required directories have not already been created
+        if not os.path.exists(os.path.dirname(path)):
+            # Create the directories
+            os.makedirs(os.path.dirname(path))
 
-		# Remove the attributes that need not be written to file
-		for attr in attrsToIgnore() :
-			if attr in attributes :
-				attributes.remove(attr)
+        for repertoire in repertoires :
+            # Create the file name
+            fileName = path + repertoire + "_genotype_measures.txt"
 
-		# Write the row of headers
-		dataFile.write("Sequence" + "\t")
-		for attribute in attributes :
-			dataFile.write(attribute + "\t")
+            # Open file to write
+            with open(fileName, 'w') as dataFile :
+                Writer.writeSeqAttribsFor(repertoire, repToGiantDict[repertoire],
+                    dataFile, attrsToIgnore)
 
-		dataFile.write("\n")
+    @staticmethod
+    def writeSeqAttribsFor(repertoire, network, dataFile, attrsToIgnore) :
+        # Get vertex level attributes
+        attributes = network.vs.attributes()
 
-		sequences = network.vs["sequences"]
+        # Remove the attributes that need not be written to file
+        for attr in attrsToIgnore() :
+            if attr in attributes :
+                attributes.remove(attr)
 
-		# For each sequence,
-		for i in range(len(sequences)) :		
-			# Write the sequence
-			dataFile.write(sequences[i] + "\t")
-			# For each attribute,
-			for attribute in attributes :
-				# Write value to file
-				dataFile.write(str(network.vs[i][attribute]) + "\t")
+        # Write the row of headers
+        dataFile.write("Sequence" + "\t")
+        for attribute in attributes :
+            dataFile.write(attribute + "\t")
 
-			dataFile.write("\n")
+        dataFile.write("\n")
 
-	@staticmethod
-	def writeOverlapToFile(overlapMat, repertoires, path) :
-		fileName = path + "Genotype_set_overlap.txt"
+        sequences = network.vs["sequences"]
 
-		# If the required directories have not already been created
-		if not os.path.exists(os.path.dirname(path)):
-			# Create the directories
-			os.makedirs(os.path.dirname(path))
+        # For each sequence,
+        for i in range(len(sequences)) :
+            # Write the sequence
+            dataFile.write(sequences[i] + "\t")
+            # For each attribute,
+            for attribute in attributes :
+                # Write value to file
+                dataFile.write(str(network.vs[i][attribute]) + "\t")
 
-		dataFile = open(fileName, 'w')
+            dataFile.write("\n")
 
-		# Write header: All repertoire names as column headers
-		for repertoire in repertoires :
-			dataFile.write("\t" + repertoire)
+    @staticmethod
+    def writeOverlapToFile(overlapMat, repertoires, path) :
+        fileName = path + "Genotype_set_overlap.txt"
 
-		# Write the matrix with each row beginning with the
-		# corresponding repertoire name
-		for i in range(len(overlapMat)) :
-			dataFile.write("\n")
+        # If the required directories have not already been created
+        if not os.path.exists(os.path.dirname(path)):
+            # Create the directories
+            os.makedirs(os.path.dirname(path))
 
-			# Write RBP name
-			dataFile.write(repertoires[i])
+        dataFile = open(fileName, 'w')
 
-			for j in range(len(overlapMat)) :
-				if not i == j :
-					dataFile.write("\t" + str(overlapMat[i][j]))
-				else :
-					#dataFile.write("\t" + "######")
-					dataFile.write("\t" + "NaN")
+        # Write header: All repertoire names as column headers
+        for repertoire in repertoires :
+            dataFile.write("\t" + repertoire)
 
-		dataFile.close()
+        # Write the matrix with each row beginning with the
+        # corresponding repertoire name
+        for i in range(len(overlapMat)) :
+            dataFile.write("\n")
+
+            # Write RBP name
+            dataFile.write(repertoires[i])
+
+            for j in range(len(overlapMat)) :
+                if not i == j :
+                    dataFile.write("\t" + str(overlapMat[i][j]))
+                else :
+                    #dataFile.write("\t" + "######")
+                    dataFile.write("\t" + "NaN")
+
+        dataFile.close()

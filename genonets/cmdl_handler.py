@@ -98,11 +98,11 @@ class CmdArgs:
 
         # Create a dictionary of parameters
         paramsDict = {
-            "alphabetType"  : self.moleculeType,
-            "includeIndels" : str(self.useIndels),
-            "inFilePath"	: self.inFilePath,
-            "tau"			: str(self.tau),
-            "outPath"		: self.outPath
+            "alphabetType": self.moleculeType,
+            "includeIndels": str(self.useIndels),
+            "inFilePath": self.inFilePath,
+            "tau": str(self.tau),
+            "outPath": self.outPath
         }
 
         # Print the parsed parameter values
@@ -112,12 +112,12 @@ class CmdArgs:
         Writer.writeInParamsToFile(paramsDict, self.outPath)
 
     # Print parsed input parameters
-    def printInParams(self, paramsDict) :
+    def printInParams(self, paramsDict):
         print("\nParsed input parameter values:")
         print("------------------------------")
 
         # For each parameter,
-        for param in paramsDict.keys() :
+        for param in paramsDict.keys():
             # Print the 'parameter : value' pair
             print(param + ": " + paramsDict[param])
 

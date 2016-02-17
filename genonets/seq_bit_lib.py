@@ -1,4 +1,3 @@
-
 """
     seq_bit_lib
     ~~~~~~~~~~~
@@ -15,9 +14,9 @@ from array import array
 # Abstract base class that provides all methods for manipulation of arbitrary
 # character sequences as bits. Only concrete classes derived from this class
 # are supposed to be instantiated for use.
-class AbstractBitSeqManipulator :
+class AbstractBitSeqManipulator:
     # Constructor
-    def __init__(self, seqLength, useIndels) :
+    def __init__(self, seqLength, useIndels):
         # Set the sequence length
         self.seqLength = seqLength
 
@@ -33,26 +32,26 @@ class AbstractBitSeqManipulator :
         self.masks = self.getMasks()
 
     # Basic popcount
-    def popcount(self, x) :
+    def popcount(self, x):
         return bin(x).count('1')
 
-    # Returns the 2-bit sequence corresponding to the given nucleotide letter
-    def letterToBits(self, letter) :
+    # Returns the bit sequence corresponding to the given letter
+    def letterToBits(self, letter):
         return self.letterToBitDict[letter]
 
-    # Return the nucleotide letter corresponding to the given 2-bit sequence
-    def bitsToLetter(self, bits) :
+    # Return the letter corresponding to the given bit sequence
+    def bitsToLetter(self, bits):
         return self.bitToLetterDict[bits]
 
     # Returns 'True' if the given number is even and 'False'
     # otherwise.
-    def isEven(self, x) :
+    def isEven(self, x):
         return (x % 2) == 0
 
     # Returns a list of indices, such that each index in the list
     # is the index of the start of bit of the n-bit code
-    # repsenting a single letter in the sequence.
-    def computeStartIndices(self) :
+    # representing a single letter in the sequence.
+    def computeStartIndices(self):
         # Code length
         n = self.bitCodeLen
         # Total No. of bits in the sequence
@@ -65,15 +64,15 @@ class AbstractBitSeqManipulator :
         return indices
 
     # Returns 'n' masks, where 'n = bitCodeLen'
-    def getMasks(self) :
+    def getMasks(self):
         masks = []
 
-        for i in range(self.bitCodeLen) :
-            if i == 0 :
+        for i in range(self.bitCodeLen):
+            if i == 0:
                 # Zeros mask is no use here. We start with a mask
                 # with the first bit set in each letter.
                 masks.append(self.generateMask(1))
-            else :
+            else:
                 # Mask with bit i-1 set in each letter. This is
                 # done by taking the i-1 power of 2.
                 masks.append(self.generateMask(2 << (i - 1)))
@@ -82,16 +81,16 @@ class AbstractBitSeqManipulator :
 
     # Generates and returns a mask where only every pth bit is set,
     # where 'p' is determined by 'maskVal'.
-    def generateMask(self, maskVal) :
+    def generateMask(self, maskVal):
         # Total No. of bits in the sequence
         l = self.bitCodeLen * self.seqLength
 
         # Initialize mask to be constructed later
         mask = 0
 
-        # Starting from the most signigicant bit, set maskval
+        # Starting from the most significant bit, set maskval
         # in each nth position, where n=self.bitCodeLen
-        for i in reversed(range(0, l, self.bitCodeLen)) :
+        for i in reversed(range(0, l, self.bitCodeLen)):
             mask |= maskVal << i
 
         return mask
@@ -99,17 +98,17 @@ class AbstractBitSeqManipulator :
     # Return True if the two sequences are 1-neighbors.
     # The 1-neighborhood includes all single point mutations, as well as all
     # left shift and right shift mutations.
-    def areNeighbors(self, seq1, seq2) :
-        # If the distance betweeen seq1 and seq2 is a point
+    def areNeighbors(self, seq1, seq2):
+        # If the distance between seq1 and seq2 is a point
         # mutation, they are neighbors; no need to check further.
-        if self.distanceBwSeqs(seq1, seq2) == 1 :
+        if self.distanceBwSeqs(seq1, seq2) == 1:
             return True
 
         # If shift mutations should not be considered,
-        if not self.useIndels :
+        if not self.useIndels:
             return False
 
-        # Since seq2 is not seqarated by a point mutation, test for
+        # Since seq2 is not separated by a point mutation, test for
         # a left shift mutation
 
         # Get the right most letter of seq2
@@ -121,10 +120,10 @@ class AbstractBitSeqManipulator :
         # Mutate the right most nucleotide in temp and see if that results
         # in seq2. If so, seq1 and seq2 are 1-neighbors separated by
         # a single left shift mutation.
-        if seq2 == self.mutAftrLftShift(temp, self.seqLength - 1, rmn) :
+        if seq2 == self.mutAftrLftShift(temp, self.seqLength - 1, rmn):
             return True
 
-        # Since seq2 is neither seqarated by a point mutation nor by
+        # Since seq2 is neither separated by a point mutation nor by
         # a left shit, test for a right shift mutation
 
         # Get the left most nucleotide of seq2
@@ -136,26 +135,28 @@ class AbstractBitSeqManipulator :
         # Mutate the right most nucleotide temp and see if that results
         # in seq2. If so, seq1 and seq2 are 1-neighbors separated by
         # a single right shift mutation. If not, we have exhausted all
-        # possibilites, which means seq1 and seq2 are not 1-neighbors.
-        if seq2 == self.mutateLetter(temp, 0, lmn) :
+        # possibilities, which means seq1 and seq2 are not 1-neighbors.
+        if seq2 == self.mutateLetter(temp, 0, lmn):
             return True
-        else :
+        else:
             return False
 
     # Accepts a sequence in bit format and generates all possible 1-neighbors.
     # Returns a list of neighbors.
-    def generateNeighbors(self, sequence) :
+    def generateNeighbors(self, sequence):
         # No. of nucleotides in the sequence
         k = self.seqLength
 
         # Generate all possible single letter mutants
-        neighbors = [self.mutateLetter(sequence, i, target) \
-                        for i in range(k) \
-                        for target in self.bitToLetterDict.keys() \
-                        if target != self.getLetterAtIndex(sequence, i)]
+        neighbors = [
+            self.mutateLetter(sequence, i, target)
+            for i in range(k)
+            for target in self.bitToLetterDict.keys()
+            if target != self.getLetterAtIndex(sequence, i)
+        ]
 
         # If shift mutations should be considered,
-        if self.useIndels :
+        if self.useIndels:
             # Generate all possible left shift mutations
 
             # Left shift sequence by one letter, i.e., n bits
@@ -170,7 +171,7 @@ class AbstractBitSeqManipulator :
             # Also, do not include the mutant that results in the source sequence.
             neighbors.extend(self.getUniqueNeighbors(lsNeighbors, neighbors, sequence))
 
-            # Generate all right shift mutatants
+            # Generate all right shift mutants
 
             # Right shift sequence by one nucleotide (2 bits)
             temp = sequence >> self.bitCodeLen
@@ -188,41 +189,43 @@ class AbstractBitSeqManipulator :
         return neighbors
 
     # Depending on the shiftType, i.e., "left" or "right", returns the
-    # corresponding shift mutatants.
-    def getShiftMutants(self, shiftType, source) :
+    # corresponding shift mutants.
+    def getShiftMutants(self, shiftType, source):
         # Check if this is a left shift
-        if shiftType == "left" :
+        if shiftType == "left":
             # The letter index at which to perform the mutations is
             # 'seqLength - 1' for a left shift
             index = self.seqLength - 1
 
             # Get all left shift mutants
-            mutants = [self.mutAftrLftShift(source, index, target) \
-                        for target in self.bitToLetterDict.keys()]
-        else :	# Right shift
+            mutants = [self.mutAftrLftShift(source, index, target)
+                       for target in self.bitToLetterDict.keys()]
+        else:  # Right shift
             # The letter index at which to perform the mutations is
             # '0' for a left shift
             index = 0
 
             # Get all right shift mutants
-            mutants = [self.mutateLetter(source, index, target) \
-                        for target in self.bitToLetterDict.keys()]
+            mutants = [self.mutateLetter(source, index, target)
+                       for target in self.bitToLetterDict.keys()]
 
         return mutants
 
     # Return a list of neighbors from 'newNeighbors' that are not already in
     # 'neighbors', and none of them is the same as the 'source' sequence for
     # which the neighborhood is being generated.
-    def getUniqueNeighbors(self, newNeighbors, neighbors, source) :
-        return [neighbor \
-                for neighbor in newNeighbors \
-                if neighbor not in neighbors \
-                and neighbor != source]
+    def getUniqueNeighbors(self, newNeighbors, neighbors, source):
+        return [
+            neighbor
+            for neighbor in newNeighbors
+            if neighbor not in neighbors and
+            neighbor != source
+        ]
 
     # Computes the distance between two sequences (in bit format) in terms
-    # of the total number of letters that differ in the two seqences.
+    # of the total number of letters that differ in the two sequences.
     # FIXME: Should be extend to include distance for shift mutations ...
-    def distanceBwSeqs(self, seq1, seq2) :
+    def distanceBwSeqs(self, seq1, seq2):
         # Code length
         n = self.bitCodeLen
 
@@ -238,7 +241,7 @@ class AbstractBitSeqManipulator :
         # other bits are now available in the left most positions as well.
         allOred = 0
         # For each number in the list
-        for i in range(len(diffList)) :
+        for i in range(len(diffList)):
             # Move all differences to the left most position
             allOred |= diffList[i] << (n - i)
 
@@ -250,19 +253,19 @@ class AbstractBitSeqManipulator :
     # Builds a list of numbers, where each number has bits set only at
     # specific indices, and represents difference in bit value between
     # seq1 and seq2 at that index. These indices appear at intervals of
-    # length 'n', where 'n = bitCodeLen'. Each number repesents the bits
+    # length 'n', where 'n = bitCodeLen'. Each number represents the bits
     # for each letter that differs on a certain index within the bit code.
     # E.g., one of the numbers contains only the difference bits on the first
     # index of each letter.
-    def buildDiffList(self, seq1, seq2) :
+    def buildDiffList(self, seq1, seq2):
         diffList = []
 
         # Get the difference values for all bits. XOR gives us only those
         # bits that have different values in the two sequences.
-        diffBits = seq1 ^ seq2	# Bitwise XOR
+        diffBits = seq1 ^ seq2  # Bitwise XOR
 
         # Populate the diffLists corresponding to each position
-        for i in range(self.bitCodeLen) :
+        for i in range(self.bitCodeLen):
             diffList.append(diffBits & self.masks[i])
 
         return diffList
@@ -274,7 +277,7 @@ class AbstractBitSeqManipulator :
     # 		a letter other than '0', a left shift can leave one or more
     #		'1' bits on the left. These must be unset so that integer
     #		comparisons return correct results.
-    def mutAftrLftShift(self, sequence, position, target) :
+    def mutAftrLftShift(self, sequence, position, target):
         # Mutate the required nucleotide
         mutant = self.mutateLetter(sequence, position, target)
 
@@ -286,7 +289,7 @@ class AbstractBitSeqManipulator :
     # Mutates a single letter in the bit sequence at index=position, to
     # value=target. Position is expected to have been determined using
     # zero-based indexing.
-    def mutateLetter(self, sequence, position, target) :
+    def mutateLetter(self, sequence, position, target):
         # Code length
         n = self.bitCodeLen
         # Total No. of bits in the sequence
@@ -304,15 +307,15 @@ class AbstractBitSeqManipulator :
         mask = ones << bitIndex
 
         # Perform the mutation
-        # TODO: Add desciption here ...
+        # TODO: Add description here ...
         mutatedSeq = sequence & (~mask) | (target << bitIndex)
 
         return mutatedSeq
 
     # Return the n-bit code at the given index, where index is in the
     # range '0' to 'k - 1', i.e, it is the index corresponding to the
-    # letter index in the string sequence (inreasing from left to right).
-    def getLetterAtIndex(self, sequence, index) :
+    # letter index in the string sequence (increasing from left to right).
+    def getLetterAtIndex(self, sequence, index):
         # Total No. of bits in the sequence
         l = self.bitCodeLen * self.seqLength
 
@@ -328,12 +331,12 @@ class AbstractBitSeqManipulator :
         return letter
 
     # Convert a sequence into a bit representation
-    def seqToBits(self, sequence) :
+    def seqToBits(self, sequence):
         # Initializing the to-be-constructed bit sequence
         bitSequence = 0
 
         # For each letter in the sequence
-        for i in range(0, self.seqLength) :
+        for i in range(0, self.seqLength):
             # Get the corresponding bit code
             bitValue = self.letterToBitDict[sequence[i]]
 
@@ -341,7 +344,7 @@ class AbstractBitSeqManipulator :
             bitSequence |= bitValue
 
             # If this is not the last letter in the sequence
-            if i != (self.seqLength - 1) :
+            if i != (self.seqLength - 1):
                 # Left shift by 'bitCodeLen' bits to make room
                 # for the bit code corresponding to the next
                 # letter in the sequence
@@ -350,7 +353,7 @@ class AbstractBitSeqManipulator :
         return bitSequence
 
     # Convert a bit sequence into letter sequence
-    def bitsToSeq(self, bitSequence) :
+    def bitsToSeq(self, bitSequence):
         # k-mer length
         k = self.seqLength
         # Code length
@@ -365,7 +368,7 @@ class AbstractBitSeqManipulator :
         # For each n-bit sequence (in a k-mer occupying n*k bits in an
         # integer),
         j = k - 1
-        for i in self.startIndices :
+        for i in self.startIndices:
             # Get the letter on index 'i'
             letter = self.getbitsOnIndex(i, bitSequence)
 
@@ -379,7 +382,7 @@ class AbstractBitSeqManipulator :
 
     # Extracts 'n' bits from 'bitSeq' starting at index 'i'.
     # Returns an integer that is a copy of only these bits.
-    def getbitsOnIndex(self, i, bitSeq) :
+    def getbitsOnIndex(self, i, bitSeq):
         # Code length
         n = self.bitCodeLen
 
@@ -387,7 +390,7 @@ class AbstractBitSeqManipulator :
         letter = ((bitSeq & (1 << i)) >> i)
 
         # For the rest of the bits used to represent this letter
-        for p in range(1, n) :
+        for p in range(1, n):
             # Shift the bit by 1 bit to the left to make room
             letter <<= 1
 

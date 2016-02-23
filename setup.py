@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(	name='genonets',
-		version='1.0.0',
+		version='1.0.2',
 		description='Framework for creating and analyzing genotype networks from data.',
 		author='Fahad Khalid',
 		author_email='fahad.khalid@ieu.uzh.ch',

@@ -213,7 +213,7 @@ class InReader :
     def getDictReaderForFile(fileName) :
         # Open file
         try :
-            dataFile = open(fileName, 'r')
+            dataFile = open(fileName, 'rU')
         except Exception as e:
             print("Error: " +
                 ErrorCodes.getErrDescription(ErrorCodes.UNKNOWN_PARSING_ERROR))

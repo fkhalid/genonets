@@ -348,21 +348,23 @@ class Genonets:
         resultsQueue = Queue()
 
         # Create separate processes for each repertoire
-        processes = [Process(target=Genonets.createGN, \
-                             args=(self.inDataDict[repertoire], \
-                                   self.cmdArgs, \
-                                   self.seqLength, \
-                                   resultsQueue, \
-                                   repertoire) \
-                             ) \
-                     for repertoire in repertoires]
+        processes = [
+            Process(target=Genonets.createGN,
+                    args=(self.inDataDict[repertoire],
+                          self.cmdArgs,
+                          self.seqLength,
+                          resultsQueue,
+                          repertoire)
+                    )
+            for repertoire in repertoires
+        ]
 
-        # Start the processses
+        # Start the processes
         for p in processes:
             p.start()
 
         # Spin lock
-        # FIXME: The condtion in the loop can result in an infinite
+        # FIXME: The condition in the loop can result in an infinite
         #		 iteration if one of the processes does not put results
         #		 in the queue. This condition should be replaced
         #		 with one that is reliable ...
@@ -420,19 +422,73 @@ class Genonets:
             self.analyzer.analyze(repertoire, analyses)
 
     def analyzeNets_parallel(self, repertoires, analyses):
+        # Make a copy of self
+        self_copy = copy.deepcopy(self)
+
+        # Delete the existing net dicts
+        del self.repToNetDict
+        del self.repToGiantDict
+
+        # Re-initialize the deleted dicts
+        self.repToNetDict = {}
+        self.repToGiantDict = {}
+
+        # Max processes to use
+        max_procs = 5
+
+        # Partition the repertoires list into batches of 'max_procs'
+        for i in range(1, len(repertoires), max_procs):
+            # Instantiate a concurrent queue for results
+            resultsQueue = Queue()
+
+            # Create separate processes for each repertoire
+            processes = [
+                Process(target=Genonets.analyzeGN,
+                        args=(copy.deepcopy(self_copy),
+                              analyses,
+                              resultsQueue,
+                              repertoires[j])
+                        )
+                for j in range(i - 1, Genonets.len_finished_reps(i, len(repertoires), max_procs))
+            ]
+
+            # Start the processes
+            for p in processes:
+                p.start()
+
+            # Spin lock
+            # FIXME: The condition in the loop can result in an infinite
+            #		 iteration if one of the processes does not put results
+            #		 in the queue. This condition should be replaced
+            #		 with one that is reliable ...
+            while len(self.repToNetDict) != Genonets.len_finished_reps(i, len(repertoires), max_procs):
+                result = resultsQueue.get()
+
+                print("Analysis results received for: " + result[0])
+
+                self.repToNetDict[result[0]] = result[1][0]
+                self.repToGiantDict[result[0]] = result[1][1]
+
+    @staticmethod
+    def len_finished_reps(cur_index, len_repertoires, max_procs):
+        return min(len_repertoires, (cur_index - 1) + max_procs)
+
+    def analyzeNets_parallel_old(self, repertoires, analyses):
         # Instantiate a concurrent queue for results
         resultsQueue = Queue()
 
         # Create separate processes for each repertoire
-        processes = [Process(target=Genonets.analyzeGN, \
-                             args=(copy.deepcopy(self), \
-                                   analyses, \
-                                   resultsQueue, \
-                                   repertoire) \
-                             ) \
-                     for repertoire in repertoires]
+        processes = [
+            Process(target=Genonets.analyzeGN,
+                    args=(copy.deepcopy(self),
+                          analyses,
+                          resultsQueue,
+                          repertoire)
+                    )
+            for repertoire in repertoires
+        ]
 
-        # Start the processses
+        # Start the processes
         for p in processes:
             p.start()
 
@@ -445,7 +501,7 @@ class Genonets:
         self.repToGiantDict = {}
 
         # Spin lock
-        # FIXME: The condtion in the loop can result in an infinite
+        # FIXME: The condition in the loop can result in an infinite
         #		 iteration if one of the processes does not put results
         #		 in the queue. This condition should be replaced
         #		 with one that is reliable ...
@@ -466,8 +522,13 @@ class Genonets:
         analyzer.analyze(repertoire, analyses)
 
         # Create a tuple in which to put the results
-        resultTuple = (repertoire, (genonetsCopy.getNetworkFor(repertoire), \
-                                    genonetsCopy.getDominantNetFor(repertoire)))
+        resultTuple = (
+            repertoire,
+            (
+                genonetsCopy.getNetworkFor(repertoire),
+                genonetsCopy.getDominantNetFor(repertoire)
+            )
+        )
 
         # Add results to the shared queue
         resultsQueue.put(resultTuple)

@@ -21,6 +21,8 @@ class CmdParser:
         # Initialize the parser object
         parser = argparse.ArgumentParser()
 
+        # ---------------- Mandatory arguments ------------------ #
+
         # Add 'alphabetType' as an argument
         parser.add_argument("alphabetType",
                             help="Each genotype in the input file must be a string " +
@@ -53,6 +55,13 @@ class CmdParser:
                                  "generated. The directory will be created if it does " +
                                  "not already exist.")
 
+        # ---------------- Optional arguments ------------------ #
+
+        # Add 'num_processes' as an argument
+        parser.add_argument("-np", "--num_processes", dest="num_procs", action="store",
+                            type=int, default="4",
+                            help="No. of processes to be used in parallel processing")
+
         # Keep an object level copy of the arguments dict
         if arguments:
             # Parse the string of arguments received
@@ -70,8 +79,6 @@ class CmdParser:
 class CmdArgs:
     # Constructor. Accepts a list of arguments.
     def __init__(self, arguments):
-        # Mandatory arguments
-
         # Molecule type: RNA, DNA, Protein, etc.
         self.moleculeType = arguments.alphabetType
 
@@ -96,13 +103,17 @@ class CmdArgs:
         if not self.outPath.endswith("/"):
             self.outPath += "/"
 
+        # Maximum number of parallel processes to be used
+        self.num_procs = arguments.num_procs
+
         # Create a dictionary of parameters
         paramsDict = {
             "alphabetType": self.moleculeType,
             "includeIndels": str(self.useIndels),
             "inFilePath": self.inFilePath,
             "tau": str(self.tau),
-            "outPath": self.outPath
+            "outPath": self.outPath,
+            "num_procs": str(self.num_procs)
         }
 
         # Print the parsed parameter values

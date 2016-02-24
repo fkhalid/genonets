@@ -347,32 +347,38 @@ class Genonets:
         # Instantiate a concurrent queue for results
         resultsQueue = Queue()
 
-        # Create separate processes for each repertoire
-        processes = [
-            Process(target=Genonets.createGN,
-                    args=(self.inDataDict[repertoire],
-                          self.cmdArgs,
-                          self.seqLength,
-                          resultsQueue,
-                          repertoire)
-                    )
-            for repertoire in repertoires
-        ]
+        # Compute indices to be used in the loop
+        indices = Genonets.process_blocks(len(repertoires), self.cmdArgs.num_procs)
 
-        # Start the processes
-        for p in processes:
-            p.start()
+        for i in indices:
+            # Create separate processes for each repertoire in the current block
+            processes = [
+                Process(target=Genonets.createGN,
+                        args=(self.inDataDict[repertoires[j]],
+                              self.cmdArgs,
+                              self.seqLength,
+                              resultsQueue,
+                              repertoires[j])
+                        )
+                for j in range(i - 1, Genonets.len_finished_reps(
+                    i, len(repertoires), self.cmdArgs.num_procs))
+            ]
 
-        # Spin lock
-        # FIXME: The condition in the loop can result in an infinite
-        #		 iteration if one of the processes does not put results
-        #		 in the queue. This condition should be replaced
-        #		 with one that is reliable ...
-        while len(self.repToNetDict) != len(repertoires):
-            result = resultsQueue.get()
+            # Start the processes
+            for p in processes:
+                p.start()
 
-            self.repToNetDict[result[0]] = result[1][0]
-            self.repToGiantDict[result[0]] = result[1][1]
+            # Spin lock
+            # FIXME: The condition in the loop can result in an infinite
+            # iteration if one of the processes does not put results
+            # in the queue. This condition should be replaced
+            # with one that is reliable ...
+            while len(self.repToNetDict) != Genonets.len_finished_reps(
+                    i, len(repertoires), self.cmdArgs.num_procs):
+                result = resultsQueue.get()
+
+                self.repToNetDict[result[0]] = result[1][0]
+                self.repToGiantDict[result[0]] = result[1][1]
 
     @staticmethod
     def createGN(seqScrDict, args, seqLength, resultsQueue, repertoire):
@@ -433,14 +439,14 @@ class Genonets:
         self.repToNetDict = {}
         self.repToGiantDict = {}
 
+        # Instantiate a concurrent queue for results
+        resultsQueue = Queue()
+
         # Compute indices to be used in the loop
         indices = Genonets.process_blocks(len(repertoires), self.cmdArgs.num_procs)
 
         for i in indices:
-            # Instantiate a concurrent queue for results
-            resultsQueue = Queue()
-
-            # Create separate processes for each repertoire
+            # Create separate processes for each repertoire in the current block
             processes = [
                 Process(target=Genonets.analyzeGN,
                         args=(copy.deepcopy(self_copy),

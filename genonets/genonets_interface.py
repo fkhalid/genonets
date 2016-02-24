@@ -433,11 +433,10 @@ class Genonets:
         self.repToNetDict = {}
         self.repToGiantDict = {}
 
-        # Max processes to use
-        max_procs = 5
+        # Compute indices to be used in the loop
+        indices = Genonets.process_blocks(len(repertoires), self.cmdArgs.num_procs)
 
-        # Partition the repertoires list into batches of 'max_procs'
-        for i in range(1, len(repertoires), max_procs):
+        for i in indices:
             # Instantiate a concurrent queue for results
             resultsQueue = Queue()
 
@@ -449,7 +448,8 @@ class Genonets:
                               resultsQueue,
                               repertoires[j])
                         )
-                for j in range(i - 1, Genonets.len_finished_reps(i, len(repertoires), max_procs))
+                for j in range(i - 1, Genonets.len_finished_reps(
+                    i, len(repertoires), self.cmdArgs.num_procs))
             ]
 
             # Start the processes
@@ -458,16 +458,51 @@ class Genonets:
 
             # Spin lock
             # FIXME: The condition in the loop can result in an infinite
-            #		 iteration if one of the processes does not put results
-            #		 in the queue. This condition should be replaced
-            #		 with one that is reliable ...
-            while len(self.repToNetDict) != Genonets.len_finished_reps(i, len(repertoires), max_procs):
+            # iteration if one of the processes does not put results
+            # in the queue. This condition should be replaced
+            # with one that is reliable ...
+            while len(self.repToNetDict) != Genonets.len_finished_reps(
+                    i, len(repertoires), self.cmdArgs.num_procs):
+
                 result = resultsQueue.get()
 
                 print("Analysis results received for: " + result[0])
 
                 self.repToNetDict[result[0]] = result[1][0]
                 self.repToGiantDict[result[0]] = result[1][1]
+
+    @staticmethod
+    def process_blocks(num_repertoires, num_processes):
+        # If there are enough processes to process all repertoires
+        # in parallel,
+        if num_repertoires <= num_processes:
+            # Only one iteration is required
+            indices = [1]
+        else:
+            # Calculate the number of iteration that consume all
+            # processes
+            num_full_iters = num_repertoires / num_processes
+
+            # Calculate the increment required in the last iteration
+            incr_last = num_repertoires % num_processes
+
+            # Create a list of increment values per iteration
+            index_incrs = [num_processes for i in range(num_full_iters)] \
+                if num_full_iters != 0 else []
+
+            # If required, add the last increment
+            if incr_last != 0:
+                index_incrs.append(incr_last)
+
+            # Initialize the list of indices
+            indices = [1]
+
+            # Indices from index 1 onwards are calculated using prefix sum
+            # of the increment list
+            for i in range(0, len(index_incrs) - 1):
+                indices.append(index_incrs[i] + indices[i])
+
+        return indices
 
     @staticmethod
     def len_finished_reps(cur_index, len_repertoires, max_procs):

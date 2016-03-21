@@ -20,7 +20,7 @@ class WriterFilter:
         "Evolvability_targets": 3,
         "Accessibility": 4,
         "Neighbor_abundance": 5,
-        "Phenotypic_diversity": 6,
+        "Diversity_index": 6,
         "Number_of_genotype_networks": 7,
         "Genotype_network_sizes": 8,
         "Size_of_dominant_genotype_network": 9,

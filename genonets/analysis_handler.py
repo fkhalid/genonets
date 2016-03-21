@@ -254,7 +254,7 @@ class AnalysisHandler:
                                             self.inDataDict, self.netBuilder, self.bitManip)
 
         # Compute phenotypic diversity and set it as a network attribute
-        giant["Phenotypic_diversity"] = accAnalyzer.getPhenotypicDivesity()
+        giant["Diversity_index"] = accAnalyzer.getPhenotypicDivesity()
 
     def structure(self, repertoire):
         # Get the genotype network for the repertoire

@@ -116,7 +116,7 @@ class Writer:
             netToWrite.write(fileName, format="gml")
 
     @staticmethod
-    def writeNetAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=gc.ALL):
+    def writeNetAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, order, repertoires=gc.ALL):
         # If all repertoires should be considered,
         if repertoires == gc.ALL:
             # Get a list of all repertoires
@@ -138,6 +138,10 @@ class Writer:
         for attr in attrsToIgnore():
             if attr in attributes:
                 attributes.remove(attr)
+
+        # Sort the attributes, so that they are written to file in a
+        # fixed, pre-determined order
+        attributes.sort(key=order)
 
         # If the required directories have not already been created
         if not os.path.exists(os.path.dirname(path)):
@@ -171,7 +175,7 @@ class Writer:
         dataFile.close()
 
     @staticmethod
-    def writeSeqAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=gc.ALL):
+    def writeSeqAttribs(repToGiantDict, path, attrsToIgnore, order, repertoires=gc.ALL):
         # If all repertoires should be considered,
         if repertoires == gc.ALL:
             # Get a list of all repertoires
@@ -188,11 +192,11 @@ class Writer:
 
             # Open file to write
             with open(fileName, 'w') as dataFile:
-                Writer.writeSeqAttribsFor(repertoire, repToGiantDict[repertoire],
-                                          dataFile, attrsToIgnore)
+                Writer.writeSeqAttribsFor(repToGiantDict[repertoire],
+                                          dataFile, attrsToIgnore, order)
 
     @staticmethod
-    def writeSeqAttribsFor(repertoire, network, dataFile, attrsToIgnore):
+    def writeSeqAttribsFor(network, dataFile, attrsToIgnore, order):
         # Get vertex level attributes
         attributes = network.vs.attributes()
 
@@ -200,6 +204,10 @@ class Writer:
         for attr in attrsToIgnore():
             if attr in attributes:
                 attributes.remove(attr)
+
+        # Sort the attributes, so that they are written to file in a
+        # fixed, pre-determined order
+        attributes.sort(key=order)
 
         # Write the row of headers
         dataFile.write("Sequence" + "\t")
@@ -248,7 +256,6 @@ class Writer:
                 if not i == j:
                     dataFile.write("\t" + str(overlapMat[i][j]))
                 else:
-                    # dataFile.write("\t" + "######")
                     dataFile.write("\t" + "NaN")
 
         dataFile.close()

@@ -244,7 +244,9 @@ class Genonets:
 
         Writer.writeNetAttribs(self.repToNetDict, self.repToGiantDict,
                                self.netBuilder, self.cmdArgs.outPath,
-                               WriterFilter.netAttribsToIgnore, repertoires)
+                               WriterFilter.netAttribsToIgnore,
+                               WriterFilter.net_attribute_to_order,
+                               repertoires)
 
     # Description:	Writes the genotype level results to file.
     # Arguments:
@@ -254,9 +256,11 @@ class Genonets:
         # If a single string is received, convert it into an iterable
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
-        Writer.writeSeqAttribs(self.repToNetDict, self.repToGiantDict,
-                               self.netBuilder, self.cmdArgs.outPath,
-                               WriterFilter.seqAttribsToIgnore, repertoires)
+        Writer.writeSeqAttribs(self.repToGiantDict,
+                               self.cmdArgs.outPath,
+                               WriterFilter.seqAttribsToIgnore,
+                               WriterFilter.seq_attribute_to_order,
+                               repertoires)
 
     # Description:	Save the phenotype network as a GML file.
     # Arguments:

@@ -172,37 +172,37 @@ class Aligner:
 
     def areNeighbors(self, seq1, seq2, bitmanip):
         areneighbors = False
-        error = False
-        complement = False
+        # error = False
+        # complement = False
 
         self.align(seq1, seq2)
 
         if self.numMismatches == 1:
             areneighbors = True
         else:
-            complement = True
+            # complement = True
             self.align(self.seq1,
                        self.revserse_complement(seq2))
 
             if self.numMismatches == 1:
                 areneighbors = True
 
-        if areneighbors:
-            if not bitmanip.areNeighbors(bitmanip.seqToBits(seq1), bitmanip.seqToBits(seq2)):
-                error = True
-        else:
-            if bitmanip.areNeighbors(bitmanip.seqToBits(seq1), bitmanip.seqToBits(seq2)):
-                error = True
-        if error:
-                print("Mismatch:")
-                print("Are neighbors: " + str(areneighbors))
-                print("Reverse complement: " + str(complement))
-                print("Sequence 1: " + seq1)
-                print("Sequence 2: " + self.seq2)
-                print("Sequence 2: " + self.seq2)
-                print("RC Sequence 2: " + self.revserse_complement(self.seq2))
-                print("Alignment: ")
-                print("Sequence 1: " + self.seq1_aligned)
-                print("Sequence 2: " + self.seq2_aligned)
+        # if areneighbors:
+        #     if not bitmanip.areNeighbors(bitmanip.seqToBits(seq1), bitmanip.seqToBits(seq2)):
+        #         error = True
+        # else:
+        #     if bitmanip.areNeighbors(bitmanip.seqToBits(seq1), bitmanip.seqToBits(seq2)):
+        #         error = True
+        # if error:
+        #         print("Mismatch:")
+        #         print("Are neighbors: " + str(areneighbors))
+        #         print("Reverse complement: " + str(complement))
+        #         print("Sequence 1: " + seq1)
+        #         print("Sequence 2: " + self.seq2)
+        #         print("Sequence 2: " + self.seq2)
+        #         print("RC Sequence 2: " + self.revserse_complement(self.seq2))
+        #         print("Alignment: ")
+        #         print("Sequence 1: " + self.seq1_aligned)
+        #         print("Sequence 2: " + self.seq2_aligned)
 
         return areneighbors

@@ -328,7 +328,7 @@ class Genonets:
                 self.netBuilder.createGenoNet(repertoire, seqs, scores)
 
             # Get the number of components in the network
-            numComponents = len(self.netBuilder.getComponents( \
+            numComponents = len(self.netBuilder.getComponents(
                 self.repToNetDict[repertoire]))
 
             # If there are more than one components,

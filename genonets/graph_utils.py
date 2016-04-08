@@ -8,10 +8,10 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import math
 import json
 import igraph
 
+from genonets.seq_align import Aligner
 
 # Provides methods for constructing and manipulating genotype
 # networks. The methods in this class are agnostic to molecule
@@ -22,6 +22,14 @@ class NetworkBuilder:
         # Store reference to the sequence/bit manipulator object
         # in use
         self.bitManip = seqBitManip
+
+        # TODO: Initialize the aligner object here ...
+        # FIXME: Figure out a way to access sequence length and alphabet ...
+        self.aligner = Aligner(alphabet="DNA",
+                               seqlen=8,
+                               match=1,
+                               mismatch=-1,
+                               gap=-0.5)
 
     # Return 'True' if the source sequence is connected to the target
     # sequence, and 'False' otherwise.
@@ -47,21 +55,33 @@ class NetworkBuilder:
         # Add sequences to all vertices
         network.vs["sequences"] = sequences
 
-        # Add bit formatted sequences to all vertices
-        # Note: For very long sequences, the size of the corresponding
-        # integer value becomes too long for igraph to be able
-        # to deal with it (since igraph is C based). Therefore,
-        # bitseqs cannot be stored in the graph.
-        bitseqs = [self.bitManip.seqToBits(seq) for seq in sequences]
+        # # Add bit formatted sequences to all vertices
+        # # Note: For very long sequences, the size of the corresponding
+        # # integer value becomes too long for igraph to be able
+        # # to deal with it (since igraph is C based). Therefore,
+        # # bitseqs cannot be stored in the graph.
+        # bitseqs = [self.bitManip.seqToBits(seq) for seq in sequences]
+        #
+        # # Get a list of pairs of indices which represent paris of
+        # # sequences that are 1-neighbors, i.e., only one mutation
+        # # apart.
+        # edges = [
+        #     (i, j)
+        #     for i in range(len(bitseqs) - 1)
+        #     for j in range(i + 1, len(bitseqs))
+        #     if self.bitManip.areNeighbors(bitseqs[i], bitseqs[j])
+        # ]
 
         # Get a list of pairs of indices which represent paris of
         # sequences that are 1-neighbors, i.e., only one mutation
         # apart.
         edges = [
             (i, j)
-            for i in range(len(bitseqs) - 1)
-            for j in range(i + 1, len(bitseqs))
-            if self.bitManip.areNeighbors(bitseqs[i], bitseqs[j])
+            for i in range(len(sequences) - 1)
+            for j in range(i + 1, len(sequences))
+            if self.aligner.areNeighbors(sequences[i],
+                                         sequences[j],
+                                         self.bitManip)
         ]
 
         # Connect the two with an edge

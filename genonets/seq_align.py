@@ -59,15 +59,9 @@ class Aligner:
         for i in xrange(1, self.seqlen + 1):
             self.mat[0, i] = self.mat[0, i - 1] + self.GAP
 
-            # # Store op in map
-            # self.btMap[(0, i)] = (self.INDEL2, (0, i-1))
-
         # Fill in the first column
         for i in xrange(1, self.seqlen + 1):
             self.mat[i, 0] = self.mat[i - 1, 0] + self.GAP
-
-            # # Store op in map
-            # self.btMap[(i, 0)] = (self.INDEL1, (i-1, 0))
 
         # Fill in the rest of the matrix
         for i in xrange(1, self.seqlen + 1):
@@ -78,12 +72,15 @@ class Aligner:
 
         self.backtrack()
 
+    # @profile
     def score(self, i, j):
         # Check if the letters match at the current position
         if self.seq1[i - 1] == self.seq2[j - 1]:
             match_score = self.MATCH
+            indel = self.NOINDEL_MATCH
         else:
             match_score = self.MISMATCH
+            indel = self.NOINDEL_MISMATCH
 
         # Case 1: S_i-1,j-1 + s(a_i, b_i)
         s1 = self.mat[i - 1, j - 1] + match_score
@@ -94,23 +91,21 @@ class Aligner:
 
             # Case 3: S_i,j-1 - delta
             s3 = self.mat[i, j - 1] + self.GAP
-        else:
-            s3 = s2 = s1 - 1
 
-        # Compute the max
-        maxval, indel, parent = self.max(s1, s2, s3, match_score, i=i, j=j)
+            # Compute the max
+            maxval, indel, parent = self.max(s2, s3, i=i, j=j)
+        else:
+            # s3 = s2 = s1 - 1
+            maxval = s1
+            parent = (i - 1, j - 1)
 
         # Store op in map
         self.btMap[(i, j)] = (indel, parent)
 
         return maxval
 
-    def max(self, s1, s2, s3, match_status, i, j):
-        if s1 >= s2 and s1 >= s3:
-            return s1, \
-                   self.NOINDEL_MATCH if match_status == self.MATCH else self.NOINDEL_MISMATCH, \
-                   (i - 1, j - 1)
-        elif s2 >= s1 and s2 >= s3:
+    def max(self, s2, s3, i, j):
+        if s2 >= s3:
             return s2, self.INDEL1, (i - 1, j)
         else:
             return s3, self.INDEL2, (i, j - 1)
@@ -179,13 +174,13 @@ class Aligner:
 
         if self.numMismatches == 1:
             areneighbors = True
-        else:
-            # complement = True
-            self.align(self.seq1,
-                       self.revserse_complement(seq2))
-
-            if self.numMismatches == 1:
-                areneighbors = True
+        # else:
+        #     # complement = True
+        #     self.align(self.seq1,
+        #                self.revserse_complement(seq2))
+        #
+        #     if self.numMismatches == 1:
+        #         areneighbors = True
 
         # if areneighbors:
         #     if not bitmanip.areNeighbors(bitmanip.seqToBits(seq1), bitmanip.seqToBits(seq2)):

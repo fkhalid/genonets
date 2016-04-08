@@ -11,7 +11,7 @@
 import json
 import igraph
 
-from genonets.seq_align import Aligner
+from seq_align import Aligner
 
 # Provides methods for constructing and manipulating genotype
 # networks. The methods in this class are agnostic to molecule
@@ -25,8 +25,8 @@ class NetworkBuilder:
 
         # TODO: Initialize the aligner object here ...
         # FIXME: Figure out a way to access sequence length and alphabet ...
-        self.aligner = Aligner(alphabet="DNA",
-                               seqlen=8,
+        self.aligner = Aligner(alphabet="RNA",
+                               seqlen=7,
                                match=1,
                                mismatch=-1,
                                gap=-0.5)

@@ -58,7 +58,7 @@ class AnalysisHandler:
 
         # Dictionary to store 'analysis type' to 'function'
         # mapping
-        self.analysisToFunc = {  # ac.LANDSCAPE : self.landscape, \
+        self.analysisToFunc = {
             ac.PEAKS: self.peaks,
             ac.PATHS: self.paths,
             ac.EPISTASIS: self.epistasis,
@@ -71,7 +71,7 @@ class AnalysisHandler:
             ac.OVERLAP: self.overlap
         }
 
-        # Refernce to the overlap matrix
+        # Reference to the overlap matrix
         self.overlapMatrix = None
 
     def getFuncsFor(self, analysis):
@@ -198,10 +198,20 @@ class AnalysisHandler:
         # Get the dominant genotype network for the repertoire
         giant = self.caller.getDominantNetFor(repertoire)
 
+        # Flag to indicate whether or not the genotypes should be
+        # considered double stranded, i.e., whether or not
+        # reverse complements should be used in evolvability
+        # computations.
+        isDoubleStranded = self.caller.cmdArgs.moleculeType == "DNA"
+
         # Construct a EvolvabilityAnalyzer object
-        evoAnalyzer = EvolvabilityAnalyzer(giant, self.inDataDict,
-                                           self.seqToRepDict, self.repToGiantDict, self.netBuilder,
-                                           self.bitsToSeqDict)
+        evoAnalyzer = EvolvabilityAnalyzer(giant,
+                                           self.inDataDict,
+                                           self.seqToRepDict,
+                                           self.repToGiantDict,
+                                           self.netBuilder,
+                                           self.bitsToSeqDict,
+                                           isDoubleStranded)
 
         # Compute repertoire evolvability and set it as a network
         # attribute

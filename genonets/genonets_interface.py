@@ -312,8 +312,10 @@ class Genonets:
         uniqueSeqs = list(set(allSeqs))
 
         # Construct the dict {bitseq : seq}
-        return {self.bitManip.seqToBits(seq): seq \
-                for seq in uniqueSeqs}
+        return {
+            self.bitManip.seqToBits(seq): seq
+            for seq in uniqueSeqs
+        }
 
     # Create genotype networks for the given, or all repertoires
     def createNets(self, repertoires):

@@ -143,7 +143,7 @@ class EvolvabilityAnalyzer:
     # to repertoire dictionary, return a list of repertoires for which the given
     # sequence could develop score >= tau by a single mutation.
     def getEvoTargetReps(self, extNeighs):
-        targetReps = {}
+        targetReps = dict()
 
         # For each external neighbor,
         for extNeigh in extNeighs:
@@ -156,10 +156,13 @@ class EvolvabilityAnalyzer:
                 # can therefore safely skip the current iteration
                 continue
 
-            # If the external neighbor is in any repertoires,
+            # If the external neighbor is in any repertoire,
             if extNeighSeq in self.seqToRepDict:
                 # For each repertoire that contains the external neighbor,
                 for repertoire in self.seqToRepDict[extNeighSeq]:
+                    if repertoire == self.network["name"]:
+                        continue
+
                     # We have found a repertoire with a genotype network that
                     # has a 1-neighbor to which  the sequence can evolve.
                     if repertoire not in targetReps:
@@ -167,14 +170,24 @@ class EvolvabilityAnalyzer:
 
                     targetReps[repertoire].append(extNeighSeq)
             elif self.isDoubleStranded:
-                if self.bm.seqToBits(extNeighSeq) in self.rcToSeqDict:
+                # Get the bit representation for the extNeighSeq
+                extNeighBits = self.bm.seqToBits(extNeighSeq)
+
+                if extNeighBits in self.rcToSeqDict:
+                    # Get the string representation of the reverse complement
+                    # of the external neighbor sequence
+                    strSeq = self.rcToSeqDict[extNeighBits]
+
                     # For each repertoire that contains the external neighbor,
-                    for repertoire in self.seqToRepDict[extNeighSeq]:
+                    for repertoire in self.seqToRepDict[strSeq]:
+                        if repertoire == self.network["name"]:
+                            continue
+
                         # We have found a repertoire with a genotype network that
                         # has a 1-neighbor to which  the sequence can evolve.
                         if repertoire not in targetReps:
                             targetReps[repertoire] = []
 
-                        targetReps[repertoire].append(extNeighSeq)
+                        targetReps[repertoire].append(strSeq)
 
         return targetReps

@@ -308,6 +308,16 @@ class Genonets:
             # Get the list of all sequences in the repertoire
             allSeqs.extend(self.inDataDict[repertoire].keys())
 
+            # If we are dealing with DNA,
+            if self.cmdArgs.moleculeType == "DNA":
+                # Compute the list of reverse complements (in bit format),
+                # and append it to 'allSeqs'
+                allSeqs.extend([
+                    self.bitManip.bitsToSeq(
+                        self.bitManip.getReverseComplement(self.bitManip.seqToBits(seq)))
+                    for seq in self.inDataDict[repertoire].keys()
+                ])
+
         # Remove all redundant entries in the list
         uniqueSeqs = list(set(allSeqs))
 

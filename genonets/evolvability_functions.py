@@ -160,7 +160,7 @@ class EvolvabilityAnalyzer:
             if extNeighSeq in self.seqToRepDict:
                 # For each repertoire that contains the external neighbor,
                 for repertoire in self.seqToRepDict[extNeighSeq]:
-                    if repertoire == self.network["name"]:
+                    if self.network["name"] in [repertoire, repertoire + "_dominant"]:
                         continue
 
                     # We have found a repertoire with a genotype network that
@@ -180,7 +180,7 @@ class EvolvabilityAnalyzer:
 
                     # For each repertoire that contains the external neighbor,
                     for repertoire in self.seqToRepDict[strSeq]:
-                        if repertoire == self.network["name"]:
+                        if self.network["name"] in [repertoire, repertoire + "_dominant"]:
                             continue
 
                         # We have found a repertoire with a genotype network that

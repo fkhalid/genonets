@@ -12,7 +12,8 @@
 class EvolvabilityAnalyzer:
     # Constructor
     def __init__(self, network, dataDict, seqToRepDict, repToGiantDict,
-                 netBuilder, isDoubleStranded):
+                 rcToSeqDict, bitsToSeqDict, netBuilder,
+                 isDoubleStranded):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -21,10 +22,17 @@ class EvolvabilityAnalyzer:
         self.dataDict = dataDict
 
         # Copy dict: key=sequence, value=[repertoires]
-        self.seqToRepDict = seqToRepDict.copy()
+        self.seqToRepDict = seqToRepDict
 
         # Copy of dict: key=repertoire, value=giant
         self.repToGiantDict = repToGiantDict
+
+        # Dict {bit reverse complement: string seq} - Holds reverse
+        # complement (bit format) to original sequence (string)
+        self.rcToSeqDict = rcToSeqDict
+
+        # Dict {bitseq : seq}
+        self.bitsToSeqDict = bitsToSeqDict
 
         # Get a reference to the NetworkUtils object
         self.netBuilder = netBuilder
@@ -36,65 +44,59 @@ class EvolvabilityAnalyzer:
         # Reference to the bit manipulator object
         self.bm = self.netBuilder.bitManip
 
-        # Dict {bit reverse complement: string seq} - Holds reverse
-        # complement (bit format) to original sequence (string)
-        self.rcToSeqDict = None
-
-        # Dict {bitseq : seq}
-        self.bitsToSeqDict = None
-
-        # Remove all seq-rep mappings, where seq is not within the
-        # giant
-        self.updateSeqToRepDict()
-
-        # If reverse complements should also be considered,
-        if self.isDoubleStranded:
-            self.buildRcToSeqDict()
-
-        # Build the 'bits to sequence' dictionary
-        self.buildBitsToSeqDict()
-
         # Reference to the list of evolvability values for all sequences
         self.evoTuples = None
 
-    def updateSeqToRepDict(self):
+    @staticmethod
+    def updateSeqToRepDict(seqToRepDict_original, repToGiantDict):
+        # Make a deep copy of the dict
+        seqToRepDict = seqToRepDict_original.copy()
+
         # For each sequence key in the dict,
-        for seq in self.seqToRepDict.keys():
+        for seq in seqToRepDict.keys():
             # Update the list of repertoires corresponding to this
             # sequence with only those repertoires for which this
             # sequence exists in the giant.
-            self.seqToRepDict[seq] = [
-                rep for rep in self.seqToRepDict[seq]
-                if seq in self.repToGiantDict[rep].vs["sequences"]
+            seqToRepDict[seq] = [
+                rep for rep in seqToRepDict[seq]
+                if seq in repToGiantDict[rep].vs["sequences"]
             ]
 
-    def buildRcToSeqDict(self):
+        return seqToRepDict
+
+    @staticmethod
+    def buildRcToSeqDict(seqToRepDict, bm):
         # Initialize the dict
-        self.rcToSeqDict = dict()
+        rcToSeqDict = dict()
 
         # For each sequence key in the dict,
-        for seq in self.seqToRepDict.keys():
+        for seq in seqToRepDict.keys():
             # Compute the reverse complement
-            rcBitSeq = self.bm.getReverseComplement(
-                self.bm.seqToBits(seq))
+            rcBitSeq = bm.getReverseComplement(
+                bm.seqToBits(seq))
 
             # With the reverse complement bit sequence as the key,
             # add the original sequence (string format) as the value.
-            self.rcToSeqDict[rcBitSeq] = seq
+            rcToSeqDict[rcBitSeq] = seq
 
-    def buildBitsToSeqDict(self):
+        return rcToSeqDict
+
+    @staticmethod
+    def buildBitsToSeqDict(seqToRepDict, rcToSeqDict, bm, isDoubleStranded):
         # Create the dictionary - {bit sequence: sequence}
-        self.bitsToSeqDict = {
-            self.bm.seqToBits(seq): seq for seq in self.seqToRepDict.keys()
+        bitsToSeqDict = {
+            bm.seqToBits(seq): seq for seq in seqToRepDict.keys()
         }
 
         # If we need to consider reverse complements,
-        if self.isDoubleStranded:
+        if isDoubleStranded:
             # Use the 'reverse complement to sequence dict' to get the
             # the reverse complements corresponding to all the
             # sequences.
-            for rc in self.rcToSeqDict.keys():
-                self.bitsToSeqDict[rc] = self.bm.bitsToSeq(rc)
+            for rc in rcToSeqDict.keys():
+                bitsToSeqDict[rc] = bm.bitsToSeq(rc)
+
+        return bitsToSeqDict
 
     # Returns repertoire evolvability
     def getReportoireEvo(self):
@@ -184,9 +186,14 @@ class EvolvabilityAnalyzer:
                 # Get the bit representation for the extNeighSeq
                 extNeighBits = self.bm.seqToBits(extNeighSeq)
 
+                # If the external neighbor is amongst the reverse complements,
                 if extNeighBits in self.rcToSeqDict:
                     # Get the string representation of the reverse complement
-                    # of the external neighbor sequence
+                    # of the external neighbor sequence.
+                    # Note: The reason we are using the original sequence rather
+                    # than the reverse complement is that if we use the
+                    # reverse complement, the visualization in the Genonets
+                    # Server would not be able to highlight the target node.
                     strSeq = self.rcToSeqDict[extNeighBits]
 
                     self.appendToTargets(strSeq, targetReps)
@@ -206,4 +213,3 @@ class EvolvabilityAnalyzer:
                 targetReps[repertoire] = []
 
             targetReps[repertoire].append(seq)
-

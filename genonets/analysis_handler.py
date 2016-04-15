@@ -23,7 +23,7 @@ from genonets_constants import EpistasisConstants as epi
 
 class AnalysisHandler:
     # Constructor
-    def __init__(self, caller, parallel=False):
+    def __init__(self, caller, analyses, parallel=False):
         # Store a reference to the caller object
         self.caller = caller
 
@@ -67,6 +67,33 @@ class AnalysisHandler:
             ac.STRUCTURE: self.structure,
             ac.OVERLAP: self.overlap
         }
+
+        # Flag to indicate whether or not the genotypes should be
+        # considered double stranded, i.e., whether or not
+        # reverse complements should be used in evolvability
+        # computations.
+        self.isDoubleStranded = self.caller.cmdArgs.moleculeType == "DNA"
+
+        # If 'Evolvability' analysis has been requested, initialize
+        # data structures specific to 'Evolvability' analysis
+        # Note: This is by design, since building these data
+        # structures once is a lot more efficient than building them
+        # again and again for each repertoire.
+        if ac.EVOLVABILITY in analyses:
+            # Dict - {sequence: [repertoires]}, with only those repertoires
+            # for which the sequence in the giant.
+            self.seqToRepDict_evo = None
+
+            # Dict - {reverse complement in bit format: original sequence in
+            # string format}
+            self.rcToSeqDict = None
+
+            # Dict - {sequence in bit format: sequence in string format}
+            self.bitsToSeqDict = None
+
+            # Initialize analysis specific data structures used in
+            # in the analysis of all repertoires
+            self.init_evolvability()
 
         # Reference to the overlap matrix
         self.overlapMatrix = None
@@ -191,23 +218,33 @@ class AnalysisHandler:
         # Set robustness values for all vertices, i.e., sequences
         giant.vs["Robustness"] = robAnalyzer.getRobustnessAll()
 
+    # Data structure initializations that need only be done once for
+    # evolvability analysis of all repertoires.
+    def init_evolvability(self):
+        self.seqToRepDict_evo = EvolvabilityAnalyzer.updateSeqToRepDict(
+            self.seqToRepDict, self.repToGiantDict)
+
+        if self.isDoubleStranded:
+            self.rcToSeqDict = EvolvabilityAnalyzer.buildRcToSeqDict(
+                self.seqToRepDict_evo, self.bitManip)
+
+        self.bitsToSeqDict = EvolvabilityAnalyzer.buildBitsToSeqDict(
+            self.seqToRepDict_evo, self.rcToSeqDict, self.bitManip,
+            self.isDoubleStranded)
+
     def evolvability(self, repertoire):
         # Get the dominant genotype network for the repertoire
         giant = self.caller.getDominantNetFor(repertoire)
 
-        # Flag to indicate whether or not the genotypes should be
-        # considered double stranded, i.e., whether or not
-        # reverse complements should be used in evolvability
-        # computations.
-        isDoubleStranded = self.caller.cmdArgs.moleculeType == "DNA"
-
         # Construct a EvolvabilityAnalyzer object
         evoAnalyzer = EvolvabilityAnalyzer(giant,
                                            self.inDataDict,
-                                           self.seqToRepDict,
+                                           self.seqToRepDict_evo,
                                            self.repToGiantDict,
+                                           self.rcToSeqDict,
+                                           self.bitsToSeqDict,
                                            self.netBuilder,
-                                           isDoubleStranded)
+                                           self.isDoubleStranded)
 
         # Compute repertoire evolvability and set it as a network
         # attribute

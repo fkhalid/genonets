@@ -50,8 +50,8 @@ class Genonets:
         # If there is only one component, giant=network
         self.repToGiantDict = {}
 
-        # Create the analyzer object
-        self.analyzer = AnalysisHandler(self)
+        # Reference to the analyzer object
+        self.analyzer = None
 
     # ----------------------------------------------------------------------
     #	Public interface
@@ -403,6 +403,10 @@ class Genonets:
         resultsQueue.close()
 
     def analyzeNets(self, repertoires, analyses):
+        # Instantiate the analyzer. Initializing here makes it possible
+        # to perform actions based on the list of requested analyses.
+        self.analyzer = AnalysisHandler(self, analyses)
+
         # For each repertoire,
         for repertoire in repertoires:
             # Perform the analysis

@@ -12,7 +12,7 @@
 class EvolvabilityAnalyzer:
     # Constructor
     def __init__(self, network, dataDict, seqToRepDict, repToGiantDict,
-                 netBuilder, bitsToSeqDict, isDoubleStranded):
+                 netBuilder, isDoubleStranded):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -29,23 +29,30 @@ class EvolvabilityAnalyzer:
         # Get a reference to the NetworkUtils object
         self.netBuilder = netBuilder
 
-        # Dict {bitseq : seq}
-        self.bitsToSeqDict = bitsToSeqDict
-
         # Flag indicating whether the genotypes correspond to double
         # stranded molecules
         self.isDoubleStranded = isDoubleStranded
+
+        # Reference to the bit manipulator object
+        self.bm = self.netBuilder.bitManip
 
         # Dict {bit reverse complement: string seq} - Holds reverse
         # complement (bit format) to original sequence (string)
         self.rcToSeqDict = None
 
-        # Reference to the bit manipulator object
-        self.bm = self.netBuilder.bitManip
+        # Dict {bitseq : seq}
+        self.bitsToSeqDict = None
 
         # Remove all seq-rep mappings, where seq is not within the
         # giant
         self.updateSeqToRepDict()
+
+        # If reverse complements should also be considered,
+        if self.isDoubleStranded:
+            self.buildRcToSeqDict()
+
+        # Build the 'bits to sequence' dictionary
+        self.buildBitsToSeqDict()
 
         # Reference to the list of evolvability values for all sequences
         self.evoTuples = None
@@ -53,29 +60,41 @@ class EvolvabilityAnalyzer:
     def updateSeqToRepDict(self):
         # For each sequence key in the dict,
         for seq in self.seqToRepDict.keys():
-            # For each repertoire of which the sequence is a member,
-            for rep in self.seqToRepDict[seq]:
-                # If the sequence is not within the giant of the
-                # repertoire,
-                if seq not in self.repToGiantDict[rep].vs["sequences"]:
-                    # Remove the repertoire from the list
-                    self.seqToRepDict[seq].remove(rep)
+            # Update the list of repertoires corresponding to this
+            # sequence with only those repertoires for which this
+            # sequence exists in the giant.
+            self.seqToRepDict[seq] = [
+                rep for rep in self.seqToRepDict[seq]
+                if seq in self.repToGiantDict[rep].vs["sequences"]
+            ]
 
-        # If the reverse complements should be considered as evolvability
-        # targets,
+    def buildRcToSeqDict(self):
+        # Initialize the dict
+        self.rcToSeqDict = dict()
+
+        # For each sequence key in the dict,
+        for seq in self.seqToRepDict.keys():
+            # Compute the reverse complement
+            rcBitSeq = self.bm.getReverseComplement(
+                self.bm.seqToBits(seq))
+
+            # With the reverse complement bit sequence as the key,
+            # add the original sequence (string format) as the value.
+            self.rcToSeqDict[rcBitSeq] = seq
+
+    def buildBitsToSeqDict(self):
+        # Create the dictionary - {bit sequence: sequence}
+        self.bitsToSeqDict = {
+            self.bm.seqToBits(seq): seq for seq in self.seqToRepDict.keys()
+        }
+
+        # If we need to consider reverse complements,
         if self.isDoubleStranded:
-            # Initialize the dict
-            self.rcToSeqDict = dict()
-
-            # For each sequence key in the dict,
-            for seq in self.seqToRepDict.keys():
-                # Compute the reverse complement
-                rcBitSeq = self.bm.getReverseComplement(
-                    self.bm.seqToBits(seq))
-
-                # With the reverse complement bit sequence as the key,
-                # add the original sequence (string format) as the value.
-                self.rcToSeqDict[rcBitSeq] = seq
+            # Use the 'reverse complement to sequence dict' to get the
+            # the reverse complements corresponding to all the
+            # sequences.
+            for rc in self.rcToSeqDict.keys():
+                self.bitsToSeqDict[rc] = self.bm.bitsToSeq(rc)
 
     # Returns repertoire evolvability
     def getReportoireEvo(self):
@@ -158,17 +177,9 @@ class EvolvabilityAnalyzer:
 
             # If the external neighbor is in any repertoire,
             if extNeighSeq in self.seqToRepDict:
-                # For each repertoire that contains the external neighbor,
-                for repertoire in self.seqToRepDict[extNeighSeq]:
-                    if self.network["name"] in [repertoire, repertoire + "_dominant"]:
-                        continue
-
-                    # We have found a repertoire with a genotype network that
-                    # has a 1-neighbor to which  the sequence can evolve.
-                    if repertoire not in targetReps:
-                        targetReps[repertoire] = []
-
-                    targetReps[repertoire].append(extNeighSeq)
+                # Append the corresponding repertoire(s) to the
+                # list of target repertoires for this sequence.
+                self.appendToTargets(extNeighSeq, targetReps)
             elif self.isDoubleStranded:
                 # Get the bit representation for the extNeighSeq
                 extNeighBits = self.bm.seqToBits(extNeighSeq)
@@ -178,16 +189,21 @@ class EvolvabilityAnalyzer:
                     # of the external neighbor sequence
                     strSeq = self.rcToSeqDict[extNeighBits]
 
-                    # For each repertoire that contains the external neighbor,
-                    for repertoire in self.seqToRepDict[strSeq]:
-                        if self.network["name"] in [repertoire, repertoire + "_dominant"]:
-                            continue
-
-                        # We have found a repertoire with a genotype network that
-                        # has a 1-neighbor to which  the sequence can evolve.
-                        if repertoire not in targetReps:
-                            targetReps[repertoire] = []
-
-                        targetReps[repertoire].append(strSeq)
+                    self.appendToTargets(strSeq, targetReps)
 
         return targetReps
+
+    def appendToTargets(self, seq, targetReps):
+        # For each repertoire that contains the external neighbor,
+        for repertoire in self.seqToRepDict[seq]:
+            # The focal repertoire should not be considered
+            if self.network["name"] in [repertoire, repertoire + "_dominant"]:
+                continue
+
+            # We have found a repertoire with a genotype network that
+            # has a 1-neighbor to which  the sequence can evolve.
+            if repertoire not in targetReps:
+                targetReps[repertoire] = []
+
+            targetReps[repertoire].append(seq)
+

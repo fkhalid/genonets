@@ -53,9 +53,6 @@ class AnalysisHandler:
         # Reference to
         self.seqToRepDict = self.caller.seqToRepDict
 
-        # Dict {bitseq : seq}
-        self.bitsToSeqDict = self.caller.bitsToSeqDict
-
         # Dictionary to store 'analysis type' to 'function'
         # mapping
         self.analysisToFunc = {
@@ -210,7 +207,6 @@ class AnalysisHandler:
                                            self.seqToRepDict,
                                            self.repToGiantDict,
                                            self.netBuilder,
-                                           self.bitsToSeqDict,
                                            isDoubleStranded)
 
         # Compute repertoire evolvability and set it as a network

@@ -40,10 +40,6 @@ class Genonets:
         # given molecule type.
         self.bitManip = self.getBitManip()
 
-        # Dict {bitseq : seq}
-        # The function call uses bitManip, so bitManip must be created first
-        self.bitsToSeqDict = self.buildBitsToSeqDict()
-
         # Get the NetworkUtils object
         self.netBuilder = NetworkBuilder(self.bitManip)
 
@@ -295,37 +291,6 @@ class Genonets:
         scores = [self.inDataDict[repertoire][seq] for seq in sequences]
 
         return sequences, scores
-
-    def buildBitsToSeqDict(self):
-        # Get the list of available repertoires
-        repertoires = self.getRepertoires()
-
-        # Construct a list of all sequences available in the input data
-        allSeqs = []
-
-        # For each repertoire,
-        for repertoire in repertoires:
-            # Get the list of all sequences in the repertoire
-            allSeqs.extend(self.inDataDict[repertoire].keys())
-
-            # If we are dealing with DNA,
-            if self.cmdArgs.moleculeType == "DNA":
-                # Compute the list of reverse complements (in bit format),
-                # and append it to 'allSeqs'
-                allSeqs.extend([
-                    self.bitManip.bitsToSeq(
-                        self.bitManip.getReverseComplement(self.bitManip.seqToBits(seq)))
-                    for seq in self.inDataDict[repertoire].keys()
-                ])
-
-        # Remove all redundant entries in the list
-        uniqueSeqs = list(set(allSeqs))
-
-        # Construct the dict {bitseq : seq}
-        return {
-            self.bitManip.seqToBits(seq): seq
-            for seq in uniqueSeqs
-        }
 
     # Create genotype networks for the given, or all repertoires
     def createNets(self, repertoires):

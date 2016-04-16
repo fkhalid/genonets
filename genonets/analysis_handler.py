@@ -270,8 +270,12 @@ class AnalysisHandler:
         giant = self.caller.getDominantNetFor(repertoire)
 
         # Create an AccessibilityAnalyzer object
-        accAnalyzer = AccessibilityAnalyzer(repertoire, giant, self.repToGiantDict,
-                                            self.inDataDict, self.netBuilder, self.bitManip)
+        accAnalyzer = AccessibilityAnalyzer(repertoire, giant,
+                                            self.repToGiantDict,
+                                            self.inDataDict,
+                                            self.netBuilder,
+                                            self.bitManip,
+                                            self.isDoubleStranded)
 
         # Compute repertoire accessibility and set it as a network attribute
         giant["Accessibility"] = accAnalyzer.getAccessibility()
@@ -281,8 +285,12 @@ class AnalysisHandler:
         giant = self.caller.getDominantNetFor(repertoire)
 
         # Create an AccessibilityAnalyzer object
-        accAnalyzer = AccessibilityAnalyzer(repertoire, giant, self.repToGiantDict,
-                                            self.inDataDict, self.netBuilder, self.bitManip)
+        accAnalyzer = AccessibilityAnalyzer(repertoire, giant,
+                                            self.repToGiantDict,
+                                            self.inDataDict,
+                                            self.netBuilder,
+                                            self.bitManip,
+                                            self.isDoubleStranded)
 
         # Compute repertoire neighborhood abundance and set it as a network
         # attribute
@@ -293,8 +301,12 @@ class AnalysisHandler:
         giant = self.caller.getDominantNetFor(repertoire)
 
         # Create an AccessibilityAnalyzer object
-        accAnalyzer = AccessibilityAnalyzer(repertoire, giant, self.repToGiantDict,
-                                            self.inDataDict, self.netBuilder, self.bitManip)
+        accAnalyzer = AccessibilityAnalyzer(repertoire, giant,
+                                            self.repToGiantDict,
+                                            self.inDataDict,
+                                            self.netBuilder,
+                                            self.bitManip,
+                                            self.isDoubleStranded)
 
         # Compute phenotypic diversity and set it as a network attribute
         giant["Diversity_index"] = accAnalyzer.getPhenotypicDivesity()

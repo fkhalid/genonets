@@ -11,7 +11,8 @@
 
 class AccessibilityAnalyzer:
     # Constructor
-    def __init__(self, repertoire, network, repToGiantDict, dataDict, netBuilder, bitManip):
+    def __init__(self, repertoire, network, repToGiantDict, dataDict,
+                 netBuilder, bitManip, isDoubleStranded):
         # Repertoire name
         self.repertoire = repertoire
 
@@ -33,6 +34,10 @@ class AccessibilityAnalyzer:
         # Reference to the bit manipulator object
         self.bitManip = bitManip
 
+        # Flag to indicate whether reverse complements should be
+        # considered for genotypes.
+        self.isDoubelStranded = isDoubleStranded
+
     # Computes the accessibility value for the given repertoire.
     # Ref: Cowperthwaite et al. (2008) PLoS Comp. Biol.
     def getAccessibility(self):
@@ -46,8 +51,18 @@ class AccessibilityAnalyzer:
         targets.remove(self.repertoire)
 
         # Get all sequences (in bit format) for the given repertoire
-        sequences = [self.bitManip.seqToBits(seq) for seq in \
-                     self.network.vs["sequences"]]
+        sequences = [
+            self.bitManip.seqToBits(seq) for seq in
+            self.network.vs["sequences"]
+        ]
+
+        # If reverse complements should be considered,
+        if self.isDoubelStranded:
+            # Extend the list of sequences with their reverse complements
+            sequences.extend([
+                self.bitManip.getReverseComplement(seq)
+                for seq in sequences
+            ])
 
         # For each target, compute F(j,i)
         for target in targets:
@@ -91,8 +106,18 @@ class AccessibilityAnalyzer:
         # For each target, compute F(i, j)
         for target in targets:
             # Get target sequences in bit format
-            targetSeqs = [self.bitManip.seqToBits(seq) for seq in \
-                          self.repToGiantDict[target].vs["sequences"]]
+            targetSeqs = [
+                self.bitManip.seqToBits(seq) for seq in
+                self.repToGiantDict[target].vs["sequences"]
+            ]
+
+            # If reverse complements should be considered,
+            if self.isDoubelStranded:
+                # Extend the list of sequences with their reverse complements
+                targetSeqs.extend([
+                    self.bitManip.getReverseComplement(seq)
+                    for seq in targetSeqs
+                ])
 
             # Find sequences that exist in both extNeighbors and
             # targetSeqs, i.e., intersection of both sets
@@ -105,7 +130,7 @@ class AccessibilityAnalyzer:
             except ZeroDivisionError:
                 fraction = 0
 
-            # Muliply the fraction with the target's abundance, i.e., the size
+            # Multiply the fraction with the target's abundance, i.e., the size
             # of the target genotype network
             abundanceFrac = float(fraction) * float(len(targetSeqs))
 
@@ -132,8 +157,18 @@ class AccessibilityAnalyzer:
         # For each target, compute F(i, j)
         for target in targets:
             # Get target sequences in bit format
-            targetSeqs = [self.bitManip.seqToBits(seq) for seq in \
-                          self.repToGiantDict[target].vs["sequences"]]
+            targetSeqs = [
+                self.bitManip.seqToBits(seq) for seq in
+                self.repToGiantDict[target].vs["sequences"]
+            ]
+
+            # If reverse complements should be considered,
+            if self.isDoubelStranded:
+                # Extend the list of sequences with their reverse complements
+                targetSeqs.extend([
+                    self.bitManip.getReverseComplement(seq)
+                    for seq in targetSeqs
+                ])
 
             # Find sequences that exist in both extNeighbors and
             # targetSeqs, i.e., intersection of both sets

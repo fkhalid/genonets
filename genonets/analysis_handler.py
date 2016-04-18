@@ -2,7 +2,8 @@
     analysis_handler
     ~~~~~~~~~~~~~~~~
 
-    Exposes wrapper functions, one per analysis type. Serves as a collective interface to handler classes for all analysis types.
+    Exposes wrapper functions, one per analysis type. Serves as a collective
+    interface to handler classes for all analysis types.
 
     :author: Fahad Khalid
     :license: MIT, see LICENSE for more details.
@@ -23,7 +24,7 @@ from genonets_constants import EpistasisConstants as epi
 
 class AnalysisHandler:
     # Constructor
-    def __init__(self, caller, analyses, parallel=False):
+    def __init__(self, caller, analyses=ac.ALL, parallel=False):
         # Store a reference to the caller object
         self.caller = caller
 
@@ -79,7 +80,7 @@ class AnalysisHandler:
         # Note: This is by design, since building these data
         # structures once is a lot more efficient than building them
         # again and again for each repertoire.
-        if ac.EVOLVABILITY in analyses:
+        if analyses == ac.ALL or ac.EVOLVABILITY in analyses:
             # Dict - {sequence: [repertoires]}, with only those repertoires
             # for which the sequence in the giant.
             self.seqToRepDict_evo = None

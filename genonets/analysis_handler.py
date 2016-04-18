@@ -349,7 +349,7 @@ class AnalysisHandler:
         # If overlap has been computed for any of the repertoires already,
         # it does not need to be computed again.
         if not self.overlapMatrix:
-            # Creat the overlap analyzer
+            # Create the overlap analyzer
             overlapAnalyzer = OverlapAnalyzer(self.repToGiantDict,
                                               self.caller.getRepertoires())
 

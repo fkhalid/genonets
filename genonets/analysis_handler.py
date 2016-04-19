@@ -328,6 +328,33 @@ class AnalysisHandler:
         for i in xrange(diameter):
             giant.vs["Distance_" + str(i+1)] = [result[i] for result in results]
 
+    def covering(self, repertoire):
+        # Get the dominant genotype network for the repertoire
+        giant = self.caller.getDominantNetFor(repertoire)
+
+        # Create an 'EvolvabilityAnalyzer' object that is required by
+        # the 'CoveringAnalyzer'
+        evo_analyzer = EvolvabilityAnalyzer(giant,
+                                            self.inDataDict,
+                                            self.seqToRepDict_evo,
+                                            self.repToGiantDict,
+                                            self.rcToSeqDict,
+                                            self.bitsToSeqDict,
+                                            self.netBuilder,
+                                            self.isDoubleStranded)
+
+        # Sequence length for genotypes
+        sequence_length = self.caller.seqLength
+
+        # Create the 'CoveringAnalyzer' object
+        covering_analyzer = CoveringAnalyzer(giant, evo_analyzer,
+                                             sequence_length,
+                                             len(self.inDataDict))
+
+        covering_results = covering_analyzer.covering_all(radius=sequence_length)
+
+        giant.vs["Covering"] = [item for item in covering_results]
+
     # Data structure initializations that need only be done once for
     # evolvability analysis of all repertoires.
     def init_evolvability(self):

@@ -8,6 +8,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import sys
 import copy
 from multiprocessing import Process, Queue
 
@@ -53,6 +54,9 @@ class Genonets:
         # Reference to the analyzer object
         self.analyzer = None
 
+        # Set the VERBOSE flag
+        self.VERBOSE = True if self.cmdArgs.verbose else False
+
     # ----------------------------------------------------------------------
     #	Public interface
     # ----------------------------------------------------------------------
@@ -67,6 +71,9 @@ class Genonets:
     #					by default.
     # Return:		No return value.
     def create(self, repertoires=gc.ALL, parallel=False):
+        if self.VERBOSE:
+            print("Creating genotype networks:")
+
         # If a single string is received, convert it into an iterable
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
@@ -76,10 +83,13 @@ class Genonets:
             repertoires = self.getRepertoires()
 
         # If multiprocessing should be used,
-        if parallel == True:
+        if parallel:
             self.createNets_parallel(repertoires)
         else:
             self.createNets(repertoires)
+
+        if self.VERBOSE:
+            sys.stdout.write("Done.\n")
 
     # Description:	Performs the given set of analyses on the given list of
     #				genotype sets.
@@ -95,6 +105,9 @@ class Genonets:
     #					by default.
     # Return:		No return value.
     def analyze(self, repertoires=gc.ALL, analyses=gc.ALL, parallel=False):
+        if self.VERBOSE:
+            sys.stdout.write("\nPerforming analyses:")
+
         # If all repertoires should be considered,
         if repertoires == gc.ALL:
             # Get a list of all repertoires
@@ -108,15 +121,15 @@ class Genonets:
         if analyses == gc.ALL or ac.OVERLAP in analyses:
             if len(repertoires) < 2:
                 print("Error: " +
-                      ErrorCodes.getErrDescription(ErrorCodes.NOT_ENOUGH_REPS_OLAP)
-                      + ": Tau=" + str(self.cmdArgs.tau))
+                      ErrorCodes.getErrDescription(ErrorCodes.NOT_ENOUGH_REPS_OLAP) +
+                      ": Tau=" + str(self.cmdArgs.tau))
 
                 raise GenonetsError(
                     ErrorCodes.NOT_ENOUGH_REPS_OLAP,
                     "Tau=" + str(self.cmdArgs.tau))
 
         # If multiprocessing should be used,
-        if parallel == True:
+        if parallel:
             # Perform all analyses in parallel; overlap will be ignored.
             self.analyzeNets_parallel(repertoires, analyses)
 
@@ -128,8 +141,6 @@ class Genonets:
 
                 # Use serial processing to perform overlap analysis
                 self.analyzeNets(repertoires, [ac.OVERLAP])
-
-                print("Finished performing overlap analysis.")
         else:
             # Perform all analyses using serial processing
             self.analyzeNets(repertoires, analyses)
@@ -137,14 +148,14 @@ class Genonets:
     # Description:	Creates the phenotype network from the given list of
     #				genotype sets.
     # Arguments:
-    #	'collection':	Name to give the phenotype network.
+    #	'collection':	Name to give to the phenotype network.
     #	'repertoires': 	List of genotype set names. This argument is optional, and
     #					if absent, results in the processing of all available
     #					genotype networks.
     # Return:		igraph object corresponding to the phenotype network.
     # TODO: Add a check to make sure the evolvability analysis has been done
     #		for all networks that are to be processed here ...
-    def getEvoNet(self, collection="Species", repertoires=gc.ALL):
+    def getEvoNet(self, collection="phenotype_network", repertoires=gc.ALL):
         # If a single string is received, convert it into an iterable
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
@@ -223,6 +234,9 @@ class Genonets:
     #	'repertoires':	List of names of genotype networks to be saved to
     #					file.
     def save(self, repertoires=gc.ALL):
+        if self.VERBOSE:
+            sys.stdout.write("\nWriting GML files for genotype networks ... ")
+
         # If a single string is received, convert it into an iterable
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
@@ -230,11 +244,17 @@ class Genonets:
                                self.netBuilder, self.cmdArgs.outPath,
                                WriterFilter.gmlAttribsToIgnore, repertoires)
 
+        if self.VERBOSE:
+            sys.stdout.write("Done.\n")
+
     # Description:	Writes the network level results to file.
     # Arguments:
     #	'repertoires':	List of names of genotype networks for which results
     #					need to be written to file.
     def saveNetResults(self, repertoires=gc.ALL):
+        if self.VERBOSE:
+            sys.stdout.write("\nWriting genotype set level results ... ")
+
         # If a single string is received, convert it into an iterable
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
@@ -244,11 +264,17 @@ class Genonets:
                                WriterFilter.net_attribute_to_order,
                                repertoires)
 
+        if self.VERBOSE:
+            sys.stdout.write("Done.\n")
+
     # Description:	Writes the genotype level results to file.
     # Arguments:
     #	'repertoires':	List of names of genotype networks for which results
     #					need to be written to file.
     def saveGenotypeResults(self, repertoires=gc.ALL):
+        if self.VERBOSE:
+            sys.stdout.write("\nWriting genotype level results ... ")
+
         # If a single string is received, convert it into an iterable
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
@@ -258,13 +284,22 @@ class Genonets:
                                WriterFilter.seq_attribute_to_order,
                                repertoires)
 
+        if self.VERBOSE:
+            sys.stdout.write("Done.\n")
+
     # Description:	Save the phenotype network as a GML file.
     # Arguments:
     #	'phenotypeNetwork':	igraph object corresponding to the phenotype
     #						network.
     def saveEvoNet(self, phenotypeNetwork):
+        if self.VERBOSE:
+            sys.stdout.write("\nWriting GML file for phenotype network ... ")
+
         Writer.writeNetToFile(phenotypeNetwork, self.cmdArgs.outPath,
                               WriterFilter.gmlAttribsToIgnore)
+
+        if self.VERBOSE:
+            sys.stdout.write("Done.\n")
 
     # Plots the given network.
     def plot(self, network, layout="auto"):
@@ -296,6 +331,9 @@ class Genonets:
     def createNets(self, repertoires):
         # For each repertoire,
         for repertoire in repertoires:
+            if self.VERBOSE:
+                sys.stdout.write(repertoire + " ... ")
+
             # Get the sequences and scores
             seqs, scores = self.getBitSeqsAndScores(repertoire)
 
@@ -305,7 +343,7 @@ class Genonets:
                 self.netBuilder.createGenoNet(repertoire, seqs, scores)
 
             # Get the number of components in the network
-            numComponents = len(self.netBuilder.getComponents( \
+            numComponents = len(self.netBuilder.getComponents(
                 self.repToNetDict[repertoire]))
 
             # If there are more than one components,
@@ -358,6 +396,9 @@ class Genonets:
                     i, len(repertoires), self.cmdArgs.num_procs):
                 result = resultsQueue.get()
 
+                if self.VERBOSE:
+                    sys.stdout.write(result[0] + " ... ")
+
                 self.repToNetDict[result[0]] = result[1][0]
                 self.repToGiantDict[result[0]] = result[1][1]
 
@@ -409,10 +450,20 @@ class Genonets:
 
         # For each repertoire,
         for repertoire in repertoires:
+            if self.VERBOSE:
+                sys.stdout.write("\n" + repertoire + ":")
+                sys.stdout.write("\n\t")
+
             # Perform the analysis
             self.analyzer.analyze(repertoire, analyses)
 
+        if self.VERBOSE:
+            print
+
     def analyzeNets_parallel(self, repertoires, analyses):
+        if self.VERBOSE:
+            print
+
         # Make a copy of self
         self_copy = copy.deepcopy(self)
 
@@ -457,7 +508,8 @@ class Genonets:
 
                 result = resultsQueue.get()
 
-                print("Analysis results received for: " + result[0])
+                if self.VERBOSE:
+                    print("\tAnalysis results received for: " + result[0])
 
                 self.repToNetDict[result[0]] = result[1][0]
                 self.repToGiantDict[result[0]] = result[1][1]

@@ -62,6 +62,12 @@ class CmdParser:
                             type=int, default="4",
                             help="No. of processes to be used in parallel processing")
 
+        # Add 'verbose' as an argument
+        parser.add_argument("-v", "--verbose", dest="verbose", action="store_const",
+                            const=True,
+                            help="Processing steps are printed to the screen during " +
+                                 "program execution.")
+
         # Keep an object level copy of the arguments dict
         if arguments:
             # Parse the string of arguments received
@@ -105,6 +111,9 @@ class CmdArgs:
 
         # Maximum number of parallel processes to be used
         self.num_procs = arguments.num_procs
+
+        # Verbose flag
+        self.verbose = arguments.verbose
 
         # Create a dictionary of parameters
         paramsDict = {

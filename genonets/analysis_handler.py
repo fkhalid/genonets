@@ -9,6 +9,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import sys
 import json  # For proper list stringification
 
 from genonets_writer import Writer
@@ -53,6 +54,9 @@ class AnalysisHandler:
 
         # Reference to
         self.seqToRepDict = self.caller.seqToRepDict
+
+        # Verbosity flag
+        self.VERBOSE = self.caller.VERBOSE
 
         # Dictionary to store 'analysis type' to 'function'
         # mapping
@@ -113,6 +117,9 @@ class AnalysisHandler:
 
         # For each analysis type specified in the list,
         for analysis in analyses:
+            if self.VERBOSE and not self.parallel:
+                sys.stdout.write(ac.analysisToDesc[analysis] + " ... ")
+
             # Get a list of function names
             functions = self.getFuncsFor(analysis)
 
@@ -120,6 +127,9 @@ class AnalysisHandler:
             for function in functions:
                 # Call the function for the given repertoire
                 function(repertoire)
+
+        if self.VERBOSE and not self.parallel:
+            sys.stdout.write("Done.")
 
     def getLandscapeObj(self, giant, repertoire):
         # Get the landscape object
@@ -340,10 +350,13 @@ class AnalysisHandler:
         giant.vs["Coreness"] = structAnalyzer.getCoreness()
         giant.vs["Clustering_coefficient"] = structAnalyzer.getClusteringCoefficients()
 
+    # The parameter 'r' is just a place holder, and is needed in the
+    # signature just so that it can be called anonymously from
+    # analyze(). See analyze() for further details.
     def overlap(self, r=None):
         # Overlap analysis is not allowed during parallel processing,
         # since it needs to be performed only once
-        if self.parallel == True:
+        if self.parallel:
             return
 
         # If overlap has been computed for any of the repertoires already,
@@ -378,7 +391,7 @@ class AnalysisHandler:
                         giant.vs[vertex.index]["Overlaps_with_genotypes_in"] = \
                             seqDict[sequence]
 
-            # If overalp matrix was populated,
+            # If overlap matrix was populated,
             if self.overlapMatrix:
                 # Write matrix to file
                 Writer.writeOverlapToFile(self.overlapMatrix, repertoires,

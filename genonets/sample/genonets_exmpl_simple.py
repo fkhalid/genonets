@@ -51,4 +51,4 @@ if __name__ == "__main__":
     process(CmdParser().getArgs())
 
     # Print message to indicate processing is done.
-    print("Done.\n")
+    print("\nDone.\n")

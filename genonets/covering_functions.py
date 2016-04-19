@@ -10,9 +10,12 @@
 
 
 class CoveringAnalyzer:
-    def __init__(self, network, evo_analyzer, sequence_length, total_phenotypes):
+    def __init__(self, network, net_builder, evo_analyzer, sequence_length, total_phenotypes):
         # Reference to the network on which to perform this analysis
         self.network = network
+
+        # Reference to the Network Builder
+        self.netBuilder = net_builder
 
         # EvolvabilityAnalyzer object
         self.evoAnalyzer = evo_analyzer
@@ -24,14 +27,20 @@ class CoveringAnalyzer:
         self.NUM_PHENOTYPES = total_phenotypes - 1
 
         # Reference to Bit Manipulator
-        self.bm = self.network.bitManip
+        self.bm = self.netBuilder.bitManip
 
         # Set - All genotypes within the network in bit format
         self.bit_genotypes = frozenset(
             self.bm.seqToBits(seq)
             for seq in self.network.vs["sequences"])
 
+        # FIXME: for debugging purposes only ...
+        self.counter = 0
+
     def covering_all(self, radius):
+        # FIXME: for debugging purposes only ...
+        print
+
         # Radius value must be between 1, and sequence length
         if radius not in xrange(1, self.seqLength + 1):
             return []
@@ -43,7 +52,11 @@ class CoveringAnalyzer:
             for bit_genotype in self.bit_genotypes
         ]
 
-    def covering(self, sequence, radius):
+    def covering(self, bit_sequence, radius):
+        # FIXME: for debugging purposes only ...
+        print '{0}\r'.format(self.counter),
+        self.counter += 1
+
         # If the focal genotype set is the only genotype set available,
         if self.NUM_PHENOTYPES < 1:
             # There's no point on doing the calculations
@@ -55,7 +68,7 @@ class CoveringAnalyzer:
 
         # Convert the input sequence value into the required format. It
         # needs to be an iterable for later convenience.
-        genotypes = {self.bm.seqToBits(sequence)}
+        genotypes = {bit_sequence}
 
         # Set of sequences that have already been considered in the
         # previous value of 'r'. These are initialized with all
@@ -72,7 +85,7 @@ class CoveringAnalyzer:
 
             # Set to hold the genotypes that have already been computed
             # within the current value of 'r'.
-            siblings = {}
+            siblings = set()
 
             # For each genotype computed during the previous iteration,
             for genotype in genotypes:

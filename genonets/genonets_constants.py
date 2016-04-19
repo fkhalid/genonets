@@ -67,6 +67,8 @@ class AnalysisConstants:
     STRUCTURE = 10
     OVERLAP = 11
     PATHS_RATIOS = 12
+    COVERING = 13
+    COVERING_IN = 14
 
     # Dictionary to map constants to string descriptors
     analysisToDesc = {
@@ -80,7 +82,9 @@ class AnalysisConstants:
         NEIGHBOR_ABUNDANCE: "Neighbor Abundance",
         PHENOTYPIC_DIVERSITY: "Diversity Index",
         STRUCTURE: "Structure",
-        OVERLAP: "Overlap"
+        OVERLAP: "Overlap",
+        COVERING: "Phenotype space covering",
+        COVERING_IN: "Covering within GN"
     }
 
     @staticmethod

@@ -21,8 +21,8 @@ from genonets_filters import WriterFilter
 from analysis_handler import AnalysisHandler
 from genonets_constants import ErrorCodes
 from genonets_exceptions import GenonetsError
-from genonets_constants import GenonetsConstants as gc
-from genonets_constants import AnalysisConstants as ac
+from genonets_constants import GenonetsConstants as Gc
+from genonets_constants import AnalysisConstants as Ac
 
 
 class Genonets:
@@ -70,7 +70,7 @@ class Genonets:
     #					be used. This argument is optional, and is set to 'False'
     #					by default.
     # Return:		No return value.
-    def create(self, repertoires=gc.ALL, parallel=False):
+    def create(self, repertoires=Gc.ALL, parallel=False):
         if self.VERBOSE:
             print("Creating genotype networks:")
 
@@ -78,7 +78,7 @@ class Genonets:
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
         # If all repertoires should be considered,
-        if repertoires == gc.ALL:
+        if repertoires == Gc.ALL:
             # Get a list of all repertoires
             repertoires = self.getRepertoires()
 
@@ -104,12 +104,12 @@ class Genonets:
     #					be used. This argument is optional, and is set to 'False'
     #					by default.
     # Return:		No return value.
-    def analyze(self, repertoires=gc.ALL, analyses=gc.ALL, parallel=False):
+    def analyze(self, repertoires=Gc.ALL, analyses=Gc.ALL, parallel=False):
         if self.VERBOSE:
             sys.stdout.write("\nPerforming analyses:")
 
         # If all repertoires should be considered,
-        if repertoires == gc.ALL:
+        if repertoires == Gc.ALL:
             # Get a list of all repertoires
             repertoires = self.getRepertoires()
 
@@ -117,8 +117,8 @@ class Genonets:
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
         # If overlap in one of the requested analyses, there need to be at
-        # at least two repertoires in the dataset
-        if analyses == gc.ALL or ac.OVERLAP in analyses:
+        # at least two repertoires in the data set
+        if analyses == Gc.ALL or Ac.OVERLAP in analyses:
             if len(repertoires) < 2:
                 print("Error: " +
                       ErrorCodes.getErrDescription(ErrorCodes.NOT_ENOUGH_REPS_OLAP) +
@@ -133,14 +133,14 @@ class Genonets:
             # Perform all analyses in parallel; overlap will be ignored.
             self.analyzeNets_parallel(repertoires, analyses)
 
-            if analyses == gc.ALL or ac.OVERLAP in analyses:
+            if analyses == Gc.ALL or Ac.OVERLAP in analyses:
                 # Reset analysis handler to make sure it references
                 # the updated dicts
                 del self.analyzer
                 self.analyzer = AnalysisHandler(self)
 
                 # Use serial processing to perform overlap analysis
-                self.analyzeNets(repertoires, [ac.OVERLAP])
+                self.analyzeNets(repertoires, [Ac.OVERLAP])
         else:
             # Perform all analyses using serial processing
             self.analyzeNets(repertoires, analyses)
@@ -155,19 +155,19 @@ class Genonets:
     # Return:		igraph object corresponding to the phenotype network.
     # TODO: Add a check to make sure the evolvability analysis has been done
     #		for all networks that are to be processed here ...
-    def getEvoNet(self, collection="phenotype_network", repertoires=gc.ALL):
+    def getEvoNet(self, collection="phenotype_network", repertoires=Gc.ALL):
         # If a single string is received, convert it into an iterable
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
         # If all repertoires should be considered,
-        if repertoires == gc.ALL:
+        if repertoires == Gc.ALL:
             # Get a list of all repertoires
             repertoires = self.getRepertoires()
 
         # Create a list of giants for the given repertoires
         giants = [self.repToGiantDict[repertoire] for repertoire in repertoires]
 
-        # Create the evolvability network, and get the igraph object
+        # Create the evolvability network, and get the 'igraph' object
         evoNet = self.netBuilder.createEvoNet(collection, giants)
 
         return evoNet
@@ -184,21 +184,21 @@ class Genonets:
     # Description:	Returns the igraph object for the network corresponding to the
     #				given genotype set name.
     # Arguments:
-    #	'repertoire':	Name of the genotype network for which the igraph object
+    #	'repertoire':	Name of the genotype network for which the 'igraph' object
     #					is required.
-    # Return:		igraph object for the required network.
+    # Return:		'igraph' object for the required network.
     def getNetworkFor(self, repertoire):
         try:
             return self.repToNetDict[repertoire]
         except KeyError:
             return None
 
-    # Description:	Returns the igraph object for the giant component
+    # Description:	Returns the 'igraph' object for the giant component
     #				corresponding to the given genotype set name.
     # Arguments:
     #	'repertoire':	Name of the genotype network for which the igraph object
     #					is required.
-    # Return:		igraph object for the giant component corresponding to the
+    # Return:		'igraph' object for the giant component corresponding to the
     #				given genotype set name.
     def getDominantNetFor(self, repertoire):
         try:
@@ -223,7 +223,7 @@ class Genonets:
             # No need to compute again, just return the existing matrix
             return self.analyzer.overlapMatrix
         else:
-            # Perform the overlap compution
+            # Perform the overlap analysis
             self.analyzer.overlap()
 
             # Return the resulting matrix
@@ -233,7 +233,7 @@ class Genonets:
     # Arguments:
     #	'repertoires':	List of names of genotype networks to be saved to
     #					file.
-    def save(self, repertoires=gc.ALL):
+    def save(self, repertoires=Gc.ALL):
         if self.VERBOSE:
             sys.stdout.write("\nWriting GML files for genotype networks ... ")
 
@@ -251,7 +251,7 @@ class Genonets:
     # Arguments:
     #	'repertoires':	List of names of genotype networks for which results
     #					need to be written to file.
-    def saveNetResults(self, repertoires=gc.ALL):
+    def saveNetResults(self, repertoires=Gc.ALL):
         if self.VERBOSE:
             sys.stdout.write("\nWriting genotype set level results ... ")
 
@@ -271,7 +271,7 @@ class Genonets:
     # Arguments:
     #	'repertoires':	List of names of genotype networks for which results
     #					need to be written to file.
-    def saveGenotypeResults(self, repertoires=gc.ALL):
+    def saveGenotypeResults(self, repertoires=Gc.ALL):
         if self.VERBOSE:
             sys.stdout.write("\nWriting genotype level results ... ")
 

@@ -10,8 +10,8 @@
 
 
 class GenonetsError(Exception):
-    def __init__(self, errId, info=""):
-        self.errId = errId
+    def __init__(self, err_id, info=""):
+        self.errId = err_id
         self.info = info
 
     def __str__(self):

@@ -31,6 +31,9 @@ class AbstractBitSeqManipulator:
         # computation
         self.masks = self.getMasks()
 
+        # No. of bits in each sequence
+        self.numBits = self.bitCodeLen * self.seqLength
+
     # Basic popcount
     def popcount(self, x):
         return bin(x).count('1')
@@ -198,16 +201,20 @@ class AbstractBitSeqManipulator:
             index = self.seqLength - 1
 
             # Get all left shift mutants
-            mutants = [self.mutAftrLftShift(source, index, target)
-                       for target in self.bitToLetterDict.keys()]
+            mutants = [
+                self.mutAftrLftShift(source, index, target)
+                for target in self.bitToLetterDict.keys()
+            ]
         else:  # Right shift
             # The letter index at which to perform the mutations is
             # '0' for a left shift
             index = 0
 
             # Get all right shift mutants
-            mutants = [self.mutateLetter(source, index, target)
-                       for target in self.bitToLetterDict.keys()]
+            mutants = [
+                self.mutateLetter(source, index, target)
+                for target in self.bitToLetterDict.keys()
+            ]
 
         return mutants
 
@@ -316,14 +323,11 @@ class AbstractBitSeqManipulator:
     # range '0' to 'k - 1', i.e, it is the index corresponding to the
     # letter index in the string sequence (increasing from left to right).
     def getLetterAtIndex(self, sequence, index):
-        # Total No. of bits in the sequence
-        l = self.bitCodeLen * self.seqLength
-
         # Calculate the index that corresponds to the to the start bit
-        # for the letter on the given index. E.g., if k=8, n=5, l=40,
-        # index=7: l-1=39, index*n=35, => i=4. Then the letter is
-        # represented by bits on indices 4,3,2,1,0.
-        i = (l - 1) - (index * self.bitCodeLen)
+        # for the letter on the given index. E.g., if k=8, n=5,
+        # self.numBits=40, index=7: self.numBits-1=39, index*n=35, => i=4.
+        # Then the letter is represented by bits on indices 4,3,2,1,0.
+        i = (self.numBits - 1) - (index * self.bitCodeLen)
 
         # Get the letter on index 'i'
         letter = self.getbitsOnIndex(i, sequence)
@@ -376,7 +380,7 @@ class AbstractBitSeqManipulator:
             # it in the correct index of the output sequence
             outputSequence[j] = self.bitToLetterDict[letter]
 
-            j = j - 1
+            j -= 1
 
         return outputSequence.tostring()
 

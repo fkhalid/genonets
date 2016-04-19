@@ -8,6 +8,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import collections
+
 
 class EvolvabilityAnalyzer:
     # Constructor
@@ -72,8 +74,7 @@ class EvolvabilityAnalyzer:
         # For each sequence key in the dict,
         for seq in seqToRepDict.keys():
             # Compute the reverse complement
-            rcBitSeq = bm.getReverseComplement(
-                bm.seqToBits(seq))
+            rcBitSeq = bm.getReverseComplement(bm.seqToBits(seq))
 
             # With the reverse complement bit sequence as the key,
             # add the original sequence (string format) as the value.
@@ -105,8 +106,8 @@ class EvolvabilityAnalyzer:
 
         # Get repertoire lists from the tuples
         repLists = [
-            evoTuples[1].keys()
-            for evoTuples in evoTuples if evoTuples[1]
+            evoTuples.target_reps.keys()
+            for evoTuples in evoTuples if evoTuples.target_reps
         ]
 
         # Combine all repLists into one list
@@ -119,10 +120,10 @@ class EvolvabilityAnalyzer:
 
         try:
             evolvability = float(len(targets)) / float(len(self.dataDict) - 1)
-
-            return evolvability, targets
         except ZeroDivisionError:
-            return 0, targets
+            evolvability = 0
+
+        return evolvability, targets
 
     def getEvoAll(self, recompute=False):
         # If either the evolvability values have not been computed already,
@@ -158,7 +159,13 @@ class EvolvabilityAnalyzer:
         except ZeroDivisionError:
             evolvability = 0
 
-        return (evolvability, targetReps)
+        # Construct the result as a named tuple
+        result = collections.namedtuple("Result", ["evolvability", "target_reps"])
+
+        return result(
+            evolvability=evolvability,
+            target_reps=targetReps
+        )
 
     # For the given sequence, list of external neighbors, and the sequence
     # to repertoire dictionary, return a list of repertoires for which the given

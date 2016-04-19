@@ -86,7 +86,9 @@ class AnalysisHandler:
         # Note: This is by design, since building these data
         # structures once is a lot more efficient than building them
         # again and again for each repertoire.
-        if analyses == ac.ALL or {ac.EVOLVABILITY, ac.COVERING}.issubset(set(analyses)):
+        if analyses == ac.ALL or \
+                any(analysis in analyses
+                    for analysis in [ac.EVOLVABILITY, ac.COVERING]):
             # Dict - {sequence: [repertoires]}, with only those repertoires
             # for which the sequence in the giant.
             self.seqToRepDict_evo = None
@@ -250,11 +252,14 @@ class AnalysisHandler:
         sequence_length = self.caller.seqLength
 
         # Create the 'CoveringAnalyzer' object
-        covering_analyzer = CoveringAnalyzer(giant, evo_analyzer,
+        covering_analyzer = CoveringAnalyzer(giant,
+                                             self.netBuilder,
+                                             evo_analyzer,
                                              sequence_length,
                                              len(self.inDataDict))
 
         covering_results = covering_analyzer.covering_all(radius=sequence_length)
+        # covering_results = covering_analyzer.covering_all(radius=4)
 
         giant.vs["Covering"] = [item for item in covering_results]
 

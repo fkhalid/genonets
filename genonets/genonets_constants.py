@@ -66,20 +66,24 @@ class AnalysisConstants:
     PHENOTYPIC_DIVERSITY = 9
     STRUCTURE = 10
     OVERLAP = 11
+    COVERING = 12
 
     # Dictionary to map constants to string descriptors
     # TODO: Look into whether 'ALL' and 'LANDSCAPE' should be included
-    #		in the following dict ...
-    analysisToDesc = {PEAKS: "Peaks",
-                      PATHS: "Paths",
-                      EPISTASIS: "Epistasis",
-                      ROBUSTNESS: "Robustness",
-                      EVOLVABILITY: "Evolvability",
-                      ACCESSIBILITY: "Accessibility",
-                      NEIGHBOR_ABUNDANCE: "Neighbor Abundance",
-                      PHENOTYPIC_DIVERSITY: "Diversity Index",
-                      STRUCTURE: "Structure",
-                      OVERLAP: "Overlap"}
+    # in the following dict ...
+    analysisToDesc = {
+        PEAKS: "Peaks",
+        PATHS: "Paths",
+        EPISTASIS: "Epistasis",
+        ROBUSTNESS: "Robustness",
+        EVOLVABILITY: "Evolvability",
+        ACCESSIBILITY: "Accessibility",
+        NEIGHBOR_ABUNDANCE: "Neighbor Abundance",
+        PHENOTYPIC_DIVERSITY: "Diversity Index",
+        STRUCTURE: "Structure",
+        OVERLAP: "Overlap",
+        COVERING: "Phenotype space covering"
+    }
 
     @staticmethod
     def getAnalysisTypes():

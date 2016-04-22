@@ -39,7 +39,7 @@ class CoveringAnalyzer:
 
     def covering_all(self, radius):
         # FIXME: for debugging purposes only ...
-        print
+        # print
 
         # Radius value must be between 1, and sequence length
         if radius not in xrange(1, self.seqLength + 1):
@@ -54,7 +54,7 @@ class CoveringAnalyzer:
 
     def covering(self, bit_sequence, radius):
         # FIXME: for debugging purposes only ...
-        print '{0}\r'.format(self.counter),
+        # print '{0}\r'.format(self.counter),
         self.counter += 1
 
         # If the focal genotype set is the only genotype set available,
@@ -64,7 +64,7 @@ class CoveringAnalyzer:
 
         # List to hold the covering value for each value of 'r';
         # initialization here with all '0's.
-        covering = [0 for i in xrange(radius)]
+        covering = [float("NaN") for i in xrange(radius)]
 
         # Convert the input sequence value into the required format. It
         # needs to be an iterable for later convenience.
@@ -103,6 +103,11 @@ class CoveringAnalyzer:
             # genotypes in other genotype sets (dominants only).
             covering[r-1] = self.overlap(siblings)
 
+            # If 100% coverage has been achieved, no need to proceed
+            # any further.
+            if sum(covering[0:r]) >= 1:
+                break
+
             # Current siblings are added to the parents, since we do
             # not want to allow backwards mutations.
             # FIXME: This may result in memory consumption issues ...
@@ -112,7 +117,7 @@ class CoveringAnalyzer:
             # next iteration.
             genotypes = siblings.copy()
 
-        return covering
+        return covering, r
 
     def overlap(self, genotypes):
         # Use the 'EvolvabilityAnalyzer' to get a dictionary with

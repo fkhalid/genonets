@@ -289,9 +289,10 @@ class AnalysisHandler:
                                              len(self.inDataDict))
 
         covering_results = covering_analyzer.covering_all(radius=sequence_length)
-        # covering_results = covering_analyzer.covering_all(radius=4)
+        # covering_results = covering_analyzer.covering_all(radius=3)
 
-        giant.vs["Covering"] = [item for item in covering_results]
+        giant.vs["Covering_list"] = [item[0] for item in covering_results]
+        giant.vs["Covering_radius"] = [item[1] for item in covering_results]
 
     # Data structure initializations that need only be done once for
     # evolvability analysis of all repertoires.

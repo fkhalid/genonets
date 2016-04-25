@@ -52,7 +52,9 @@ class WriterFilter:
         "Coreness": 6,
         "Clustering_coefficient": 7,
         "Distance from Summit": 8,
-        "Accessible_paths_through": 9
+        "Accessible_paths_through": 9,
+        "Covering_radius": 10,
+        "Covering_list": 11
     }
 
     @staticmethod

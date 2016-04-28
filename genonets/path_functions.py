@@ -127,9 +127,12 @@ class PathAnalyzer:
                                                            trgtVrtx, mode=igraph.OUT)
 
         # Get all shortest accessible paths
-        shrtAccPaths = [self.network.vs[path].indices \
-                        for path in allShrtPaths \
-                        if self.isAccessible(path)]
+        shrtAccPaths = [
+            self.network.vs[path].indices
+            for path in allShrtPaths
+            if self.isAccessible(path)
+        ]
+
         # Store the paths
         self.allPathsToPeak[srcVrtx.index].extend(shrtAccPaths)
 

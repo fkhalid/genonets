@@ -156,8 +156,10 @@ class AnalysisHandler:
         giant["Number_of_peaks"] = len(peaks)
 
         # Store a dict - {key=peakId, value=[sequences in the peak]}
-        giant["Peaks"] = {peakId: peaks[peakId]["sequences"] \
-                          for peakId in peaks.keys()}
+        giant["Peaks"] = {
+            peakId: peaks[peakId]["sequences"]
+            for peakId in peaks.keys()
+        }
 
         # For each vertex, add distance to summit as a vertex attribute
         lscape.populateDistsToSummit()
@@ -177,8 +179,10 @@ class AnalysisHandler:
 
         # Vertex level attributes
         allPathsToPeak = lscape.pathAnalyzer.getAllPathsToPeak()
-        giant.vs["pathsToSummit"] = [allPathsToPeak[i] \
-                                     for i in range(len(allPathsToPeak))]
+        giant.vs["pathsToSummit"] = [
+            allPathsToPeak[i]
+            for i in range(len(allPathsToPeak))
+        ]
 
         # Add the count for each vertex as a vertex level attribute in giant
         giant.vs["Accessible_paths_through"] = lscape.pathAnalyzer.getPathsThruVtxs()
@@ -259,7 +263,6 @@ class AnalysisHandler:
                                              len(self.inDataDict))
 
         covering_results = covering_analyzer.covering_all(radius=sequence_length)
-        # covering_results = covering_analyzer.covering_all(radius=3)
 
         giant.vs["Covering_list"] = [item[0] for item in covering_results]
         giant.vs["Covering_radius"] = [item[1] for item in covering_results]

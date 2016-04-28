@@ -8,7 +8,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from genonets_constants import EpistasisConstants as epi
+from genonets_constants import EpistasisConstants as Epi
 
 
 class EpistasisAnalyzer:
@@ -21,7 +21,7 @@ class EpistasisAnalyzer:
         # Get reference to the NetworkUtils object
         self.netUtils = netUtils
 
-        # Get reference to dict: key=sequence, value=escore
+        # Get reference to dict: key=sequence, value=score
         self.seqToEscrDict = seqToEscrDict
 
         # Keep a copy of the delta value
@@ -43,8 +43,12 @@ class EpistasisAnalyzer:
     def getEpiAll(self):
         # Dictionary to keep count of the number of squares that
         # show each class of epistasis.
-        epistasis = {epi.MAGNITUDE: 0, epi.SIGN: 0,
-                     epi.RECIPROCAL_SIGN: 0, epi.NO_EPISTASIS: 0}
+        epistasis = {
+            Epi.MAGNITUDE: 0,
+            Epi.SIGN: 0,
+            Epi.RECIPROCAL_SIGN: 0,
+            Epi.NO_EPISTASIS: 0
+        }
 
         # Get all squares
         squares = self.getSquares()
@@ -65,7 +69,7 @@ class EpistasisAnalyzer:
             epistasis[epiClass] += 1
 
         # There's no need to keep count of no epistasis
-        del epistasis[epi.NO_EPISTASIS]
+        del epistasis[Epi.NO_EPISTASIS]
 
         # Convert counts into ratios
         for epiClass in epistasis.keys():
@@ -77,9 +81,6 @@ class EpistasisAnalyzer:
         return epistasis
 
     def getEpistasis(self, square):
-        epsilon = 0
-        epiClass = epi.NO_EPISTASIS
-
         # Get e-scores for all corners of the square
         esrc_AB = self.seqToEscrDict[square[3]]
         esrc_ab = self.seqToEscrDict[square[0]]
@@ -94,20 +95,13 @@ class EpistasisAnalyzer:
         if abs(epsilon) >= self.delta:
             # Classify the type of epistasis
             epiClass = self.getEpiClass(esrc_ab, esrc_aB, esrc_Ab, esrc_AB)
-
-            # Check if we have a case where all mutational effects are 0
-            if epiClass == epi.NO_EPISTASIS:
-                # No epistasis
-                epsilon = 0
         else:
             # No epistasis
-            epsilon = 0
+            epiClass = Epi.NO_EPISTASIS
 
         return epiClass
 
     def getEpiClass(self, esrc_ab, esrc_aB, esrc_Ab, esrc_AB):
-        epiClass = 0
-
         # Calculate mutational effects
         dE_ab_Ab = esrc_Ab - esrc_ab
         dE_aB_AB = esrc_AB - esrc_aB
@@ -123,7 +117,7 @@ class EpistasisAnalyzer:
 
         # If all mutational effects are 0, there is no epistasis
         if dE_ab_Ab == 0 and dE_aB_AB == 0 and dE_ab_aB == 0 and dE_Ab_AB == 0:
-            return epi.NO_EPISTASIS
+            return Epi.NO_EPISTASIS
 
         # Conditions used to determine epistasis type
         condition1 = abs(dE_ab_Ab + dE_aB_AB) == abs(dE_ab_Ab) + abs(dE_aB_AB)
@@ -133,14 +127,14 @@ class EpistasisAnalyzer:
         if condition1 and not condition2:
             # if condition 1 holds but not condition 2, there is
             # magnitude epistasis
-            epiClass = epi.MAGNITUDE
+            epiClass = Epi.MAGNITUDE
         elif condition2 and not condition1:
             # if condition 2 holds but not condition 1, there is
             # reciprocal sign epistasis
-            epiClass = epi.RECIPROCAL_SIGN
+            epiClass = Epi.RECIPROCAL_SIGN
         else:
             # Otherwise, we have sign epistasis
-            epiClass = epi.SIGN
+            epiClass = Epi.SIGN
 
         return epiClass
 
@@ -155,7 +149,6 @@ class EpistasisAnalyzer:
         return {sequences[i]: i for i in range(len(sequences))}
 
     # Return all squares found in the genotype network
-    # TODO: Look into performance optimization ...
     def getSquares(self, recompute=False):
         # If squares computation has been done already, and the
         # caller has not explicitly asked for re-running the
@@ -177,10 +170,11 @@ class EpistasisAnalyzer:
         # For each sequence in the network
         for sequence in sequences:
             # Get all 1-neighbor sequences
-            neighbors = [self.network.vs[vid]["sequences"]
-                         for vid in
-                         self.network.neighbors(
-                             self.netUtils.getVertex(sequence, self.network))]
+            neighbors = [
+                self.network.vs[vid]["sequences"]
+                for vid in self.network.neighbors(
+                    self.netUtils.getVertex(sequence, self.network))
+            ]
 
             # If the number of neighbors is less than two, there's no point
             # in continuing any further
@@ -191,11 +185,12 @@ class EpistasisAnalyzer:
             # Construct all possible pairs of neighbors, where symmetric pairs
             # are considered only once. Also, pairs that neighbor each other
             # are not considered.
-            pairs = [(neighbors[i], neighbors[j])
-                     for i in range(len(neighbors) - 1)
-                     for j in range(i + 1, len(neighbors))
-                     if not self.netUtils.areConnected(
-                    neighbors[i], neighbors[j])]
+            pairs = [
+                (neighbors[i], neighbors[j])
+                for i in range(len(neighbors) - 1)
+                for j in range(i + 1, len(neighbors))
+                if not self.netUtils.areConnected(neighbors[i], neighbors[j])
+            ]
 
             # For each pair of neighbors
             for pair in pairs:
@@ -212,16 +207,18 @@ class EpistasisAnalyzer:
                         # Construct the square
                         square = [sequence, pair[0], pair[1], node]
                         # Square as a set of bitseqs
-                        bitSqr = frozenset([self.bitManip.seqToBits(sequence),
-                                            self.bitManip.seqToBits(pair[0]),
-                                            self.bitManip.seqToBits(pair[1]),
-                                            self.bitManip.seqToBits(node)])
+                        bitSqr = frozenset([
+                            self.bitManip.seqToBits(sequence),
+                            self.bitManip.seqToBits(pair[0]),
+                            self.bitManip.seqToBits(pair[1]),
+                            self.bitManip.seqToBits(node)
+                        ])
 
                         # If the square has not already been found.
                         # Note: This is a set operation, which means due to
                         # the lack or ordering, all permutations will be tested
                         # with just this one condition.
-                        if not bitSqr in bitSqrs:
+                        if bitSqr not in bitSqrs:
                             squares.append(square)
                             bitSqrs.add(bitSqr)
 
@@ -234,12 +231,16 @@ class EpistasisAnalyzer:
     # parent is not considered as a common neighbor.
     def getCommonNeighbors(self, pair, parent):
         # Get neighbors for the first sequence in the pair
-        neighbors1 = [self.network.vs[vid]["sequences"] for vid in \
-                      self.network.neighbors(self.seqToVidDict[pair[0]])]
+        neighbors1 = [
+            self.network.vs[vid]["sequences"]
+            for vid in self.network.neighbors(self.seqToVidDict[pair[0]])
+        ]
 
         # Get neighbors for the second sequence in the pair
-        neighbors2 = [self.network.vs[vid]["sequences"] for vid in \
-                      self.network.neighbors(self.seqToVidDict[pair[1]])]
+        neighbors2 = [
+            self.network.vs[vid]["sequences"]
+            for vid in self.network.neighbors(self.seqToVidDict[pair[1]])
+        ]
 
         # Get a list of common neighbors
         commonNeighbors = list(set(neighbors1) & set(neighbors2))

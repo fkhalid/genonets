@@ -20,13 +20,13 @@ from structure_functions import StructureAnalyzer
 from robustness_functions import RobustnessAnalyzer
 from evolvability_functions import EvolvabilityAnalyzer
 from accessibility_functions import AccessibilityAnalyzer
-from genonets_constants import AnalysisConstants as ac
-from genonets_constants import EpistasisConstants as epi
+from genonets_constants import AnalysisConstants as Ac
+from genonets_constants import EpistasisConstants as Epi
 
 
 class AnalysisHandler:
     # Constructor
-    def __init__(self, caller, analyses=ac.ALL, parallel=False):
+    def __init__(self, caller, analyses=Ac.ALL, parallel=False):
         # Store a reference to the caller object
         self.caller = caller
 
@@ -62,17 +62,17 @@ class AnalysisHandler:
         # Dictionary to store 'analysis type' to 'function'
         # mapping
         self.analysisToFunc = {
-            ac.PEAKS: self.peaks,
-            ac.PATHS: self.paths,
-            ac.EPISTASIS: self.epistasis,
-            ac.ROBUSTNESS: self.robustness,
-            ac.EVOLVABILITY: self.evolvability,
-            ac.ACCESSIBILITY: self.accessibility,
-            ac.NEIGHBOR_ABUNDANCE: self.neighborAbundance,
-            ac.PHENOTYPIC_DIVERSITY: self.phenotypicDiversity,
-            ac.STRUCTURE: self.structure,
-            ac.OVERLAP: self.overlap,
-            ac.COVERING: self.covering
+            Ac.PEAKS: self.peaks,
+            Ac.PATHS: self.paths,
+            Ac.EPISTASIS: self.epistasis,
+            Ac.ROBUSTNESS: self.robustness,
+            Ac.EVOLVABILITY: self.evolvability,
+            Ac.ACCESSIBILITY: self.accessibility,
+            Ac.NEIGHBOR_ABUNDANCE: self.neighborAbundance,
+            Ac.PHENOTYPIC_DIVERSITY: self.phenotypicDiversity,
+            Ac.STRUCTURE: self.structure,
+            Ac.OVERLAP: self.overlap,
+            Ac.COVERING: self.covering
         }
 
         # Flag to indicate whether or not the genotypes should be
@@ -86,9 +86,9 @@ class AnalysisHandler:
         # Note: This is by design, since building these data
         # structures once is a lot more efficient than building them
         # again and again for each repertoire.
-        if analyses == ac.ALL or \
+        if analyses == Ac.ALL or \
                 any(analysis in analyses
-                    for analysis in [ac.EVOLVABILITY, ac.COVERING]):
+                    for analysis in [Ac.EVOLVABILITY, Ac.COVERING]):
             # Dict - {sequence: [repertoires]}, with only those repertoires
             # for which the sequence in the giant.
             self.seqToRepDict_evo = None
@@ -115,14 +115,14 @@ class AnalysisHandler:
         except KeyError:
             return None
 
-    def analyze(self, repertoire, analyses=ac.ALL):
-        if analyses == ac.ALL:
+    def analyze(self, repertoire, analyses=Ac.ALL):
+        if analyses == Ac.ALL:
             analyses = self.analysisToFunc.keys()
 
         # For each analysis type specified in the list,
         for analysis in analyses:
             if self.VERBOSE and not self.parallel:
-                sys.stdout.write(ac.analysisToDesc[analysis] + " ... ")
+                sys.stdout.write(Ac.analysisToDesc[analysis] + " ... ")
 
             # Get a list of function names
             functions = self.getFuncsFor(analysis)
@@ -204,9 +204,9 @@ class AnalysisHandler:
         giant["Squares_list"] = json.dumps(squares)
         giant["SqrEpi_list"] = json.dumps(lscape.epiAnalyzer.getSqrEpi())
         giant["Number_of_squares"] = len(lscape.epiAnalyzer.squares)
-        giant["Magnitude_epistasis"] = epistasis[epi.MAGNITUDE]
-        giant["Simple_sign_epistasis"] = epistasis[epi.SIGN]
-        giant["Reciprocal_sign_epistasis"] = epistasis[epi.RECIPROCAL_SIGN]
+        giant["Magnitude_epistasis"] = epistasis[Epi.MAGNITUDE]
+        giant["Simple_sign_epistasis"] = epistasis[Epi.SIGN]
+        giant["Reciprocal_sign_epistasis"] = epistasis[Epi.RECIPROCAL_SIGN]
 
         # Vertex level attributes
 
@@ -310,8 +310,10 @@ class AnalysisHandler:
         evoTargets = [evoTuples[i][1] for i in range(len(evoTuples))]
 
         giant.vs["Evolvability"] = evoScores
-        giant.vs["Evolves_to_genotypes_in"] = [evoTargets[i].keys()
-                                               for i in range(len(evoTargets))]
+        giant.vs["Evolves_to_genotypes_in"] = [
+            evoTargets[i].keys()
+            for i in range(len(evoTargets))
+        ]
         giant.vs["Evolvability_targets"] = evoTargets
 
     def accessibility(self, repertoire):

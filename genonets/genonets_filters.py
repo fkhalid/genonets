@@ -69,6 +69,8 @@ class WriterFilter:
                 "pathsToSummit",
                 "VtxToSqrs"
             ]
+        else:
+            attrs = []
 
         return attrs
 

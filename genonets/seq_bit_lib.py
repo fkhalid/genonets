@@ -201,16 +201,20 @@ class AbstractBitSeqManipulator:
             index = self.seqLength - 1
 
             # Get all left shift mutants
-            mutants = [self.mutAftrLftShift(source, index, target)
-                       for target in self.bitToLetterDict.keys()]
+            mutants = [
+                self.mutAftrLftShift(source, index, target)
+                for target in self.bitToLetterDict.keys()
+            ]
         else:  # Right shift
             # The letter index at which to perform the mutations is
             # '0' for a left shift
             index = 0
 
             # Get all right shift mutants
-            mutants = [self.mutateLetter(source, index, target)
-                       for target in self.bitToLetterDict.keys()]
+            mutants = [
+                self.mutateLetter(source, index, target)
+                for target in self.bitToLetterDict.keys()
+            ]
 
         return mutants
 
@@ -376,7 +380,7 @@ class AbstractBitSeqManipulator:
             # it in the correct index of the output sequence
             outputSequence[j] = self.bitToLetterDict[letter]
 
-            j = j - 1
+            j -= 1
 
         return outputSequence.tostring()
 

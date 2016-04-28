@@ -11,7 +11,7 @@
 from genonets_utils import Utils
 
 
-# Provides functions to analyze the landscape defined by the geontype
+# Provides functions to analyze the landscape defined by the genotype
 # network, and detect peaks in the landscape.
 # TODO: Once the peaks dict has been created for a network, perhaps the
 #		path list can be deleted to release memeory ...
@@ -50,6 +50,7 @@ class PeakAnalyzer:
 
         # TODO: replace with proper exception handling ...
         print("Error: Count not find " + seq + " in any peak!!!!")
+
         return None
 
     # The function to be exposed to the calling object. Triggers the
@@ -176,17 +177,19 @@ class PeakAnalyzer:
         neutralZone = [item for item in binMembers if item['sequence'] in neighSeqs]
 
         # Get all non-neighbor elements in the bin
-        nonNeighs = [binMembers[i] for i in range(len(binMembers)) \
-                     if binMembers[i] not in neutralZone]
+        nonNeighs = [
+            binMembers[i] for i in range(len(binMembers))
+            if binMembers[i] not in neutralZone
+        ]
 
         # Do a breadth-first search of the neutral zone to find elements in
-        # the non-neighbors list that might be indirected connected.
+        # the non-neighbors list that might be indirectly connected.
         neutralZone, nonNeighs = self.bfsNeutralZone(neutralZone, nonNeighs)
 
         return neutralZone, nonNeighs
 
     # Performs a breadth-first search of the neutral zone to check if any of
-    # the elements in the list of non-neighboring bin memebers are connected
+    # the elements in the list of non-neighboring bin members are connected
     # to any of the members in the neutral zone. The search is dynamic, i.e.,
     # as connected elements are found, these are themselves then considered
     # as members of the neutral zone, and used as seed elements for further
@@ -205,8 +208,7 @@ class PeakAnalyzer:
             for nonNeigh in nonNeighs:
                 # If the non-neighbor is connected to the ith element in the
                 # neutral zone,
-                if self.netUtils.areConnected(nonNeigh['sequence'], \
-                                              neutralZone[i]['sequence']):
+                if self.netUtils.areConnected(nonNeigh['sequence'], neutralZone[i]['sequence']):
                     # Append the non-neighbor to the neutral zone
                     neutralZone.append(nonNeigh)
 
@@ -230,8 +232,10 @@ class PeakAnalyzer:
         #		element + delta >= e-score of the peak summit, because
         #		if it weren't, the focal element here would not have
         #		made it to the non-neighbors list.
-        return [peakId for peakId in peaks.keys() \
-                if focalElement in peaks[peakId]["non-neighbors"]]
+        return [
+            peakId for peakId in peaks.keys()
+            if focalElement in peaks[peakId]["non-neighbors"]
+        ]
 
     # For each element in the neutral zone, checks whether it is connected
     # to an existing peak, except for peaks that are in 'peakNonNeighs'.
@@ -300,8 +304,10 @@ class PeakAnalyzer:
         # so that the focal element that was appended at the end becomes
         # the head.
         neutralZone.reverse()
-        peak["sequences"] = [neutralZone[i][0] \
-                             for i in range(len(neutralZone))]
+        peak["sequences"] = [
+            neutralZone[i][0]
+            for i in range(len(neutralZone))
+        ]
 
         # Initialize the list of the connected sequences with sequences
         # in the peak. This simplifies comparisons when searching through
@@ -325,6 +331,8 @@ class PeakAnalyzer:
     # Returns the list of sequences that constitute the neighborhood of the
     # given element
     def getNeighSeqs(self, element):
-        return [self.network.vs[neighbor]["sequences"] \
-                for neighbor in self.netUtils.getNeighbors( \
-                element['sequence'], self.network)]
+        return [
+            self.network.vs[neighbor]["sequences"]
+            for neighbor in self.netUtils.getNeighbors(element['sequence'],
+                                                       self.network)
+        ]

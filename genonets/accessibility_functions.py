@@ -21,8 +21,6 @@ class AccessibilityAnalyzer:
         self.network = network
 
         # Reference to dict: key=repertoire, value=network
-        # FIXME: perhaps this dict should be replaced by the genonet
-        #		 method getGraphFor() ...
         self.repToGiantDict = repToGiantDict
 
         # Reference to dict: key=rep, value=dict{seq: score}

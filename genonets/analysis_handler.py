@@ -288,7 +288,6 @@ class AnalysisHandler:
                                              len(self.inDataDict))
 
         covering_results = covering_analyzer.covering_all(radius=sequence_length)
-        # covering_results = covering_analyzer.covering_all(radius=3)
 
         giant.vs["Covering_list"] = [item[0] for item in covering_results]
         giant.vs["Covering_radius"] = [item[1] for item in covering_results]

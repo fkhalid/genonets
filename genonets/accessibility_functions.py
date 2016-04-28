@@ -36,7 +36,7 @@ class AccessibilityAnalyzer:
 
         # Flag to indicate whether reverse complements should be
         # considered for genotypes.
-        self.isDoubelStranded = isDoubleStranded
+        self.isDoubleStranded = isDoubleStranded
 
     # Computes the accessibility value for the given repertoire.
     # Ref: Cowperthwaite et al. (2008) PLoS Comp. Biol.
@@ -57,7 +57,7 @@ class AccessibilityAnalyzer:
         ]
 
         # If reverse complements should be considered,
-        if self.isDoubelStranded:
+        if self.isDoubleStranded:
             # Extend the list of sequences with their reverse complements
             sequences.extend([
                 self.bitManip.getReverseComplement(seq)
@@ -112,7 +112,7 @@ class AccessibilityAnalyzer:
             ]
 
             # If reverse complements should be considered,
-            if self.isDoubelStranded:
+            if self.isDoubleStranded:
                 # Extend the list of sequences with their reverse complements
                 targetSeqs.extend([
                     self.bitManip.getReverseComplement(seq)
@@ -163,7 +163,7 @@ class AccessibilityAnalyzer:
             ]
 
             # If reverse complements should be considered,
-            if self.isDoubelStranded:
+            if self.isDoubleStranded:
                 # Extend the list of sequences with their reverse complements
                 targetSeqs.extend([
                     self.bitManip.getReverseComplement(seq)

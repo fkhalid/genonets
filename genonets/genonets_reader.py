@@ -21,7 +21,7 @@ class InReader:
     # Uses the given DictReader to construct a dictionary from file with,
     # key=Genotypeset, value=dict{key=sequence, value=score}
     # Returns the dictionary
-    # TODO: This function can be extend to also return a reverse dictionary
+    # TODO: This function can be extended to also return a reverse dictionary
     # with key=score, value=sequence ...
     @staticmethod
     def buildDataDicts(inFilePath, tau, alphabetType):
@@ -134,20 +134,20 @@ class InReader:
         # If no genotypes were found with score >= tau,
         if not dataDict:
             print("Error: " +
-                  ErrorCodes.getErrDescription(ErrorCodes.NO_USEABLE_SCORES)
+                  ErrorCodes.getErrDescription(ErrorCodes.NO_USABLE_SCORES)
                   + ": Tau=" + str(tau))
 
             raise GenonetsError(
-                ErrorCodes.NO_USEABLE_SCORES,
+                ErrorCodes.NO_USABLE_SCORES,
                 "Tau=" + str(tau))
 
-        # Dictionary: Key=Sequence, Value=[Genotypesets]. Reverse dictionary
+        # Dictionary: Key=Sequence, Value=[Genotype sets]. Reverse dictionary
         # that is used in functions like evolvability.
         seqToRepDict = InReader.getSeqToRepDict(sequences, dataDict)
 
         return dataDict, deltaDict, seqToRepDict, seqLength
 
-    # Builds Dictionary: Key=Sequence, Value=[Genotypesets in which this sequence
+    # Builds Dictionary: Key=Sequence, Value=[Genotype sets in which this sequence
     # exists]
     @staticmethod
     def getSeqToRepDict(sequences, dataDict):
@@ -155,7 +155,7 @@ class InReader:
 
         # For each sequence in the given list of sequences,
         for seq in sequences:
-            # Initialize the list genotypesets
+            # Initialize the list genotype sets
             seqToRepDict[seq] = []
 
             # For each genotypeset in the given data dictionary,

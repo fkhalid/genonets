@@ -335,8 +335,10 @@ class AnalysisHandler:
         evoTargets = [evoTuples[i][1] for i in range(len(evoTuples))]
 
         giant.vs["Evolvability"] = evoScores
-        giant.vs["Evolves_to_genotypes_in"] = [evoTargets[i].keys()
-                                               for i in range(len(evoTargets))]
+        giant.vs["Evolves_to_genotypes_in"] = [
+            evoTargets[i].keys()
+            for i in range(len(evoTargets))
+        ]
         giant.vs["Evolvability_targets"] = evoTargets
 
     def accessibility(self, repertoire):

@@ -14,7 +14,7 @@ import warnings
 
 from genonets_constants import ErrorCodes
 from genonets_exceptions import GenonetsError
-from genonets_constants import GenonetsConstants as gc
+from genonets_constants import GenonetsConstants as Gc
 
 
 class Writer:
@@ -49,9 +49,9 @@ class Writer:
             raise GenonetsError(ErrorCodes.CANNOT_WRITE_TO_FILE)
 
     @staticmethod
-    def writeNetsToFile(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=gc.ALL):
+    def writeNetsToFile(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, repertoires=Gc.ALL):
         # If all repertoires should be considered,
-        if repertoires == gc.ALL:
+        if repertoires == Gc.ALL:
             # Get a list of all repertoires
             repertoires = repToNetDict.keys()
 
@@ -117,9 +117,9 @@ class Writer:
 
     @staticmethod
     def writeNetAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, attribute_order,
-                        genotype_set_order, repertoires=gc.ALL):
+                        genotype_set_order, repertoires=Gc.ALL):
         # If all repertoires should be considered,
-        if repertoires == gc.ALL:
+        if repertoires == Gc.ALL:
             # Get a list of all repertoires
             repertoires = repToNetDict.keys()
 
@@ -179,9 +179,9 @@ class Writer:
         dataFile.close()
 
     @staticmethod
-    def writeSeqAttribs(repToGiantDict, path, attrsToIgnore, order, repertoires=gc.ALL):
+    def writeSeqAttribs(repToGiantDict, path, attrsToIgnore, order, repertoires=Gc.ALL):
         # If all repertoires should be considered,
-        if repertoires == gc.ALL:
+        if repertoires == Gc.ALL:
             # Get a list of all repertoires
             repertoires = repToGiantDict.keys()
 

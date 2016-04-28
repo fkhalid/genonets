@@ -87,9 +87,9 @@ class AnalysisHandler:
         # Note: This is by design, since building these data
         # structures once is a lot more efficient than building them
         # again and again for each repertoire.
-        if analyses == ac.ALL or \
+        if analyses == Ac.ALL or \
                 any(analysis in analyses
-                    for analysis in [ac.EVOLVABILITY, ac.COVERING]):
+                    for analysis in [Ac.EVOLVABILITY, Ac.COVERING]):
             # Dict - {sequence: [repertoires]}, with only those repertoires
             # for which the sequence in the giant.
             self.seqToRepDict_evo = None

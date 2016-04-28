@@ -134,8 +134,8 @@ class InReader:
         # If no genotypes were found with score >= tau,
         if not dataDict:
             print("Error: " +
-                  ErrorCodes.getErrDescription(ErrorCodes.NO_USABLE_SCORES)
-                  + ": Tau=" + str(tau))
+                  ErrorCodes.getErrDescription(ErrorCodes.NO_USABLE_SCORES) +
+                  ": Tau=" + str(tau))
 
             raise GenonetsError(
                 ErrorCodes.NO_USABLE_SCORES,

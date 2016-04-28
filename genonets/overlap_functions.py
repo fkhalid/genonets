@@ -26,13 +26,19 @@ class OverlapAnalyzer:
             return None, None
 
         # Overlap dict for all repertoires. Dict{rep : {seq : [target reps]}}
-        allOverlap = {rep: {seq: [] \
-                            for seq in self.repToGiantDict[rep].vs["sequences"]} \
-                      for rep in self.repertoires}
+        allOverlap = {
+            rep: {
+                seq: []
+                for seq in self.repToGiantDict[rep].vs["sequences"]
+            }
+            for rep in self.repertoires
+        }
 
         # Initialize the overlap matrix with zeros
-        overlapMat = [[0 for x in range(len(self.repertoires))] \
-                      for x in range(len(self.repertoires))]
+        overlapMat = [
+            [0 for x in range(len(self.repertoires))]
+            for x in range(len(self.repertoires))
+        ]
 
         # For each repertoire,
         for i in range(len(self.repertoires) - 1):

@@ -117,7 +117,7 @@ class Genonets:
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
         # If overlap in one of the requested analyses, there need to be at
-        # at least two repertoires in the dataset
+        # at least two repertoires in the data set
         if analyses == Gc.ALL or Ac.OVERLAP in analyses:
             if len(repertoires) < 2:
                 print("Error: " +
@@ -167,7 +167,7 @@ class Genonets:
         # Create a list of giants for the given repertoires
         giants = [self.repToGiantDict[repertoire] for repertoire in repertoires]
 
-        # Create the evolvability network, and get the igraph object
+        # Create the evolvability network, and get the 'igraph' object
         evoNet = self.netBuilder.createEvoNet(collection, giants)
 
         return evoNet
@@ -184,21 +184,21 @@ class Genonets:
     # Description:	Returns the igraph object for the network corresponding to the
     #				given genotype set name.
     # Arguments:
-    #	'repertoire':	Name of the genotype network for which the igraph object
+    #	'repertoire':	Name of the genotype network for which the 'igraph' object
     #					is required.
-    # Return:		igraph object for the required network.
+    # Return:		'igraph' object for the required network.
     def getNetworkFor(self, repertoire):
         try:
             return self.repToNetDict[repertoire]
         except KeyError:
             return None
 
-    # Description:	Returns the igraph object for the giant component
+    # Description:	Returns the 'igraph' object for the giant component
     #				corresponding to the given genotype set name.
     # Arguments:
     #	'repertoire':	Name of the genotype network for which the igraph object
     #					is required.
-    # Return:		igraph object for the giant component corresponding to the
+    # Return:		'igraph' object for the giant component corresponding to the
     #				given genotype set name.
     def getDominantNetFor(self, repertoire):
         try:

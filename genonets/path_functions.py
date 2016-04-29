@@ -124,7 +124,8 @@ class PathAnalyzer:
 
         # Get all shortest paths between source and target
         allShrtPaths = self.network.get_all_shortest_paths(srcVrtx,
-                                                           trgtVrtx, mode=igraph.OUT)
+                                                           trgtVrtx,
+                                                           mode=igraph.OUT)
 
         # Get all shortest accessible paths
         shrtAccPaths = [

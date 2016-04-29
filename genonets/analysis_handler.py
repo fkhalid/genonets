@@ -331,8 +331,8 @@ class AnalysisHandler:
         # Set evolvability values for all vertices, i.e., sequences
         evoTuples = evoAnalyzer.getEvoAll()
 
-        evoScores = [evoTuples[i][0] for i in range(len(evoTuples))]
-        evoTargets = [evoTuples[i][1] for i in range(len(evoTuples))]
+        evoScores = [evoTuples[i].evolvability for i in range(len(evoTuples))]
+        evoTargets = [evoTuples[i].target_reps for i in range(len(evoTuples))]
 
         giant.vs["Evolvability"] = evoScores
         giant.vs["Evolves_to_genotypes_in"] = [

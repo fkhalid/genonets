@@ -8,6 +8,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import collections
+
 
 class EvolvabilityAnalyzer:
     # Constructor
@@ -158,7 +160,14 @@ class EvolvabilityAnalyzer:
         except ZeroDivisionError:
             evolvability = 0
 
-        return (evolvability, targetReps)
+        result = collections.namedtuple("Result", ["evolvability", "target_reps"])
+
+        return result(
+            evolvability=evolvability,
+            target_reps=targetReps
+        )
+
+        # return (evolvability, targetReps)
 
     # For the given sequence, list of external neighbors, and the sequence
     # to repertoire dictionary, return a list of repertoires for which the given

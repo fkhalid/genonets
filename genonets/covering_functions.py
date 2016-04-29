@@ -8,6 +8,9 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import igraph
+import collections
+
 
 class CoveringAnalyzer:
     def __init__(self, network, net_builder, evo_analyzer, sequence_length, total_phenotypes):
@@ -36,6 +39,45 @@ class CoveringAnalyzer:
 
         # FIXME: for debugging purposes only ...
         self.counter = 0
+
+    def covering_unique(self, radius):
+        # Get the list of all genotypes for this network
+        genotypes = self.network.vs["sequences"]
+
+        # For each genotype,
+        for genotype in genotypes:
+            # TODO: calculate unique covering for the
+            # focal genotype ...
+            pass
+
+    def covering_unique_genotype(self, focal_genotype, radius):
+        # TODO: Fix the comments ...
+        # Find all genotypes in the network that are 'radius'
+        # away from the focal_genotype ...
+
+        # TODO: List of evolvability target phenotypes for 'focal_genotype'
+
+        # Set of all genotypes except 'focal_genotype'
+        genotypes = set(self.network.vs["sequences"]) - {focal_genotype}
+
+        # Vertex ID corresponding to the focal genotype
+        src_vrtx = self.netBuilder.getVertex(focal_genotype, self.network)
+
+        # For each genotype in 'genotypes',
+        for genotype in genotypes:
+            # Vertex corresponding to 'genotype'
+            trgt_vrtx = self.netBuilder.getVertex(genotype, self.network)
+
+            # Measure the mutational distance to the focal genotype
+            distance = self.network.shortest_paths_dijkstra(src_vrtx.index,
+                                                            trgt_vrtx.index,
+                                                            mode=igraph.OUT)
+
+            # If the genotype is no more than 'radius' away from
+            # 'focal_genotype',
+            if distance <= radius:
+                # TODO: Do the covering comparison ...
+                pass
 
     def covering_all(self, radius):
         # FIXME: for debugging purposes only ...
@@ -101,7 +143,7 @@ class CoveringAnalyzer:
 
             # Compute overlap of all elements in 'siblings', with all
             # genotypes in other genotype sets (dominants only).
-            covering[r-1] = self.overlap(siblings)
+            covering[r-1] = self.overlap(siblings).covering
 
             # If 100% coverage has been achieved, no need to proceed
             # any further.

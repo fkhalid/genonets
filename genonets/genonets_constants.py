@@ -67,6 +67,7 @@ class AnalysisConstants:
     STRUCTURE = 10
     OVERLAP = 11
     COVERING = 12
+    COVERING_IN = 13
 
     # Dictionary to map constants to string descriptors
     # TODO: Look into whether 'ALL' and 'LANDSCAPE' should be included
@@ -82,7 +83,8 @@ class AnalysisConstants:
         PHENOTYPIC_DIVERSITY: "Diversity Index",
         STRUCTURE: "Structure",
         OVERLAP: "Overlap",
-        COVERING: "Phenotype space covering"
+        COVERING: "Phenotype space covering",
+        COVERING_IN: "Covering within GN"
     }
 
     @staticmethod

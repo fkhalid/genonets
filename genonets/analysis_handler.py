@@ -299,7 +299,8 @@ class AnalysisHandler:
         # Compute ratios of unique covering per genotype
         results = covering_analyzer.covering_unique(diameter)
 
-        giant.vs["Distance"] = [result for result in results]
+        for i in xrange(diameter):
+            giant.vs["Distance_" + str(i+1)] = [result[i] for result in results]
 
     # Data structure initializations that need only be done once for
     # evolvability analysis of all repertoires.

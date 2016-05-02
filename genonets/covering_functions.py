@@ -70,9 +70,11 @@ class CoveringAnalyzer:
 
         # Set of phenotypes found in the 1-mutant neighborhood of the focal
         # genotype
-        src_evo_result = self.evoAnalyzer.getSeqEvo(self.bm.seqToBits(
-            focal_genotype))
-        src_evo_trgts = set(src_evo_result.target_reps.keys())
+        src_evo_trgts = set(
+            self.evoAnalyzer.getSeqEvo(focal_genotype)
+            .target_reps
+            .keys()
+        )
 
         # If the focal genotype does not have any targets,
         if not src_evo_trgts:
@@ -87,17 +89,15 @@ class CoveringAnalyzer:
             trgt_vrtx = self.netBuilder.getVertex(genotype, self.network)
 
             # Measure the mutational distance to the focal genotype
-            distance = self.network.shortest_paths_dijkstra(src_vrtx.index,
-                                                            trgt_vrtx.index,
-                                                            mode=igraph.OUT)
+            distance = self.network.shortest_paths_dijkstra(
+                src_vrtx.index, trgt_vrtx.index, mode=igraph.OUT)[0][0]
 
             # If the genotype is 'radius' away from 'focal_genotype',
             if distance == radius:
                 # Set of phenotypes found in the 1-mutant neighborhood of the
                 # genotype
                 trgt_evo_trgts = set(
-                    self.evoAnalyzer.getSeqEvo(self.bm.seqToBits(genotype))
-                    .trgt_evo_result
+                    self.evoAnalyzer.getSeqEvo(genotype)
                     .target_reps
                     .keys()
                 )

@@ -74,7 +74,8 @@ class AnalysisHandler:
             Ac.PHENOTYPIC_DIVERSITY: self.phenotypicDiversity,
             Ac.STRUCTURE: self.structure,
             Ac.OVERLAP: self.overlap,
-            Ac.COVERING: self.covering
+            Ac.COVERING: self.covering,
+            Ac.COVERING_IN: self.covering_in
         }
 
         # Flag to indicate whether or not the genotypes should be
@@ -90,7 +91,7 @@ class AnalysisHandler:
         # again and again for each repertoire.
         if analyses == Ac.ALL or \
                 any(analysis in analyses
-                    for analysis in [Ac.EVOLVABILITY, Ac.COVERING]):
+                    for analysis in [Ac.EVOLVABILITY, Ac.COVERING, Ac.COVERING_IN]):
             # Dict - {sequence: [repertoires]}, with only those repertoires
             # for which the sequence in the giant.
             self.seqToRepDict_evo = None
@@ -289,8 +290,41 @@ class AnalysisHandler:
 
         covering_results = covering_analyzer.covering_all(radius=sequence_length)
 
-        giant.vs["Covering_list"] = [item[0] for item in covering_results]
-        giant.vs["Covering_radius"] = [item[1] for item in covering_results]
+        giant.vs["Covering_list"] = [result.covering for result in covering_results]
+        giant.vs["Covering_radius"] = [result.radius for result in covering_results]
+
+    def covering_in(self, repertoire):
+        # Get the dominant genotype network for the repertoire
+        giant = self.caller.getDominantNetFor(repertoire)
+
+        # Create an 'EvolvabilityAnalyzer' object that is required by
+        # the 'CoveringAnalyzer'
+        evo_analyzer = EvolvabilityAnalyzer(giant,
+                                            self.inDataDict,
+                                            self.seqToRepDict_evo,
+                                            self.repToGiantDict,
+                                            self.rcToSeqDict,
+                                            self.bitsToSeqDict,
+                                            self.netBuilder,
+                                            self.isDoubleStranded)
+
+        # Create a 'StructureAnalyzer' object
+        struct_analyzer = StructureAnalyzer(giant, self.netBuilder)
+
+        # Diameter of giant
+        diameter = struct_analyzer.getDiameter()
+
+        # Create the 'CoveringAnalyzer' object
+        covering_analyzer = CoveringAnalyzer(giant,
+                                             self.netBuilder,
+                                             evo_analyzer,
+                                             self.caller.seqLength,
+                                             len(self.inDataDict))
+
+        # Compute ratios of unique covering per genotype
+        results = covering_analyzer.covering_unique(diameter)
+
+        giant.vs["Distance"] = [result for result in results]
 
     # Data structure initializations that need only be done once for
     # evolvability analysis of all repertoires.

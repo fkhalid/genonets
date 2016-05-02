@@ -41,24 +41,42 @@ class CoveringAnalyzer:
         self.counter = 0
 
     def covering_unique(self, radius):
+        # TODO: Add check for radius > diameter ...
+
         # Get the list of all genotypes for this network
         genotypes = self.network.vs["sequences"]
 
-        # For each genotype,
-        for genotype in genotypes:
-            # TODO: calculate unique covering for the
-            # focal genotype ...
-            pass
+        return [
+            self.covering_unique_all(genotype, radius)
+            for genotype in genotypes
+        ]
+
+    def covering_unique_all(self, genotype, radius):
+        return [
+            self.covering_unique_genotype(genotype, r)
+            for r in xrange(1, radius + 1)
+        ]
 
     def covering_unique_genotype(self, focal_genotype, radius):
-        # TODO: Fix the comments ...
-        # Find all genotypes in the network that are 'radius'
-        # away from the focal_genotype ...
-
-        # TODO: List of evolvability target phenotypes for 'focal_genotype'
+        # List of ratios
+        ratios = []
 
         # Set of all genotypes except 'focal_genotype'
         genotypes = set(self.network.vs["sequences"]) - {focal_genotype}
+
+        # If there are no genotypes to process,
+        if not genotypes:
+            return []
+
+        # Set of phenotypes found in the 1-mutant neighborhood of the focal
+        # genotype
+        src_evo_result = self.evoAnalyzer.getSeqEvo(self.bm.seqToBits(
+            focal_genotype))
+        src_evo_trgts = set(src_evo_result.target_reps.keys())
+
+        # If the focal genotype does not have any targets,
+        if not src_evo_trgts:
+            return []
 
         # Vertex ID corresponding to the focal genotype
         src_vrtx = self.netBuilder.getVertex(focal_genotype, self.network)
@@ -73,11 +91,27 @@ class CoveringAnalyzer:
                                                             trgt_vrtx.index,
                                                             mode=igraph.OUT)
 
-            # If the genotype is no more than 'radius' away from
-            # 'focal_genotype',
-            if distance <= radius:
-                # TODO: Do the covering comparison ...
-                pass
+            # If the genotype is 'radius' away from 'focal_genotype',
+            if distance == radius:
+                # Set of phenotypes found in the 1-mutant neighborhood of the
+                # genotype
+                trgt_evo_trgts = set(
+                    self.evoAnalyzer.getSeqEvo(self.bm.seqToBits(genotype))
+                    .trgt_evo_result
+                    .target_reps
+                    .keys()
+                )
+
+                # Ratio of target phenotypes unique to either the focal
+                # or the current genotype.
+                ratio = 1 - (
+                    float(len(src_evo_trgts & trgt_evo_trgts)) /
+                    len(src_evo_trgts))
+
+                # Append to the list of results
+                ratios.append(ratio)
+
+        return ratios
 
     def covering_all(self, radius):
         # FIXME: for debugging purposes only ...
@@ -99,14 +133,24 @@ class CoveringAnalyzer:
         # print '{0}\r'.format(self.counter),
         self.counter += 1
 
+        # Construct the result as a named tuple
+        result = collections.namedtuple("Result", ["covering", "radius", "targets"])
+
         # If the focal genotype set is the only genotype set available,
         if self.NUM_PHENOTYPES < 1:
             # There's no point on doing the calculations
-            return 0
+            return result(
+                [],
+                0,
+                []
+            )
 
         # List to hold the covering value for each value of 'r';
         # initialization here with all '0's.
         covering = [float("NaN") for i in xrange(radius)]
+
+        # Set of all target repertoires covered within the radius
+        target_reps = {}
 
         # Convert the input sequence value into the required format. It
         # needs to be an iterable for later convenience.
@@ -143,7 +187,13 @@ class CoveringAnalyzer:
 
             # Compute overlap of all elements in 'siblings', with all
             # genotypes in other genotype sets (dominants only).
-            covering[r-1] = self.overlap(siblings).covering
+            overlap_result = self.overlap(siblings)
+
+            # Store the percentage of covered phenotypes
+            covering[r-1] = overlap_result.covering
+
+            # Union of the all target phenotypes found so far
+            target_reps |= overlap_result.targets
 
             # If 100% coverage has been achieved, no need to proceed
             # any further.
@@ -159,13 +209,24 @@ class CoveringAnalyzer:
             # next iteration.
             genotypes = siblings.copy()
 
-        return covering, r
+        return result(
+            covering=covering,
+            radius=r,
+            targets=target_reps
+        )
 
     def overlap(self, genotypes):
         # Use the 'EvolvabilityAnalyzer' to get a dictionary with
         # {key=genotype set, value=[overlapping genotypes]}
         targets = self.evoAnalyzer.getEvoTargetReps(genotypes)
 
-        return float(len(targets)) / float(self.NUM_PHENOTYPES)
+        # Calculate the value of 'covering'
+        covering_val = float(len(targets)) / float(self.NUM_PHENOTYPES)
 
+        # Construct the result as a named tuple
+        result = collections.namedtuple("Result", ["covering", "targets"])
 
+        return result(
+            covering=covering_val,
+            targets=targets
+        )

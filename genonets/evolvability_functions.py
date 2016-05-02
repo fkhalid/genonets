@@ -167,8 +167,6 @@ class EvolvabilityAnalyzer:
             target_reps=targetReps
         )
 
-        # return (evolvability, targetReps)
-
     # For the given sequence, list of external neighbors, and the sequence
     # to repertoire dictionary, return a list of repertoires for which the given
     # sequence could develop score >= tau by a single mutation.

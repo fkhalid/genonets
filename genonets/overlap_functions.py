@@ -26,32 +26,38 @@ class OverlapAnalyzer:
             return None, None
 
         # Overlap dict for all repertoires. Dict{rep : {seq : [target reps]}}
-        allOverlap = {rep: {seq: [] \
-                            for seq in self.repToGiantDict[rep].vs["sequences"]} \
-                      for rep in self.repertoires}
+        allOverlap = {
+            rep: {
+                seq: []
+                for seq in self.repToGiantDict[rep].vs["sequences"]
+            }
+            for rep in self.repertoires
+        }
 
         # Initialize the overlap matrix with zeros
-        overlapMat = [[0 for x in range(len(self.repertoires))] \
-                      for x in range(len(self.repertoires))]
+        overlapMat = [
+            [0 for x in range(len(self.repertoires))]
+            for x in range(len(self.repertoires))
+        ]
 
         # For each repertoire,
         for i in range(len(self.repertoires) - 1):
             # Get giant for this repertoire
-            giantI = self.repToGiantDict[self.repertoires[i]]
+            giant_i = self.repToGiantDict[self.repertoires[i]]
 
             # Get sequence list from giant
-            seqsI = giantI.vs["sequences"]
+            seqs_i = giant_i.vs["sequences"]
 
             # For the rest of the repertoires,
             for j in range(i + 1, len(self.repertoires)):
                 # Get giant for this repertoire
-                giantJ = self.repToGiantDict[self.repertoires[j]]
+                giant_j = self.repToGiantDict[self.repertoires[j]]
 
                 # Get sequence list from giant
-                seqsJ = giantJ.vs["sequences"]
+                seqs_j = giant_j.vs["sequences"]
 
                 # Get the list of sequences that are common to both repertoires
-                overlapList = self.getOverlapList(seqsI, seqsJ)
+                overlapList = self.getOverlapList(seqs_i, seqs_j)
 
                 # Get the number of sequences that overlap between the
                 # two repertoires, and set it in the matrix

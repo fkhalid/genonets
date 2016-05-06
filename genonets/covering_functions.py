@@ -150,7 +150,7 @@ class CoveringAnalyzer:
         covering = [float("NaN") for i in xrange(radius)]
 
         # Set of all target repertoires covered within the radius
-        target_reps = {}
+        target_reps = set()
 
         # Convert the input sequence value into the required format. It
         # needs to be an iterable for later convenience.
@@ -193,7 +193,7 @@ class CoveringAnalyzer:
             covering[r-1] = overlap_result.covering
 
             # Union of the all target phenotypes found so far
-            target_reps |= overlap_result.targets
+            target_reps |= set(overlap_result.targets.keys())
 
             # If 100% coverage has been achieved, no need to proceed
             # any further.

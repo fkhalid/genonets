@@ -63,6 +63,7 @@ class AnalysisHandler:
         self.analysisToFunc = {
             ac.PEAKS: self.peaks,
             ac.PATHS: self.paths,
+            ac.PATHS_RATIOS: self.paths_ratios,
             ac.EPISTASIS: self.epistasis,
             ac.ROBUSTNESS: self.robustness,
             ac.EVOLVABILITY: self.evolvability,
@@ -178,6 +179,24 @@ class AnalysisHandler:
 
         # Add the count for each vertex as a vertex level attribute in giant
         giant.vs["Accessible_paths_through"] = lscape.pathAnalyzer.getPathsThruVtxs()
+
+    def paths_ratios(self, repertoire):
+        # Get the dominant genotype network for the repertoire
+        giant = self.caller.getDominantNetFor(repertoire)
+
+        # Get the landscape object
+        lscape = self.getLandscapeObj(giant, repertoire)
+
+        # Get the length of the longest path in giant
+        max_path_length = lscape.getAccessiblePaths(0).max_path_length
+
+        # Initialize the results
+        giant["paths_ratio_" + str(i)] = [float("NaN") for i in range]
+
+        # Compute the ratio of accessible paths for all path lengths in range:
+        # [2, diameter].
+        for i in xrange(2, max_path_length + 1):
+            giant["paths_ratio_" + str(i)] = lscape.getAccessiblePaths(i)
 
     def epistasis(self, repertoire):
         # Get the dominant genotype network for the repertoire

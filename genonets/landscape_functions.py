@@ -50,7 +50,7 @@ class Landscape :
     # Path analysis methods
     # ----------------------------------------------------------------
 
-    def getAccessiblePaths(self, pathLength) :
+    def getAccessiblePaths(self, pathLength=0):
         return self.pathAnalyzer.getAccessiblePaths(pathLength)
 
     # ----------------------------------------------------------------

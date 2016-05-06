@@ -66,12 +66,14 @@ class AnalysisConstants:
     PHENOTYPIC_DIVERSITY = 9
     STRUCTURE = 10
     OVERLAP = 11
+    PATHS_RATIOS = 12
 
     # Dictionary to map constants to string descriptors
     # TODO: Look into whether 'ALL' and 'LANDSCAPE' should be included
     #		in the following dict ...
     analysisToDesc = {PEAKS: "Peaks",
                       PATHS: "Paths",
+                      PATHS_RATIOS: "Paths ratios",
                       EPISTASIS: "Epistasis",
                       ROBUSTNESS: "Robustness",
                       EVOLVABILITY: "Evolvability",

@@ -34,6 +34,9 @@ class PathAnalyzer:
         # Summit vertex, to be populated later.
         self.summitId = None
 
+        # Longest mutational path in the network (among all shortest paths)
+        self.max_path_length = 0
+
         # Dict to store all accessible paths. {vertexId : [paths]}
         self.allPathsToPeak = self.initPathsToPeak()
 
@@ -68,7 +71,7 @@ class PathAnalyzer:
 
     # Get the ratio of accessible paths to all paths of the
     # given length.
-    def getAccessiblePaths(self, pathLength):
+    def getAccessiblePaths(self, pathLength=0):
         # Stats for the entire network
         totalPaths = 0  # Total mutational paths (only shortest)
         allAccPaths = 0  # No. of accessible paths (only shortest)
@@ -91,62 +94,77 @@ class PathAnalyzer:
 
         # For each sequence in the network
         for source in sequences:
-            # Get all shortest paths as well as all accessible
-            # shortest paths from source to summit
-            self.getShortestAccPaths(source, trgtVrtx, 0)
+            # If we only need to calculate all accessible paths, regardless
+            # of the path length,
+            if pathLength == 0:
+                # Get all shortest paths as well as all accessible
+                # shortest paths from source to summit
+                self.getShortestAccPaths(source, trgtVrtx, pathLength)
+            else:   # Ratios should be calculated
+                shrtPaths, accPaths = self.getShortestAccPaths(source,
+                                                               trgtVrtx,
+                                                               pathLength + 1)
 
-            # shrtPaths, accPaths = self.getShortestAccPaths(source, trgtVrtx,
-            # 							pathLength + 1)
+                # If at least one shortest path of length == 'pathLength' was
+                # found,
+                if shrtPaths:
+                    # Increment the counts
+                    totalPaths += float(len(shrtPaths))
+                    allAccPaths += float(len(accPaths))
 
-        # 	# If at least one shortest path of length == 'pathLength' was
-        # 	# found,
-        # 	if shrtPaths :
-        # 		# Increment the counts
-        # 		totalPaths  += float(len(shrtPaths))
-        # 		allAccPaths += float(len(accPaths))
-
-        # try :
-        # 	return float(allAccPaths) / float(totalPaths)
-        # except ZeroDivisionError :
-        # 	return 0
-
-        return
+        try:
+            return float(allAccPaths) / float(totalPaths)
+        except ZeroDivisionError:
+            return 0
 
     # From within all shortest paths between source sequence and the
     # given target vertex, computes all accessible paths.
     # For computation, returns only those paths that are of the given
     # length. However, all accessible paths are stored regardless of
     # size. This is then used in the visualization.
-	# @profile
+    # @profile
     def getShortestAccPaths(self, source, trgtVrtx, pathLength):
         # Get the source and target vertices
         srcVrtx = self.netUtils.getVertex(source, self.network)
 
         # Get all shortest paths between source and target
         allShrtPaths = self.network.get_all_shortest_paths(srcVrtx,
-                                                           trgtVrtx, mode=igraph.OUT)
+                                                           trgtVrtx,
+                                                           mode=igraph.OUT)
 
-        # Get all shortest accessible paths
-        shrtAccPaths = [self.network.vs[path].indices \
-                        for path in allShrtPaths \
-                        if self.isAccessible(path)]
-        # Store the paths
-        self.allPathsToPeak[srcVrtx.index].extend(shrtAccPaths)
+        # If we only need to calculate all accessible paths, regardless
+        # of the path length,
+        if pathLength == 0:
+            # Get all shortest accessible paths
+            shrtAccPaths = [
+                self.network.vs[path].indices
+                for path in allShrtPaths
+                if self.isAccessible(path)
+            ]
 
-        # # If the shortest path length is the same as the required
-        # # length,
-        # if len(allShrtPaths[0]) == pathLength :
-        # 	allShrtAccPaths = [ self.network.vs[path]["sequences"] \
-        # 						for path in allShrtPaths \
-        # 						if self.isAccessible(path) ]
-        # else :
-        # 	# We did not find a path of the required length
-        # 	allShrtPaths = None
-        # 	allShrtAccPaths = None
+            # Store the paths
+            self.allPathsToPeak[srcVrtx.index].extend(shrtAccPaths)
 
-        # return allShrtPaths, allShrtAccPaths
+            # Update the value of the longest path
+            if len(allShrtPaths[0]) > self.max_path_length:
+                self.max_path_length = len(allShrtPaths[0])
 
-        return
+            return None, None
+        else:   # If only paths of 'path length' are required,
+            # If the shortest path length is the same as the required
+            # length,
+            if len(allShrtPaths[0]) == pathLength:
+                allShrtAccPaths = [
+                    self.network.vs[path]["sequences"]
+                    for path in allShrtPaths
+                    if self.isAccessible(path)
+                ]
+            else:
+                # We did not find a path of the required length
+                allShrtPaths = None
+                allShrtAccPaths = None
+
+            return allShrtPaths, allShrtAccPaths
 
     # Determines whether the given path is an accessible path, i.e.,
     # scores on this path increase monotonously.
@@ -167,7 +185,7 @@ class PathAnalyzer:
                 maxYet = escores[i]
 
             # If the next sequence in the path is in a lower bin,
-            if (maxYet - self.delta > escores[i + 1]):
+            if maxYet - self.delta > escores[i + 1]:
                 # The increase in e-score is not monotonous. Hence,
                 # the path is not accessible.
                 isAcc = False

@@ -34,7 +34,9 @@ class WriterFilter:
         "Number_of_squares": 17,
         "Magnitude_epistasis": 18,
         "Simple_sign_epistasis": 19,
-        "Reciprocal_sign_epistasis": 20
+        "Reciprocal_sign_epistasis": 20,
+        "Ratio_of_overlapping_genotype_sets": 21,
+        "Overlapping_genotype_sets": 22
     }
 
     # Genotype level attribute to order map

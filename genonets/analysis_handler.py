@@ -453,6 +453,9 @@ class AnalysisHandler:
                     # Get giant
                     giant = self.repToGiantDict[repertoire]
 
+                    # List of all unique repertoires that overlap with this giant
+                    giant["Overlapping_genotype_sets"] = set()
+
                     # Get the sequence dict for this repertoire
                     seqDict = overlapDict[repertoire]
 
@@ -461,10 +464,32 @@ class AnalysisHandler:
                         # Get the corresponding vertex id from the network
                         vertex = self.netBuilder.getVertex(sequence, giant)
 
+                        # List of repertoires that contain the sequence
+                        overlapping_seqs = seqDict[sequence]
+
                         # Add the list of targets as an attribute for this
                         # vertex in giant
                         giant.vs[vertex.index]["Overlaps_with_genotypes_in"] = \
-                            seqDict[sequence]
+                            overlapping_seqs
+
+                        # Add the overlapping repertoires to the set of all
+                        # repertoires that overlap with any sequence in this
+                        # repertoire.
+                        giant["Overlapping_genotype_sets"] |= set(overlapping_seqs)
+
+                    # Convert the set to list for easy output file writing
+                    giant["Overlapping_genotype_sets"] = \
+                        list(giant["Overlapping_genotype_sets"])
+
+                    # Calculate the ratio of No. of overlapping repertoires to
+                    # the total No. of other repertoires
+                    try:
+                        ratio = float(len(giant["Overlapping_genotype_sets"])) / \
+                                (float(len(self.caller.getRepertoires())) - 1)
+                    except ZeroDivisionError:
+                        ratio = 0
+
+                    giant["Ratio_of_overlapping_genotype_sets"] = ratio
 
             # If overlap matrix was populated,
             if self.overlapMatrix:

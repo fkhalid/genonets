@@ -154,8 +154,10 @@ class AnalysisHandler:
         giant["Number_of_peaks"] = len(peaks)
 
         # Store a dict - {key=peakId, value=[sequences in the peak]}
-        giant["Peaks"] = {peakId: peaks[peakId]["sequences"] \
-                          for peakId in peaks.keys()}
+        giant["Peaks"] = {
+            peakId: peaks[peakId]["sequences"]
+            for peakId in peaks.keys()
+        }
 
         # For each vertex, add distance to summit as a vertex attribute
         lscape.populateDistsToSummit()
@@ -187,20 +189,24 @@ class AnalysisHandler:
         # Get the dominant genotype network for the repertoire
         giant = self.caller.getDominantNetFor(repertoire)
 
-        # Get the landscape object
+        # 'PathAnalyzer' object
         path_analyzer = PathAnalyzer(giant, self.netBuilder,
                                      self.deltaDict[repertoire])
 
-        # Get the length of the longest path in giant
-        path_analyzer.getAccessiblePaths(0)
+        # Run shortest paths calculation for all paths; regardless of path length.
+        # This sets the 'max_path_length' value.
+        path_analyzer.getAccessiblePaths()
+
+        # Length of the longest path in the network
         max_path_length = path_analyzer.max_path_length
 
         # Compute the ratio of accessible paths for all path lengths in range:
         # [2, max_path_length].
-        giant["Ratio_of_accessible_mutational_paths"] = [
-            path_analyzer.getAccessiblePaths(i)
+        # Set dict {path_length : ratio}
+        giant["Ratio_of_accessible_mutational_paths"] = {
+            i: path_analyzer.getAccessiblePaths(i)
             for i in xrange(2, max_path_length + 1)
-        ]
+        }
 
     def epistasis(self, repertoire):
         # Get the dominant genotype network for the repertoire

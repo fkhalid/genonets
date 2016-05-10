@@ -13,19 +13,20 @@ import sys
 import json  # For proper list stringification
 
 from genonets_writer import Writer
+from path_functions import PathAnalyzer
 from landscape_functions import Landscape
 from overlap_functions import OverlapAnalyzer
 from structure_functions import StructureAnalyzer
 from robustness_functions import RobustnessAnalyzer
 from evolvability_functions import EvolvabilityAnalyzer
 from accessibility_functions import AccessibilityAnalyzer
-from genonets_constants import AnalysisConstants as ac
-from genonets_constants import EpistasisConstants as epi
+from genonets_constants import AnalysisConstants as Ac
+from genonets_constants import EpistasisConstants as Epi
 
 
 class AnalysisHandler:
     # Constructor
-    def __init__(self, caller, analyses=ac.ALL, parallel=False):
+    def __init__(self, caller, analyses=Ac.ALL, parallel=False):
         # Store a reference to the caller object
         self.caller = caller
 
@@ -61,17 +62,17 @@ class AnalysisHandler:
         # Dictionary to store 'analysis type' to 'function'
         # mapping
         self.analysisToFunc = {
-            ac.PEAKS: self.peaks,
-            ac.PATHS: self.paths,
-            ac.PATHS_RATIOS: self.paths_ratios,
-            ac.EPISTASIS: self.epistasis,
-            ac.ROBUSTNESS: self.robustness,
-            ac.EVOLVABILITY: self.evolvability,
-            ac.ACCESSIBILITY: self.accessibility,
-            ac.NEIGHBOR_ABUNDANCE: self.neighborAbundance,
-            ac.PHENOTYPIC_DIVERSITY: self.phenotypicDiversity,
-            ac.STRUCTURE: self.structure,
-            ac.OVERLAP: self.overlap
+            Ac.PEAKS: self.peaks,
+            Ac.PATHS: self.paths,
+            Ac.PATHS_RATIOS: self.paths_ratios,
+            Ac.EPISTASIS: self.epistasis,
+            Ac.ROBUSTNESS: self.robustness,
+            Ac.EVOLVABILITY: self.evolvability,
+            Ac.ACCESSIBILITY: self.accessibility,
+            Ac.NEIGHBOR_ABUNDANCE: self.neighborAbundance,
+            Ac.PHENOTYPIC_DIVERSITY: self.phenotypicDiversity,
+            Ac.STRUCTURE: self.structure,
+            Ac.OVERLAP: self.overlap
         }
 
         # Flag to indicate whether or not the genotypes should be
@@ -85,7 +86,7 @@ class AnalysisHandler:
         # Note: This is by design, since building these data
         # structures once is a lot more efficient than building them
         # again and again for each repertoire.
-        if analyses == ac.ALL or ac.EVOLVABILITY in analyses:
+        if analyses == Ac.ALL or Ac.EVOLVABILITY in analyses:
             # Dict - {sequence: [repertoires]}, with only those repertoires
             # for which the sequence in the giant.
             self.seqToRepDict_evo = None
@@ -112,14 +113,14 @@ class AnalysisHandler:
         except KeyError:
             return None
 
-    def analyze(self, repertoire, analyses=ac.ALL):
-        if analyses == ac.ALL:
+    def analyze(self, repertoire, analyses=Ac.ALL):
+        if analyses == Ac.ALL:
             analyses = self.analysisToFunc.keys()
 
         # For each analysis type specified in the list,
         for analysis in analyses:
             if self.VERBOSE and not self.parallel:
-                sys.stdout.write(ac.analysisToDesc[analysis] + " ... ")
+                sys.stdout.write(Ac.analysisToDesc[analysis] + " ... ")
 
             # Get a list of function names
             functions = self.getFuncsFor(analysis)
@@ -153,8 +154,10 @@ class AnalysisHandler:
         giant["Number_of_peaks"] = len(peaks)
 
         # Store a dict - {key=peakId, value=[sequences in the peak]}
-        giant["Peaks"] = {peakId: peaks[peakId]["sequences"] \
-                          for peakId in peaks.keys()}
+        giant["Peaks"] = {
+            peakId: peaks[peakId]["sequences"]
+            for peakId in peaks.keys()
+        }
 
         # For each vertex, add distance to summit as a vertex attribute
         lscape.populateDistsToSummit()
@@ -174,8 +177,10 @@ class AnalysisHandler:
 
         # Vertex level attributes
         allPathsToPeak = lscape.pathAnalyzer.getAllPathsToPeak()
-        giant.vs["pathsToSummit"] = [allPathsToPeak[i] \
-                                     for i in range(len(allPathsToPeak))]
+        giant.vs["pathsToSummit"] = [
+            allPathsToPeak[i]
+            for i in range(len(allPathsToPeak))
+        ]
 
         # Add the count for each vertex as a vertex level attribute in giant
         giant.vs["Accessible_paths_through"] = lscape.pathAnalyzer.getPathsThruVtxs()
@@ -184,19 +189,24 @@ class AnalysisHandler:
         # Get the dominant genotype network for the repertoire
         giant = self.caller.getDominantNetFor(repertoire)
 
-        # Get the landscape object
-        lscape = self.getLandscapeObj(giant, repertoire)
+        # 'PathAnalyzer' object
+        path_analyzer = PathAnalyzer(giant, self.netBuilder,
+                                     self.deltaDict[repertoire])
 
-        # Get the length of the longest path in giant
-        max_path_length = lscape.getAccessiblePaths(0).max_path_length
+        # Run shortest paths calculation for all paths; regardless of path length.
+        # This sets the 'max_path_length' value.
+        path_analyzer.getAccessiblePaths()
 
-        # Initialize the results
-        giant["paths_ratio_" + str(i)] = [float("NaN") for i in range]
+        # Length of the longest path in the network
+        max_path_length = path_analyzer.max_path_length
 
         # Compute the ratio of accessible paths for all path lengths in range:
-        # [2, diameter].
-        for i in xrange(2, max_path_length + 1):
-            giant["paths_ratio_" + str(i)] = lscape.getAccessiblePaths(i)
+        # [2, max_path_length].
+        # Set dict {path_length : ratio}
+        giant["Ratio_of_accessible_mutational_paths"] = {
+            i: path_analyzer.getAccessiblePaths(i)
+            for i in xrange(2, max_path_length + 1)
+        }
 
     def epistasis(self, repertoire):
         # Get the dominant genotype network for the repertoire
@@ -215,9 +225,9 @@ class AnalysisHandler:
         giant["Squares_list"] = json.dumps(squares)
         giant["SqrEpi_list"] = json.dumps(lscape.epiAnalyzer.getSqrEpi())
         giant["Number_of_squares"] = len(lscape.epiAnalyzer.squares)
-        giant["Magnitude_epistasis"] = epistasis[epi.MAGNITUDE]
-        giant["Simple_sign_epistasis"] = epistasis[epi.SIGN]
-        giant["Reciprocal_sign_epistasis"] = epistasis[epi.RECIPROCAL_SIGN]
+        giant["Magnitude_epistasis"] = epistasis[Epi.MAGNITUDE]
+        giant["Simple_sign_epistasis"] = epistasis[Epi.SIGN]
+        giant["Reciprocal_sign_epistasis"] = epistasis[Epi.RECIPROCAL_SIGN]
 
         # Vertex level attributes
 

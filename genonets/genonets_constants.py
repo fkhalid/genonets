@@ -69,19 +69,19 @@ class AnalysisConstants:
     PATHS_RATIOS = 12
 
     # Dictionary to map constants to string descriptors
-    # TODO: Look into whether 'ALL' and 'LANDSCAPE' should be included
-    #		in the following dict ...
-    analysisToDesc = {PEAKS: "Peaks",
-                      PATHS: "Paths",
-                      PATHS_RATIOS: "Paths ratios",
-                      EPISTASIS: "Epistasis",
-                      ROBUSTNESS: "Robustness",
-                      EVOLVABILITY: "Evolvability",
-                      ACCESSIBILITY: "Accessibility",
-                      NEIGHBOR_ABUNDANCE: "Neighbor Abundance",
-                      PHENOTYPIC_DIVERSITY: "Diversity Index",
-                      STRUCTURE: "Structure",
-                      OVERLAP: "Overlap"}
+    analysisToDesc = {
+        PEAKS: "Peaks",
+        PATHS: "Paths",
+        PATHS_RATIOS: "Paths ratios",
+        EPISTASIS: "Epistasis",
+        ROBUSTNESS: "Robustness",
+        EVOLVABILITY: "Evolvability",
+        ACCESSIBILITY: "Accessibility",
+        NEIGHBOR_ABUNDANCE: "Neighbor Abundance",
+        PHENOTYPIC_DIVERSITY: "Diversity Index",
+        STRUCTURE: "Structure",
+        OVERLAP: "Overlap"
+    }
 
     @staticmethod
     def getAnalysisTypes():
@@ -100,7 +100,7 @@ class ErrorCodes:
     BAD_DELTA_FORMAT = 503
     INCONSISTENT_SEQ_LEN = 504
     ALPHABET_TYPE_MISMATCH = 505
-    NO_USEABLE_SCORES = 506
+    NO_USABLE_SCORES = 506
 
     # File I/O errors
     CANNOT_WRITE_TO_FILE = 550
@@ -117,10 +117,13 @@ class ErrorCodes:
         MISSING_VALUE: "Input file parsing error - Missing value encountered in input file",
         BAD_SCORE_FORMAT: "Input file parsing error - Score value is not in the supported format",
         BAD_DELTA_FORMAT: "Input file parsing error - Delta value is not in the supported format",
-        INCONSISTENT_SEQ_LEN: "Input file parsing error - Inconsistent genotype length encountered. All genotypes must be of equal length",
-        ALPHABET_TYPE_MISMATCH: "Input file parsing error - Genotype consists of at least one letter not in the selected alphabet type",
-        NO_USEABLE_SCORES: "Input file parsing error - No genotypes found with score values greater than",
-        NOT_ENOUGH_REPS_OLAP: "Analysis error - Overlap computation can only be performed if there are least two phenotypes that have genotypes with Score values greater than Tau",
+        INCONSISTENT_SEQ_LEN: "Input file parsing error - Inconsistent genotype length encountered. " +
+                              "All genotypes must be of equal length",
+        ALPHABET_TYPE_MISMATCH: "Input file parsing error - Genotype consists of at least one letter not " +
+                                "in the selected alphabet type",
+        NO_USABLE_SCORES: "Input file parsing error - No genotypes found with score values greater than",
+        NOT_ENOUGH_REPS_OLAP: "Analysis error - Overlap computation can only be performed if there are least " +
+                              "two phenotypes that have genotypes with Score values greater than Tau",
         CANNOT_WRITE_TO_FILE: "Could not write to file",
         CANNOT_CREATE_DIRECTORY: "Error while trying to create directory"
     }
@@ -129,5 +132,5 @@ class ErrorCodes:
     def getErrDescription(errCode):
         try:
             return ErrorCodes.errCodeToDesc[errCode]
-        except:
+        except KeyError:
             return ""

@@ -12,6 +12,8 @@ import argparse
 
 from genonets_writer import Writer
 from seq_bit_impl import BitManipFactory
+from genonets_constants import ErrorCodes
+from genonets_exceptions import GenonetsError
 
 
 # Parses the command line arguments using python's 'argparse' module
@@ -97,6 +99,14 @@ class CmdArgs:
 
         # 'Use reverse complements' flag
         self.use_reverse_complements = "True" if arguments.use_reverse_complements else "False"
+
+        # Report exception if 'use_reverse_complements' has been passed as an argument with
+        # alphabet type other than DNA
+        if self.use_reverse_complements and self.moleculeType != "DNA":
+            print("Error: " +
+                  ErrorCodes.getErrDescription(ErrorCodes.RC_ALPHABET_MISMATCH))
+
+            raise GenonetsError(ErrorCodes.RC_ALPHABET_MISMATCH)
 
         # Flag to indicate whether shift mutations should
         # be considered

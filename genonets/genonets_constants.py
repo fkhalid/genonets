@@ -101,6 +101,7 @@ class ErrorCodes:
     INCONSISTENT_SEQ_LEN = 504
     ALPHABET_TYPE_MISMATCH = 505
     NO_USABLE_SCORES = 506
+    RC_ALPHABET_MISMATCH = 507
 
     # File I/O errors
     CANNOT_WRITE_TO_FILE = 550
@@ -125,7 +126,8 @@ class ErrorCodes:
         NOT_ENOUGH_REPS_OLAP: "Analysis error - Overlap computation can only be performed if there are least " +
                               "two phenotypes that have genotypes with Score values greater than Tau",
         CANNOT_WRITE_TO_FILE: "Could not write to file",
-        CANNOT_CREATE_DIRECTORY: "Error while trying to create directory"
+        CANNOT_CREATE_DIRECTORY: "Error while trying to create directory",
+        RC_ALPHABET_MISMATCH: "Reverse complements can only be considered if alphabet type is DNA"
     }
 
     @staticmethod

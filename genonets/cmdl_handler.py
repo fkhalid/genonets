@@ -98,7 +98,7 @@ class CmdArgs:
         self.moleculeType = arguments.alphabetType
 
         # 'Use reverse complements' flag
-        self.use_reverse_complements = "True" if arguments.use_reverse_complements else "False"
+        self.use_reverse_complements = True if arguments.use_reverse_complements else False
 
         # Report exception if 'use_reverse_complements' has been passed as an argument with
         # alphabet type other than DNA

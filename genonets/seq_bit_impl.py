@@ -74,6 +74,12 @@ class DNABitSeqManipulator(AbstractXnaBitSeqManipulator):
     # Dictionary that maps each base to its complement
     baseToComplementDict = {0: 1, 1: 0, 2: 3, 3: 2}
 
+    # Constructor
+    def __init__(self, seqLength, useIndels, use_reverse_complements):
+        AbstractXnaBitSeqManipulator.__init__(self, seqLength, useIndels)
+
+        self.useRC = use_reverse_complements
+
     # Computes and returns the bit representation of the reverse
     # complement of the given sequence
     def getReverseComplement(self, sequence):
@@ -102,19 +108,21 @@ class DNABitSeqManipulator(AbstractXnaBitSeqManipulator):
     # the sequence and its reverse complement have to be
     # considered.
     def areNeighbors(self, seq1, seq2):
-        # First check if seq1 and seq2 are 1-neighbors
+        # Check if seq1 and seq2 are 1-neighbors
         if AbstractXnaBitSeqManipulator.areNeighbors(self, seq1, seq2):
             # If the two sequences are 1-neighbors, no need to
             # process any further
             return True
 
-        # Get the reverse complement of seq2
-        revComplSeq2 = self.getReverseComplement(seq2)
+        # If reverse complements should be considered,
+        if self.useRC:
+            # Get the reverse complement of seq2
+            revComplSeq2 = self.getReverseComplement(seq2)
 
-        # Check if seq1 and reverse complement of seq2 are
-        # 1-neighbors
-        if AbstractXnaBitSeqManipulator.areNeighbors(self, seq1, revComplSeq2):
-            return True
+            # Check if seq1 and reverse complement of seq2 are
+            # 1-neighbors
+            if AbstractXnaBitSeqManipulator.areNeighbors(self, seq1, revComplSeq2):
+                return True
 
         # At this point, neither possibility is true, so we return False.
         return False
@@ -140,11 +148,11 @@ class BitManipFactory:
     # Based on the given molecule type, returns the corresponding
     # bit seq manipulator object.
     @staticmethod
-    def getBitSeqManip(moleculeType, seqLength, useIndels):
+    def getBitSeqManip(moleculeType, seqLength, useIndels, useReverseComplements=False):
         if moleculeType == "RNA":
             return RNABitSeqManipulator(seqLength, useIndels)
         elif moleculeType == "DNA":
-            return DNABitSeqManipulator(seqLength, useIndels)
+            return DNABitSeqManipulator(seqLength, useIndels,  useReverseComplements)
         elif moleculeType == "Protein":
             return ProteinBitSeqManipulator(seqLength, useIndels)
         elif moleculeType == "Binary":

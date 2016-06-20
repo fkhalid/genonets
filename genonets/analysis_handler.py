@@ -79,7 +79,8 @@ class AnalysisHandler:
         # considered double stranded, i.e., whether or not
         # reverse complements should be used in evolvability
         # computations.
-        self.isDoubleStranded = self.caller.cmdArgs.moleculeType == "DNA"
+        self.isDoubleStranded = self.caller.cmdArgs.use_reverse_complements
+        print("isDoubleStranded: " + self.isDoubleStranded)
 
         # If 'Evolvability' analysis has been requested, initialize
         # data structures specific to 'Evolvability' analysis

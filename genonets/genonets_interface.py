@@ -316,7 +316,9 @@ class Genonets:
 
     def getBitManip(self):
         return BitManipFactory.getBitSeqManip(self.cmdArgs.moleculeType,
-                                              self.seqLength, self.cmdArgs.useIndels)
+                                              self.seqLength,
+                                              self.cmdArgs.useIndels,
+                                              self.cmdArgs.use_reverse_complements)
 
     def getBitSeqsAndScores(self, repertoire):
         # Get the list of sequences for the given repertoire

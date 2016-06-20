@@ -57,6 +57,13 @@ class CmdParser:
 
         # ---------------- Optional arguments ------------------ #
 
+        # Add 'use_reverse_complements' as an argument
+        parser.add_argument("-rc", "--use_reverse_complements", dest="use_reverse_complements", action="store_const",
+                            const=True,
+                            help="When specified, reverse complements are considered during creation " +
+                                 "and analysis of genotype networks for alphabet type DNA. This option is " +
+                                 "not valid for other alphabet types.")
+
         # Add 'num_processes' as an argument
         parser.add_argument("-np", "--num_processes", dest="num_procs", action="store",
                             type=int, default="4",
@@ -87,6 +94,9 @@ class CmdArgs:
     def __init__(self, arguments):
         # Molecule type: RNA, DNA, Protein, etc.
         self.moleculeType = arguments.alphabetType
+
+        # 'Use reverse complements' flag
+        self.use_reverse_complements = "True" if arguments.use_reverse_complements else "False"
 
         # Flag to indicate whether shift mutations should
         # be considered

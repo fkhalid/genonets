@@ -11,7 +11,7 @@ New in version 1.0.7
 ~~~~~~~~~~~~~~~~~~~~
 
 - An optional command line argument, '-v' or '--verbose' has been introduced. This enables the verbose mode. When used with python '-u' flag,  detailed progress information is printed to the standard output.
-- A new analysis type 'PATHS_RATIOS' has been added. It enables the computation of ratio of 'accessible mutations paths' to 'all shortest mutational paths' for a given distance from summit.
+- A new analysis type 'PATHS_RATIOS' has been added. It enables the computation of ratio of 'accessible mutational paths' to 'all shortest mutational paths' for a given distance from summit.
 - An optional command line argument, '-rc' or '--use_reverse_complements' has been introduced. This option can only be used with alphabet type 'DNA'. If this option is given, in addition to the genotypes, reverse complements of the genotypes are also considered during genotype network creation, as well as during 'Evolvability', 'Accessibility', 'Neighbor abundance', and 'Diversity index' analysis types.
 
 Installation

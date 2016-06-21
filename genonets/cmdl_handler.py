@@ -133,7 +133,7 @@ class CmdArgs:
         self.num_procs = arguments.num_procs
 
         # Verbose flag
-        self.verbose = arguments.verbose
+        self.verbose = True if arguments.verbose else False
 
         # Create a dictionary of parameters
         paramsDict = {
@@ -142,7 +142,9 @@ class CmdArgs:
             "inFilePath": self.inFilePath,
             "tau": str(self.tau),
             "outPath": self.outPath,
-            "num_procs": str(self.num_procs)
+            "useReverseComplements": str(self.use_reverse_complements),
+            "num_procs": str(self.num_procs),
+            "verbose": str(self.verbose)
         }
 
         # Print the parsed parameter values

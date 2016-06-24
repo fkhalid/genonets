@@ -1,7 +1,4 @@
 """
-    genonets_interface
-    ~~~~~~~~~~~~~~~~~~
-
     Public interface to Genonets functions.
 
     :author: Fahad Khalid
@@ -26,10 +23,28 @@ from genonets_constants import AnalysisConstants as Ac
 
 
 class Genonets:
+    """
+    Encapsulates the Genonets public API.
+    """
+
     ALL = 0
 
     # Constructor
     def __init__(self, args):
+        """
+        Initiate parsing of the input file, and load the parsed data into a `Genonets` object.
+
+        A simple way to create a `Genonets` object is the following::
+
+            gn = Genonets(CmdParser(args).getArgs())
+
+        where, `CmdParser` is available in the `genonets.cmdl_handler` module. The `args` variable
+        is a list of command line arguments. Please see the `genonets` module documentation for
+        the list and descriptions of all available command line arguments.
+
+        :param args: A populated `CmdArgs` object.
+        """
+
         # Handle program arguments
         self.cmdArgs = CmdArgs(args)
 
@@ -70,23 +85,36 @@ class Genonets:
     #                   be used. This argument is optional, and is set to 'False'
     #                   by default.
     # Return:		No return value.
-    def create(self, repertoires=Gc.ALL, parallel=False):
+    def create(self, genotype_sets=Gc.ALL, parallel=False):
+        """
+        Create genotype networks for the given list of genotype set names.
+
+        :param genotype_sets: List of names of the genotype sets for which the genotype
+                             networks should be created. If a value is not explicitly
+                             specified for this parameter, genotype networks are
+                             constructed for all genotype sets available in the parsed
+                             data.
+        :param parallel: Flag to indicate whether or not parallel processing should
+                         be used.
+        :return: No return value
+        """
+
         if self.VERBOSE:
             print("Creating genotype networks:")
 
         # If a single string is received, convert it into an iterable
-        repertoires = [repertoires] if type(repertoires) == str else repertoires
+        genotype_sets = [genotype_sets] if type(genotype_sets) == str else genotype_sets
 
-        # If all repertoires should be considered,
-        if repertoires == Gc.ALL:
-            # Get a list of all repertoires
-            repertoires = self.getRepertoires()
+        # If all genotype_sets should be considered,
+        if genotype_sets == Gc.ALL:
+            # Get a list of all genotype_sets
+            genotype_sets = self.genotype_sets()
 
         # If multiprocessing should be used,
         if parallel:
-            self.createNets_parallel(repertoires)
+            self.createNets_parallel(genotype_sets)
         else:
-            self.createNets(repertoires)
+            self.createNets(genotype_sets)
 
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
@@ -104,22 +132,41 @@ class Genonets:
     #                   be used. This argument is optional, and is set to 'False'
     #                   by default.
     # Return:		No return value.
-    def analyze(self, repertoires=Gc.ALL, analyses=Gc.ALL, parallel=False):
+    def analyze(self, genotype_sets=Gc.ALL, analyses=Gc.ALL, parallel=False):
+        """
+        Performs all analyses provided in the list of analysis types, on all the given genotype sets.
+
+        This method can only be used if `create` has already been called on the same `Genonets`
+        object.
+
+        :param genotype_sets: List of names of the genotype sets for which the genotype
+                            networks should be created. If a value is not explicitly
+                            specified for this parameter, genotype networks are
+                            constructed for all genotype sets available in the parsed
+                            data.
+        :param analyses: List of analysis type constants. These constants are defined in the class
+                         `genonets.genonets_constants.AnalysisConstants`. If the value for this
+                         parameter is not explicitly set, all available analyses are performed.
+        :param parallel: Flag to indicate whether or not parallel processing should
+                         be used.
+        :return: No return value.
+        """
+
         if self.VERBOSE:
             sys.stdout.write("\nPerforming analyses:")
 
-        # If all repertoires should be considered,
-        if repertoires == Gc.ALL:
-            # Get a list of all repertoires
-            repertoires = self.getRepertoires()
+        # If all genotype_sets should be considered,
+        if genotype_sets == Gc.ALL:
+            # Get a list of all genotype_sets
+            genotype_sets = self.genotype_sets()
 
         # If a single string is received, convert it into an iterable
-        repertoires = [repertoires] if type(repertoires) == str else repertoires
+        genotype_sets = [genotype_sets] if type(genotype_sets) == str else genotype_sets
 
         # If overlap in one of the requested analyses, there need to be at
-        # at least two repertoires in the dataset
+        # at least two genotype_sets in the dataset
         if analyses == Gc.ALL or Ac.OVERLAP in analyses:
-            if len(repertoires) < 2:
+            if len(genotype_sets) < 2:
                 print("Error: " +
                       ErrorCodes.getErrDescription(ErrorCodes.NOT_ENOUGH_REPS_OLAP) +
                       ": Tau=" + str(self.cmdArgs.tau))
@@ -131,7 +178,7 @@ class Genonets:
         # If multiprocessing should be used,
         if parallel:
             # Perform all analyses in parallel; overlap will be ignored.
-            self.analyzeNets_parallel(repertoires, analyses)
+            self.analyzeNets_parallel(genotype_sets, analyses)
 
             if analyses == Gc.ALL or Ac.OVERLAP in analyses:
                 # Reset analysis handler to make sure it references
@@ -140,10 +187,10 @@ class Genonets:
                 self.analyzer = AnalysisHandler(self)
 
                 # Use serial processing to perform overlap analysis
-                self.analyzeNets(repertoires, [Ac.OVERLAP])
+                self.analyzeNets(genotype_sets, [Ac.OVERLAP])
         else:
             # Perform all analyses using serial processing
-            self.analyzeNets(repertoires, analyses)
+            self.analyzeNets(genotype_sets, analyses)
 
     # Description:	Creates the phenotype network from the given list of
     #               genotype sets.
@@ -155,27 +202,43 @@ class Genonets:
     # Return:		igraph object corresponding to the phenotype network.
     # TODO: Add a check to make sure the evolvability analysis has been done
     #       for all networks that are to be processed here ...
-    def getEvoNet(self, collection="phenotype_network", repertoires=Gc.ALL):
+    def phenotype_network(self, collection_name="phenotype_network", genotype_sets=Gc.ALL):
+        """
+        Create the phenotype network from the given list of genotype sets.
+
+        :param collection_name: The name to be assigned to the phenotype network.
+        :param genotype_sets: List of names of the genotype sets for which the phenotype
+                              network should be created. If a value is not explicitly
+                              specified for this parameter, all available genotype sets
+                              are considered.
+        :return: `igraph.Graph` object representing the phenotype network.
+        """
+
         # If a single string is received, convert it into an iterable
-        repertoires = [repertoires] if type(repertoires) == str else repertoires
+        genotype_sets = [genotype_sets] if type(genotype_sets) == str else genotype_sets
 
-        # If all repertoires should be considered,
-        if repertoires == Gc.ALL:
-            # Get a list of all repertoires
-            repertoires = self.getRepertoires()
+        # If all genotype_sets should be considered,
+        if genotype_sets == Gc.ALL:
+            # Get a list of all genotype_sets
+            genotype_sets = self.genotype_sets()
 
-        # Create a list of giants for the given repertoires
-        giants = [self.repToGiantDict[repertoire] for repertoire in repertoires]
+        # Create a list of giants for the given genotype_sets
+        giants = [self.repToGiantDict[repertoire] for repertoire in genotype_sets]
 
-        # Create the evolvability network, and get the igraph object
-        evoNet = self.netBuilder.createEvoNet(collection, giants)
+        # Create the phenotype network, and get the igraph object
+        pheno_net = self.netBuilder.createEvoNet(collection_name, giants)
 
-        return evoNet
+        return pheno_net
 
     # Description:	Returns the list of names of all genotype sets for which
     #               genotype networks have been created.
     # Return:		List of names of genotype sets.
-    def getRepertoires(self):
+    def genotype_sets(self):
+        """
+        Get a list of names of all genotype sets for which genotype networks have been created.
+
+        :return: List of names of genotype sets.
+        """
         repertoires = self.inDataDict.keys()
         repertoires = [repertoires] if type(repertoires) == str else repertoires
 
@@ -187,9 +250,23 @@ class Genonets:
     #   'repertoire':	Name of the genotype network for which the igraph object
     #                   is required.
     # Return:		igraph object for the required network.
-    def getNetworkFor(self, repertoire):
+    def genotype_network(self, genotype_set):
+        """
+        Get the `igraph` object for the network corresponding to the given genotype set name.
+
+        The `igraph` object in this case refers to the entire network, i.e., all connected
+        components.
+
+        Note: This method can only be used if the genotype network corresponding to the requested
+        genotype set name has already been created.
+
+        :param genotype_set: Name of the genotype set for which the genotype network is
+                             requested.
+        :return: Object of type `igraph.Graph`.
+        """
+
         try:
-            return self.repToNetDict[repertoire]
+            return self.repToNetDict[genotype_set]
         except KeyError:
             return None
 
@@ -200,9 +277,22 @@ class Genonets:
     #                   is required.
     # Return:		igraph object for the giant component corresponding to the
     #               given genotype set name.
-    def getDominantNetFor(self, repertoire):
+    def dominant_network(self, genotype_set):
+        """
+        Get the `igraph` object for the *dominant* network corresponding to the given genotype set name.
+
+        The dominant network refers to the giant component in the network.
+
+        Note: This method can only be used if the genotype network corresponding to the requested
+        genotype set name has already been created.
+
+        :param genotype_set: Name of the genotype set for which the genotype network is
+                             requested.
+        :return: Object of type `igraph.Graph`.
+        """
+
         try:
-            return self.repToGiantDict[repertoire]
+            return self.repToGiantDict[genotype_set]
         except KeyError:
             return None
 
@@ -223,7 +313,7 @@ class Genonets:
             # No need to compute again, just return the existing matrix
             return self.analyzer.overlapMatrix
         else:
-            # Perform the overlap compution
+            # Perform the overlap computation
             self.analyzer.overlap()
 
             # Return the resulting matrix
@@ -233,16 +323,30 @@ class Genonets:
     # Arguments:
     #   'repertoires':	List of names of genotype networks to be saved to
     #                   file.
-    def save(self, repertoires=Gc.ALL):
+    def save(self, genotype_sets=Gc.ALL):
+        """
+        Write the genotype networks corresponding to the given genotype sets to file.
+
+        The networks are saved in GML format. For networks with more than one
+        components, separate files are generated for the entire network and the
+        dominant network.
+
+        ??? ... this function be called before analyze() ... ???
+
+        :param genotype_sets: List of names of genotype sets for which the genotype
+                              should be written to file.
+        :return: No return value.
+        """
+
         if self.VERBOSE:
             sys.stdout.write("\nWriting GML files for genotype networks ... ")
 
         # If a single string is received, convert it into an iterable
-        repertoires = [repertoires] if type(repertoires) == str else repertoires
+        genotype_sets = [genotype_sets] if type(genotype_sets) == str else genotype_sets
 
         Writer.writeNetsToFile(self.repToNetDict, self.repToGiantDict,
                                self.netBuilder, self.cmdArgs.outPath,
-                               WriterFilter.gmlAttribsToIgnore, repertoires)
+                               WriterFilter.gmlAttribsToIgnore, genotype_sets)
 
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
@@ -251,18 +355,34 @@ class Genonets:
     # Arguments:
     #   'repertoires':	List of names of genotype networks for which results
     #                   need to be written to file.
-    def saveNetResults(self, repertoires=Gc.ALL):
+    def save_network_results(self, genotype_sets=Gc.ALL):
+        """
+        Write the genotype set level results to file.
+
+        A file named 'Genotype_set_measures.txt' is generated in the output directory
+        specified at the time of the `Genonets` object creation.
+
+        Note: This method can be used only after `analyze()` has been called on the
+        given genotype sets.
+
+        :param genotype_sets: List of names of genotype sets for which to generate the
+                              result files. If a value is not explicitly specified
+                              for this parameter, result files are written for all
+                              genotype sets.
+        :return: No return value.
+        """
+
         if self.VERBOSE:
             sys.stdout.write("\nWriting genotype set level results ... ")
 
         # If a single string is received, convert it into an iterable
-        repertoires = [repertoires] if type(repertoires) == str else repertoires
+        genotype_sets = [genotype_sets] if type(genotype_sets) == str else genotype_sets
 
         Writer.writeNetAttribs(self.repToNetDict, self.repToGiantDict,
                                self.netBuilder, self.cmdArgs.outPath,
                                WriterFilter.netAttribsToIgnore,
                                WriterFilter.net_attribute_to_order,
-                               repertoires)
+                               genotype_sets)
 
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
@@ -271,18 +391,33 @@ class Genonets:
     # Arguments:
     #   'repertoires':	List of names of genotype networks for which results
     #                   need to be written to file.
-    def saveGenotypeResults(self, repertoires=Gc.ALL):
+    def save_genotype_results(self, genotype_sets=Gc.ALL):
+        """
+        Write the genotype level results to files.
+
+        A results file is generated for each genotype set.
+
+        Note: This method can be used only after `analyze()` has been called on the
+        given genotype sets.
+
+        :param genotype_sets: List of names of genotype sets for which to generate the
+                              result files. If a value is not explicitly specified
+                              for this parameter, result files are written for all
+                              genotype sets.
+        :return: No return value.
+        """
+
         if self.VERBOSE:
             sys.stdout.write("\nWriting genotype level results ... ")
 
         # If a single string is received, convert it into an iterable
-        repertoires = [repertoires] if type(repertoires) == str else repertoires
+        genotype_sets = [genotype_sets] if type(genotype_sets) == str else genotype_sets
 
         Writer.writeSeqAttribs(self.repToGiantDict,
                                self.cmdArgs.outPath,
                                WriterFilter.seqAttribsToIgnore,
                                WriterFilter.seq_attribute_to_order,
-                               repertoires)
+                               genotype_sets)
 
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
@@ -291,11 +426,20 @@ class Genonets:
     # Arguments:
     #   'phenotypeNetwork':	igraph object corresponding to the phenotype
     #                       network.
-    def saveEvoNet(self, phenotypeNetwork):
+    def save_phenotype_network(self, phenotype_network):
+        """
+        Write the phenotype network to file in GML format.
+
+        Note: This method can only be used after the phenotype network has been created.
+
+        :param phenotype_network: The phenotype network (igraph.Graph) object.
+        :return: No return value.
+        """
+
         if self.VERBOSE:
             sys.stdout.write("\nWriting GML file for phenotype network ... ")
 
-        Writer.writeNetToFile(phenotypeNetwork, self.cmdArgs.outPath,
+        Writer.writeNetToFile(phenotype_network, self.cmdArgs.outPath,
                               WriterFilter.gmlAttribsToIgnore)
 
         if self.VERBOSE:
@@ -605,8 +749,8 @@ class Genonets:
         resultTuple = (
             repertoire,
             (
-                genonetsCopy.getNetworkFor(repertoire),
-                genonetsCopy.getDominantNetFor(repertoire)
+                genonetsCopy.genotype_network(repertoire),
+                genonetsCopy.dominant_network(repertoire)
             )
         )
 

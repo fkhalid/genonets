@@ -1,8 +1,7 @@
 """
-    genonets_constants
-    ~~~~~~~~~~~~~~~~~~
+    Defines constants used throughout the `Genonets` package.
 
-    Defines constans used throughout the package.
+    Constants are grouped into different classes according to function.
 
     :author: Fahad Khalid
     :license: MIT, see LICENSE for more details.
@@ -11,11 +10,16 @@
 from genonets_utils import Utils
 
 
+# Generic constants that do not belong to any specific category.
 class GenonetsConstants:
     ALL = 0
 
 
 class SupportedAlphabet:
+    """
+    Names of the supported alphabet types.
+    """
+
     binary = ['0', '1']
     rna = ['A', 'U', 'C', 'G']
     dna = ['A', 'T', 'C', 'G']
@@ -26,6 +30,18 @@ class SupportedAlphabet:
 
     @staticmethod
     def getAlphabet(alphabetType):
+        """
+        Get the list of letters corresponding to the given alphabet type.
+
+        :param alphabetType: One of the following strings (case sensitive),
+        * RNA
+        * DNA
+        * Binary
+        * Protein
+
+        :return: list: List of all letters contained in the alphabet type received
+                        as argument.
+        """
         return SupportedAlphabet.typeToList[alphabetType]
 
 

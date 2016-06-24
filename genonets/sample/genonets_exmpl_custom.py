@@ -44,9 +44,9 @@ def process(args):
     # data we need, i.e., the peaks dictionary.
 
     # For each genotype set,
-    for genotypeSet in gn.getRepertoires():
+    for genotypeSet in gn.genotype_sets():
         # Get the igraph object for the giant
-        giant = gn.getDominantNetFor(genotypeSet)
+        giant = gn.dominant_network(genotypeSet)
 
         # Get the dict of peaks {key=peakId : value=[list of sequences in the peak]}
         peaks = giant["Peaks"]
@@ -88,7 +88,7 @@ def process(args):
     gn.save()
 
     # Save the results to file from network level analysis
-    gn.saveNetResults()
+    gn.save_network_results()
 
 
 if __name__ == "__main__":

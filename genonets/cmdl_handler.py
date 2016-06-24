@@ -1,7 +1,4 @@
 """
-    cmdl_handler
-    ~~~~~~~~~~~~
-
     Handles command line arguments.
 
     :author: Fahad Khalid

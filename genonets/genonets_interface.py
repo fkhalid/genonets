@@ -72,19 +72,6 @@ class Genonets:
         # Set the VERBOSE flag
         self.VERBOSE = True if self.cmdArgs.verbose else False
 
-    # ----------------------------------------------------------------------
-    #   Public interface
-    # ----------------------------------------------------------------------
-
-    # Description: 	Creates genotype networks for the given list of genotype set names.
-    # Arguments:
-    #   'repertoires': 	List of genotype set names. This argument is optional, and
-    #                   if absent, results in the creation of all available
-    #                   genotype networks.
-    #   'parallel':		Flag to indicate whether or not parallel processing should
-    #                   be used. This argument is optional, and is set to 'False'
-    #                   by default.
-    # Return:		No return value.
     def create(self, genotype_sets=Gc.ALL, parallel=False):
         """
         Create genotype networks for the given list of genotype set names.
@@ -119,19 +106,6 @@ class Genonets:
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
 
-    # Description:	Performs the given set of analyses on the given list of
-    #               genotype sets.
-    # Arguments:
-    #   'repertoires': 	List of genotype set names. This argument is optional, and
-    #                   if absent, results in the processing of all available
-    #                   genotype networks.
-    #   'analyses':		List of analysis types. This argument is optional. If the
-    #                   the argument is not provided, all available analyses are
-    #                   performed.
-    #   'parallel':		Flag to indicate whether or not parallel processing should
-    #                   be used. This argument is optional, and is set to 'False'
-    #                   by default.
-    # Return:		No return value.
     def analyze(self, genotype_sets=Gc.ALL, analyses=Gc.ALL, parallel=False):
         """
         Performs all analyses provided in the list of analysis types, on all the given genotype sets.
@@ -192,16 +166,7 @@ class Genonets:
             # Perform all analyses using serial processing
             self.analyzeNets(genotype_sets, analyses)
 
-    # Description:	Creates the phenotype network from the given list of
-    #               genotype sets.
-    # Arguments:
-    #   'collection':	Name to give to the phenotype network.
-    #   'repertoires': 	List of genotype set names. This argument is optional, and
-    #                   if absent, results in the processing of all available
-    #                   genotype networks.
-    # Return:		igraph object corresponding to the phenotype network.
     # TODO: Add a check to make sure the evolvability analysis has been done
-    #       for all networks that are to be processed here ...
     def phenotype_network(self, collection_name="phenotype_network", genotype_sets=Gc.ALL):
         """
         Create the phenotype network from the given list of genotype sets.
@@ -230,9 +195,6 @@ class Genonets:
 
         return pheno_net
 
-    # Description:	Returns the list of names of all genotype sets for which
-    #               genotype networks have been created.
-    # Return:		List of names of genotype sets.
     def genotype_sets(self):
         """
         Get a list of names of all genotype sets for which genotype networks have been created.
@@ -244,12 +206,6 @@ class Genonets:
 
         return repertoires
 
-    # Description:	Returns the igraph object for the network corresponding to the
-    #               given genotype set name.
-    # Arguments:
-    #   'repertoire':	Name of the genotype network for which the igraph object
-    #                   is required.
-    # Return:		igraph object for the required network.
     def genotype_network(self, genotype_set):
         """
         Get the `igraph` object for the network corresponding to the given genotype set name.
@@ -270,13 +226,6 @@ class Genonets:
         except KeyError:
             return None
 
-    # Description:	Returns the igraph object for the giant component
-    #               corresponding to the given genotype set name.
-    # Arguments:
-    #   'repertoire':	Name of the genotype network for which the igraph object
-    #                   is required.
-    # Return:		igraph object for the giant component corresponding to the
-    #               given genotype set name.
     def dominant_network(self, genotype_set):
         """
         Get the `igraph` object for the *dominant* network corresponding to the given genotype set name.
@@ -319,10 +268,6 @@ class Genonets:
             # Return the resulting matrix
             return self.analyzer.overlapMatrix
 
-    # Description:	Save the given genotype networks as GML files.
-    # Arguments:
-    #   'repertoires':	List of names of genotype networks to be saved to
-    #                   file.
     def save(self, genotype_sets=Gc.ALL):
         """
         Write the genotype networks corresponding to the given genotype sets to file.
@@ -351,10 +296,6 @@ class Genonets:
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
 
-    # Description:	Writes the network level results to file.
-    # Arguments:
-    #   'repertoires':	List of names of genotype networks for which results
-    #                   need to be written to file.
     def save_network_results(self, genotype_sets=Gc.ALL):
         """
         Write the genotype set level results to file.
@@ -387,10 +328,6 @@ class Genonets:
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
 
-    # Description:	Writes the genotype level results to file.
-    # Arguments:
-    #   'repertoires':	List of names of genotype networks for which results
-    #                   need to be written to file.
     def save_genotype_results(self, genotype_sets=Gc.ALL):
         """
         Write the genotype level results to files.
@@ -422,10 +359,6 @@ class Genonets:
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
 
-    # Description:	Save the phenotype network as a GML file.
-    # Arguments:
-    #   'phenotypeNetwork':	igraph object corresponding to the phenotype
-    #                       network.
     def save_phenotype_network(self, phenotype_network):
         """
         Write the phenotype network to file in GML format.

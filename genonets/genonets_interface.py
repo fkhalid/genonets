@@ -30,7 +30,7 @@ class Genonets:
     ALL = 0
 
     # Constructor
-    def __init__(self, args):
+    def __init__(self, args, process=False, parallel=False):
         """
         Initiate parsing of the input file, and load the parsed data into a `Genonets` object.
 
@@ -38,9 +38,12 @@ class Genonets:
 
             gn = Genonets(CmdParser(args).getArgs())
 
-        where, `CmdParser` is available in the `genonets.cmdl_handler` module. The `args` variable
-        is a list of command line arguments. Please see the `genonets` module documentation for
-        the list and descriptions of all available command line arguments.
+        where, `CmdParser` can be imported as follows::
+
+            from genonets.cmdl_handler import CmdParser
+
+        The `args` variable is a list of command line arguments. Please see the `genonets` module
+        documentation for the list and descriptions of all available command line arguments.
 
         :param args: A populated `CmdArgs` object.
         """
@@ -71,6 +74,20 @@ class Genonets:
 
         # Set the VERBOSE flag
         self.VERBOSE = True if self.cmdArgs.verbose else False
+
+        # If the user has requested complete processing with default settings,
+        if process:
+            # Perform all processing steps
+            self._process_all(parallel)
+
+    # Carries out all default processing steps with default settings.
+    def _process_all(self, parallel):
+        self.create(parallel=parallel)
+        self.analyze(parallel=parallel)
+        self.save()
+        self.save_network_results()
+        self.save_genotype_results()
+        self.save_phenotype_network(self.phenotype_network())
 
     def create(self, genotype_sets=Gc.ALL, parallel=False):
         """

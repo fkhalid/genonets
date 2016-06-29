@@ -69,6 +69,9 @@ class Genonets:
         # If there is only one component, giant=network
         self.repToGiantDict = {}
 
+        # Phenotype network
+        self.pheno_net = None
+
         # Reference to the analyzer object
         self.analyzer = None
 
@@ -87,7 +90,8 @@ class Genonets:
         self.save()
         self.save_network_results()
         self.save_genotype_results()
-        self.save_phenotype_network(self.phenotype_network())
+        self.phenotype_network()
+        self.save_phenotype_network()
 
     def create(self, genotype_sets=Gc.ALL, parallel=False):
         """
@@ -208,9 +212,7 @@ class Genonets:
         giants = [self.repToGiantDict[repertoire] for repertoire in genotype_sets]
 
         # Create the phenotype network, and get the igraph object
-        pheno_net = self.netBuilder.createEvoNet(collection_name, giants)
-
-        return pheno_net
+        self.pheno_net = self.netBuilder.createEvoNet(collection_name, giants)
 
     def genotype_sets(self):
         """
@@ -376,20 +378,19 @@ class Genonets:
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
 
-    def save_phenotype_network(self, phenotype_network):
+    def save_phenotype_network(self):
         """
         Write the phenotype network to file in GML format.
 
         Note: This method can only be used after the phenotype network has been created.
 
-        :param phenotype_network: The phenotype network (igraph.Graph) object.
         :return: No return value.
         """
 
         if self.VERBOSE:
             sys.stdout.write("\nWriting GML file for phenotype network ... ")
 
-        Writer.writeNetToFile(phenotype_network, self.cmdArgs.outPath,
+        Writer.writeNetToFile(self.pheno_net, self.cmdArgs.outPath,
                               WriterFilter.gmlAttribsToIgnore)
 
         if self.VERBOSE:

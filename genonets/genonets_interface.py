@@ -488,7 +488,9 @@ class Genonets:
     def _create_gn(seqScrDict, args, seqLength, resultsQueue, repertoire):
         # Get a reference to the bit manipulator
         bitManip = BitManipFactory.getBitSeqManip(args.moleculeType,
-                                                  seqLength, args.useIndels)
+                                                  seqLength,
+                                                  args.useIndels,
+                                                  args.use_reverse_complements)
 
         # Get the sequences for the given repertoire
         sequences = seqScrDict.keys()

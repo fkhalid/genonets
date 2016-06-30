@@ -31,7 +31,7 @@
 
     Click *... here ...*  to download all code samples, including the sample input file.
 
-    Tutorial I: The one liner
+    Tutorial I: The one-liner
     -------------------------
 
     The following code snippet shows the simplest possible way of using Genonets::
@@ -45,24 +45,24 @@
     genotype networks in the input file, as well the phenotype network. In fact, these are the contents of the
     `genonets_exmpl_minimal.py` sample file included in the package.
 
-    Assuming the `genonets_sample_input.txt` input file is available in the current directory, we can run
+    Assuming the you have downloaded the sample code and changed directory to 'sample/', we can run
     `genonets_exmpl_minimal.py` from the command line as follows::
 
-        python genonets_exmpl_minimal.py DNA true genonets_sample_input.txt 0.35 results_simple
+        python genonets_exmpl_minimal.py DNA true data/genonets_sample_input.txt 0.35 results_simple
 
     The command line arguments specified above are all mandatory positional arguments, i.e., one must specify each
     one of these arguments, and in the correct order. Here's the ordered list of arguments and the corresponding
     descriptions:
 
-    #. **Alphabet type:** The type of alphabet used in the input file. Supported values are:
+    1. **Alphabet type:** The type of alphabet used in the input file. Supported values are:
      * RNA
      * DNA
      * Protein
      * Binary
-    #. **Include indels:** Whether or not indels should be considered mutation types.
-    #. **Input file name:** Path to, and name of the input file.
-    #. **Tau:** The minimum score value to consider when reading genotypes from the input file.
-    #. **Result directory:** Path to the directory in which the result files should be created.
+    2. **Include indels:** Whether or not indels should be considered mutation types.
+    3. **Input file name:** Path to, and name of the input file.
+    4. **Tau:** The minimum score value to consider when reading genotypes from the input file.
+    . **Result directory:** Path to the directory in which the result files should be created.
 
     Note: These parameters are described in detail in the *Genonets Server Tutorial*.
 
@@ -237,7 +237,6 @@
 
         # Save the results to file from network level analysis
         gn.save_network_results()
-
 
 
     :author:    Fahad Khalid

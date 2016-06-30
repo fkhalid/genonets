@@ -8,9 +8,9 @@
     and write results to files using Genonets with default settings.
 
     Use the following command to run the script:
-    'python genonets_exmpl_minimal.py DNA true data/genonets_sample_input.txt 0.35 results_simple'
+    'python genonets_exmpl_minimal.py DNA true data/genonets_sample_input.txt 0.35 results_minimal'
 
-    Output files will be generated in 'results_simple/'
+    Output files will be generated in 'results_minimal/'
 
     :author: Fahad Khalid
     :license: MIT, see LICENSE for more details.

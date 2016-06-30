@@ -1,11 +1,20 @@
 Genonets
 ========
 
-This is the Python package used by the `Genonets Server
-<http://ieu-genonets.uzh.ch/>`_ for creating and analyzing genotype networks from raw data. The details of the analyses used and the attributes computed can be found on the `Learn Genonets
-<http://ieu-genonets.uzh.ch/learn>`_ page.
+This package provides a high level interface for construction and analysis of genotype networks from data. Also,
+this is the Python package used by the `Genonets Server
+<http://ieu-genonets.uzh.ch/>`_.
+
+Documentation, including tutorials and API documentation, is available `here <http://ieu-genonets.uzh.ch/python_package>`_.
 
 ----
+
+New in version 1.1.0
+~~~~~~~~~~~~~~~~~~~~
+
+The public interface in ``genonets.genonets_interface.Genonets`` has been changed, i.e., several method signatures
+used in the previous versions are no longer valid. Please see the API documentation `here <http://ieu-genonets.uzh.ch/python_package>`_.
+
 
 New in version 1.0.7
 ~~~~~~~~~~~~~~~~~~~~
@@ -17,8 +26,8 @@ New in version 1.0.7
 Installation
 ------------
 
-Linux and Mac OS
-~~~~~~~~~~~~~~~~
+Linux (tested on Ubuntu 14.04 LTS and Ubuntu 16.04 LTS)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using ``pip``,
 
@@ -45,6 +54,29 @@ When trying to install genonets on a machine with ``Ubuntu 14.04 LTS`` that does
 5. ``sudo pip uninstall genonets``
 6. Finally, ``sudo pip install genonets``
 
+Mac OS X El Capitan
+~~~~~~~~~~~~~~~~~~~
+
+We highly recommend using ``virtualenv`` for installation on Mac OS X El Capitan.
+
+In case you do not already have ``virtualenv`` installed on your system, use the following command to install ``virtualenv``:
+
+``pip install virtualenv``
+
+In the directory of your choice, create a virtual environment. In the following example, we will create a virtual environment called ``venv_genonets``:
+
+``virtualenv venv_genonnets``
+
+Now, activate ``venv_genonets`` as follows:
+
+``source venv_genonets/bin/activate``
+
+You are now ready to install Genonets. Use the following command:
+
+``pip install genonets``
+
+Note: Every time you need to use ``genonets``, you will have to activate the corresponding virtual environment.
+
 Windows
 ~~~~~~~
 
@@ -57,28 +89,3 @@ Instructions for Windows are basically the same, except in certain cases install
 3. ``pip install python_igraph-0.7.1.post6-cp27-none-win32.whl``
 4. ``pip install numpy-1.10.2+mkl-cp27-none-win32.whl``
 5. And finally, ``pip install genonets``
-
-Genonets quick start
---------------------
-
-The best way to get started is to work through ``genonets_exmpl_simple.py`` available in the ``genonets/genonets/sample`` directory. In case you cannot locate the directory in which genonets is installed, you can download the source tarball from the genonets `PyPI page <https://pypi.python.org/pypi/genonets>`_, and find the ``sample`` folder inside the extracted ``genonets`` directory.
-
-To get started, first copy the ``sample`` folder in a directory with write privileges. Then, try the following command:
-
-``python genonets_exmpl_simple.py DNA true data/genonets_sample_input.txt 0.35 results_simple``
-
-This command does the following:
-
-1. Parses the sample input file located in the ``data`` directory
-2. Creates genotype networks for all available genotype sets
-3. Performs all available analyses on the genotype sets
-4. Writes the following in the in the ``results_simple`` directory:
-    i. A file with genotype network level attributes for all genotype sets
-    ii. For each genotype network, a file with genotype level attributes
-    iii. GML files for genotype networks
-
-The following command can be used to view a description of command line arguments:
-
-``python genonets_exmpl_simple.py -h``
-
-The ``genonets/genonets/sample`` directory also includes other sample files, each highlighting different features.

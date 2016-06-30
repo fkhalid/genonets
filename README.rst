@@ -83,9 +83,8 @@ Windows
 Instructions for Windows are basically the same, except in certain cases installation of dependencies fails. If that happens, follow these steps:
 
 1. Download the 'whl' files for ``numpy`` and ``python-igraph`` from http://www.lfd.uci.edu/~gohlke/pythonlibs/. E.g.,
-    i. ``numpy-1.10.2+mkl-cp27-none-win32.whl``
-    ii. ``python_igraph-0.7.1.post6-cp27-none-win32.whl``
-
+ i. ``numpy-1.10.2+mkl-cp27-none-win32.whl``
+ ii. ``python_igraph-0.7.1.post6-cp27-none-win32.whl``
 3. ``pip install python_igraph-0.7.1.post6-cp27-none-win32.whl``
 4. ``pip install numpy-1.10.2+mkl-cp27-none-win32.whl``
 5. And finally, ``pip install genonets``

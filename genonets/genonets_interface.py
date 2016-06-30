@@ -29,7 +29,6 @@ class Genonets:
 
     ALL = 0
 
-    # Constructor
     def __init__(self, args, process=False, parallel=False):
         """
         Initiate parsing of the input file, and load the parsed data into a `Genonets` object.
@@ -58,11 +57,11 @@ class Genonets:
 
         # Read file and load input data into memory
         self.inDataDict, self.deltaDict, self.seqToRepDict, self.seqLength = \
-            self.buildDataDicts(self.cmdArgs.inFilePath)
+            self._build_data_dicts(self.cmdArgs.inFilePath)
 
         # Get the bit-sequence manipulator object corresponding to the
         # given molecule type.
-        self.bitManip = self.getBitManip()
+        self.bitManip = self._bit_manipulator()
 
         # Get the NetworkUtils object
         self.netBuilder = NetworkBuilder(self.bitManip)
@@ -87,16 +86,6 @@ class Genonets:
         if process:
             # Perform all processing steps
             self._process_all(parallel)
-
-    # Carries out all default processing steps with default settings.
-    def _process_all(self, parallel):
-        self.create(parallel=parallel)
-        self.analyze(parallel=parallel)
-        self.save()
-        self.save_network_results()
-        self.save_genotype_results()
-        self.phenotype_network()
-        self.save_phenotype_network()
 
     def create(self, genotype_sets=Gc.ALL, parallel=False):
         """
@@ -125,9 +114,9 @@ class Genonets:
 
         # If multiprocessing should be used,
         if parallel:
-            self.createNets_parallel(genotype_sets)
+            self._create_networks_parallel(genotype_sets)
         else:
-            self.createNets(genotype_sets)
+            self._create_networks(genotype_sets)
 
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
@@ -178,7 +167,7 @@ class Genonets:
         # If multiprocessing should be used,
         if parallel:
             # Perform all analyses in parallel; overlap will be ignored.
-            self.analyzeNets_parallel(genotype_sets, analyses)
+            self._analyze_networks_parallel(genotype_sets, analyses)
 
             if analyses == Gc.ALL or Ac.OVERLAP in analyses:
                 # Reset analysis handler to make sure it references
@@ -187,10 +176,10 @@ class Genonets:
                 self.analyzer = AnalysisHandler(self)
 
                 # Use serial processing to perform overlap analysis
-                self.analyzeNets(genotype_sets, [Ac.OVERLAP])
+                self._analyze_networks(genotype_sets, [Ac.OVERLAP])
         else:
             # Perform all analyses using serial processing
-            self.analyzeNets(genotype_sets, analyses)
+            self._analyze_networks(genotype_sets, analyses)
 
     def phenotype_network(self, collection_name="phenotype_network", genotype_sets=Gc.ALL):
         """
@@ -232,7 +221,7 @@ class Genonets:
         return repertoires
 
     def genotype_network(self, genotype_set):
-        """
+        """target="_blank"
         Get the `igraph` object for the network corresponding to the given genotype set name.
 
         The `igraph` object in this case refers to the entire network, i.e., all connected
@@ -269,29 +258,6 @@ class Genonets:
             return self.repToGiantDict[genotype_set]
         except KeyError:
             return None
-
-    # Description:	Returns the overlap matrix for all the genotype networks.
-    # Return:		Overlap matrix as a list of lists.
-    def getOverlapMat(self):
-        # Overlap matrix can only be computed if the networks have already
-        # been created.
-        if len(self.repToGiantDict) == 0:
-            # Networks have not been created. Therefore, overlap matrix
-            # cannot be computed.
-            print("Overlap matrix cannot be computed before network creation.")
-
-            return None
-
-        # If the overlap matrix has already been computed,
-        if self.analyzer.overlapMatrix:
-            # No need to compute again, just return the existing matrix
-            return self.analyzer.overlapMatrix
-        else:
-            # Perform the overlap computation
-            self.analyzer.overlap()
-
-            # Return the resulting matrix
-            return self.analyzer.overlapMatrix
 
     def save(self, genotype_sets=Gc.ALL):
         """
@@ -414,17 +380,17 @@ class Genonets:
     #   public interface
     # ----------------------------------------------------------------------
 
-    def buildDataDicts(self, inFilePath):
+    def _build_data_dicts(self, inFilePath):
         return InReader.buildDataDicts(inFilePath, self.cmdArgs.tau,
                                        self.cmdArgs.moleculeType)
 
-    def getBitManip(self):
+    def _bit_manipulator(self):
         return BitManipFactory.getBitSeqManip(self.cmdArgs.moleculeType,
                                               self.seqLength,
                                               self.cmdArgs.useIndels,
                                               self.cmdArgs.use_reverse_complements)
 
-    def getBitSeqsAndScores(self, repertoire):
+    def _bitseqs_and_scores(self, repertoire):
         # Get the list of sequences for the given repertoire
         sequences = self.inDataDict[repertoire].keys()
 
@@ -433,15 +399,25 @@ class Genonets:
 
         return sequences, scores
 
+    # Carries out all default processing steps with default settings.
+    def _process_all(self, parallel):
+        self.create(parallel=parallel)
+        self.analyze(parallel=parallel)
+        self.save()
+        self.save_network_results()
+        self.save_genotype_results()
+        self.phenotype_network()
+        self.save_phenotype_network()
+
     # Create genotype networks for the given, or all repertoires
-    def createNets(self, repertoires):
+    def _create_networks(self, repertoires):
         # For each repertoire,
         for repertoire in repertoires:
             if self.VERBOSE:
                 sys.stdout.write(repertoire + " ... ")
 
             # Get the sequences and scores
-            seqs, scores = self.getBitSeqsAndScores(repertoire)
+            seqs, scores = self._bitseqs_and_scores(repertoire)
 
             # Create the genotype network and store it in a
             # dictionary: Key=Repertoire, Value=Network
@@ -468,24 +444,24 @@ class Genonets:
 
     # Use multiprocessing to create genotype networks
     # for the given, or all repertoires
-    def createNets_parallel(self, repertoires):
+    def _create_networks_parallel(self, repertoires):
         # Instantiate a concurrent queue for results
         resultsQueue = Queue()
 
         # Compute indices to be used in the loop
-        indices = Genonets.process_blocks(len(repertoires), self.cmdArgs.num_procs)
+        indices = Genonets._process_blocks(len(repertoires), self.cmdArgs.num_procs)
 
         for i in indices:
             # Create separate processes for each repertoire in the current block
             processes = [
-                Process(target=Genonets.createGN,
+                Process(target=Genonets._create_gn,
                         args=(self.inDataDict[repertoires[j]],
                               self.cmdArgs,
                               self.seqLength,
                               resultsQueue,
                               repertoires[j])
                         )
-                for j in range(i - 1, Genonets.len_finished_reps(
+                for j in range(i - 1, Genonets._len_finished_reps(
                     i, len(repertoires), self.cmdArgs.num_procs))
             ]
 
@@ -498,7 +474,7 @@ class Genonets:
             # iteration if one of the processes does not put results
             # in the queue. This condition should be replaced
             # with one that is reliable ...
-            while len(self.repToNetDict) != Genonets.len_finished_reps(
+            while len(self.repToNetDict) != Genonets._len_finished_reps(
                     i, len(repertoires), self.cmdArgs.num_procs):
                 result = resultsQueue.get()
 
@@ -509,7 +485,7 @@ class Genonets:
                 self.repToGiantDict[result[0]] = result[1][1]
 
     @staticmethod
-    def createGN(seqScrDict, args, seqLength, resultsQueue, repertoire):
+    def _create_gn(seqScrDict, args, seqLength, resultsQueue, repertoire):
         # Get a reference to the bit manipulator
         bitManip = BitManipFactory.getBitSeqManip(args.moleculeType,
                                                   seqLength, args.useIndels)
@@ -549,7 +525,7 @@ class Genonets:
         # Close the queue for this process
         resultsQueue.close()
 
-    def analyzeNets(self, repertoires, analyses):
+    def _analyze_networks(self, repertoires, analyses):
         # Instantiate the analyzer. Initializing here makes it possible
         # to perform actions based on the list of requested analyses.
         self.analyzer = AnalysisHandler(self, analyses)
@@ -566,7 +542,7 @@ class Genonets:
         if self.VERBOSE:
             print
 
-    def analyzeNets_parallel(self, repertoires, analyses):
+    def _analyze_networks_parallel(self, repertoires, analyses):
         if self.VERBOSE:
             print
 
@@ -585,18 +561,18 @@ class Genonets:
         resultsQueue = Queue()
 
         # Compute indices to be used in the loop
-        indices = Genonets.process_blocks(len(repertoires), self.cmdArgs.num_procs)
+        indices = Genonets._process_blocks(len(repertoires), self.cmdArgs.num_procs)
 
         for i in indices:
             # Create separate processes for each repertoire in the current block
             processes = [
-                Process(target=Genonets.analyzeGN,
+                Process(target=Genonets._analyze_gn,
                         args=(copy.deepcopy(self_copy),
                               analyses,
                               resultsQueue,
                               repertoires[j])
                         )
-                for j in range(i - 1, Genonets.len_finished_reps(
+                for j in range(i - 1, Genonets._len_finished_reps(
                     i, len(repertoires), self.cmdArgs.num_procs))
             ]
 
@@ -609,7 +585,7 @@ class Genonets:
             # iteration if one of the processes does not put results
             # in the queue. This condition should be replaced
             # with one that is reliable ...
-            while len(self.repToNetDict) != Genonets.len_finished_reps(
+            while len(self.repToNetDict) != Genonets._len_finished_reps(
                     i, len(repertoires), self.cmdArgs.num_procs):
 
                 result = resultsQueue.get()
@@ -621,7 +597,7 @@ class Genonets:
                 self.repToGiantDict[result[0]] = result[1][1]
 
     @staticmethod
-    def process_blocks(num_repertoires, num_processes):
+    def _process_blocks(num_repertoires, num_processes):
         # If there are enough processes to process all repertoires
         # in parallel,
         if num_repertoires <= num_processes:
@@ -654,7 +630,7 @@ class Genonets:
         return indices
 
     @staticmethod
-    def len_finished_reps(cur_index, len_repertoires, max_procs):
+    def _len_finished_reps(cur_index, len_repertoires, max_procs):
         return min(len_repertoires, (cur_index - 1) + max_procs)
 
     def analyzeNets_parallel_old(self, repertoires, analyses):
@@ -663,7 +639,7 @@ class Genonets:
 
         # Create separate processes for each repertoire
         processes = [
-            Process(target=Genonets.analyzeGN,
+            Process(target=Genonets._analyze_gn,
                     args=(copy.deepcopy(self),
                           analyses,
                           resultsQueue,
@@ -698,7 +674,7 @@ class Genonets:
             self.repToGiantDict[result[0]] = result[1][1]
 
     @staticmethod
-    def analyzeGN(genonetsCopy, analyses, resultsQueue, repertoire):
+    def _analyze_gn(genonetsCopy, analyses, resultsQueue, repertoire):
         # Initialize the AnalysisHandler object
         analyzer = AnalysisHandler(genonetsCopy, parallel=True)
 
@@ -719,3 +695,26 @@ class Genonets:
 
         # Close the queue for this process
         resultsQueue.close()
+
+    # Description:	Returns the overlap matrix for all the genotype networks.
+    # Return:		Overlap matrix as a list of lists.
+    def _overlap_matrix(self):
+        # Overlap matrix can only be computed if the networks have already
+        # been created.
+        if len(self.repToGiantDict) == 0:
+            # Networks have not been created. Therefore, overlap matrix
+            # cannot be computed.
+            print("Overlap matrix cannot be computed before network creation.")
+
+            return None
+
+        # If the overlap matrix has already been computed,
+        if self.analyzer.overlapMatrix:
+            # No need to compute again, just return the existing matrix
+            return self.analyzer.overlapMatrix
+        else:
+            # Perform the overlap computation
+            self.analyzer.overlap()
+
+            # Return the resulting matrix
+            return self.analyzer.overlapMatrix

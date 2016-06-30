@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# TODO: Add the download samples directory option, and update code samples accordingly ...
-
 """
     ========
     Genonets
@@ -11,25 +9,13 @@
 
     Following features are available:
 
-    * Parsing of genotype-phenotype maps from an input file, provided in the *... genonets input file ...* format
+    * Parsing of genotype-phenotype maps from an input file, provided in the genonets input file format
     * Creation of genotype networks from the input data
     * Various analyses on the constructed genotype networks
     * Generation of result files with attributes from genotype network level analyses, as well as genotype level
       analyses
     * Creation of a phenotype network that shows evolvability and accessibility relationships between the genotype sets
     * Generation of GML files corresponding to the created genotype networks and the phenotype network
-
-    All available analyses are described *... here ...*.
-
-    Installation instructions
-    -------------------------
-
-    Installation instructions are available *... here ...* and *... here ..*.
-
-    Code samples
-    ------------
-
-    Click *... here ...*  to download all code samples, including the sample input file.
 
     Tutorial I: The one-liner
     -------------------------

@@ -42,10 +42,15 @@ class Genonets:
 
             from genonets.cmdl_handler import CmdParser
 
-        The `args` variable is a list of command line arguments. Please see the `genonets` module
+        The `args` variable is a list of command line arguments. Please see the `genonets` package
         documentation for the list and descriptions of all available command line arguments.
 
         :param args: A populated `CmdArgs` object.
+        :param process: If 'True', in addition to creating the object, initiates complete processing, i,e., creates
+                        genotype networks for all genotype sets in the input data, performs all available analyses on
+                        all genotype networks, and generates all result files.
+        :param parallel: Flag to indicate whether or not parallel processing should be used. This parameter is only
+                         useful with 'process=True'.
         """
 
         # Handle program arguments
@@ -129,7 +134,7 @@ class Genonets:
 
     def analyze(self, genotype_sets=Gc.ALL, analyses=Gc.ALL, parallel=False):
         """
-        Performs all analyses provided in the list of analysis types, on all the given genotype sets.
+        Performs all analyses provided in the list of analysis types, on the given genotype sets.
 
         This method can only be used if `create` has already been called on the same `Genonets`
         object.
@@ -187,7 +192,6 @@ class Genonets:
             # Perform all analyses using serial processing
             self.analyzeNets(genotype_sets, analyses)
 
-    # TODO: Add a check to make sure the evolvability analysis has been done
     def phenotype_network(self, collection_name="phenotype_network", genotype_sets=Gc.ALL):
         """
         Create the phenotype network from the given list of genotype sets.
@@ -213,6 +217,8 @@ class Genonets:
 
         # Create the phenotype network, and get the igraph object
         self.pheno_net = self.netBuilder.createEvoNet(collection_name, giants)
+
+        return self.pheno_net
 
     def genotype_sets(self):
         """
@@ -295,10 +301,13 @@ class Genonets:
         components, separate files are generated for the entire network and the
         dominant network.
 
-        ??? ... this function be called before analyze() ... ???
+        Note: This method can be used only after `analyze()` has been called on the
+        given genotype sets.
 
         :param genotype_sets: List of names of genotype sets for which the genotype
-                              should be written to file.
+                              should be written to file. If a value is not explicitly specified
+                              for this parameter, result files are written for all
+                              genotype sets.
         :return: No return value.
         """
 

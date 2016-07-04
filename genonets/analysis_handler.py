@@ -82,7 +82,7 @@ class AnalysisHandler:
         # considered double stranded, i.e., whether or not
         # reverse complements should be used in evolvability
         # computations.
-        self.isDoubleStranded = self.caller.cmdArgs.moleculeType == "DNA"
+        self.isDoubleStranded = self.caller.cmdArgs.use_reverse_complements
 
         # If 'Evolvability' analysis has been requested, initialize
         # data structures specific to 'Evolvability' analysis
@@ -147,7 +147,7 @@ class AnalysisHandler:
 
     def peaks(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Get the landscape object
         lscape = self.getLandscapeObj(giant, repertoire)
@@ -169,7 +169,7 @@ class AnalysisHandler:
 
     def paths(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Get the landscape object
         lscape = self.getLandscapeObj(giant, repertoire)
@@ -192,7 +192,7 @@ class AnalysisHandler:
 
     def paths_ratios(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # 'PathAnalyzer' object
         path_analyzer = PathAnalyzer(giant, self.netBuilder,
@@ -215,7 +215,7 @@ class AnalysisHandler:
 
     def epistasis(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Get the landscape object
         lscape = self.getLandscapeObj(giant, repertoire)
@@ -251,7 +251,7 @@ class AnalysisHandler:
 
     def robustness(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Construct a RobustnessAnalyzer object
         robAnalyzer = RobustnessAnalyzer(giant, self.netBuilder)
@@ -265,7 +265,7 @@ class AnalysisHandler:
 
     def covering(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Create an 'EvolvabilityAnalyzer' object that is required by
         # the 'CoveringAnalyzer'
@@ -289,13 +289,14 @@ class AnalysisHandler:
                                              len(self.inDataDict))
 
         covering_results = covering_analyzer.covering_all(radius=sequence_length)
+        # covering_results = covering_analyzer.covering_all(radius=4)
 
         giant.vs["Covering_list"] = [result.covering for result in covering_results]
         giant.vs["Covering_radius"] = [result.radius for result in covering_results]
 
     def covering_in(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Create an 'EvolvabilityAnalyzer' object that is required by
         # the 'CoveringAnalyzer'
@@ -343,7 +344,7 @@ class AnalysisHandler:
 
     def evolvability(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Construct a EvolvabilityAnalyzer object
         evoAnalyzer = EvolvabilityAnalyzer(giant,
@@ -378,7 +379,7 @@ class AnalysisHandler:
 
     def accessibility(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Create an AccessibilityAnalyzer object
         accAnalyzer = AccessibilityAnalyzer(repertoire, giant,
@@ -393,7 +394,7 @@ class AnalysisHandler:
 
     def neighborAbundance(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Create an AccessibilityAnalyzer object
         accAnalyzer = AccessibilityAnalyzer(repertoire, giant,
@@ -409,7 +410,7 @@ class AnalysisHandler:
 
     def phenotypicDiversity(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Create an AccessibilityAnalyzer object
         accAnalyzer = AccessibilityAnalyzer(repertoire, giant,
@@ -424,10 +425,10 @@ class AnalysisHandler:
 
     def structure(self, repertoire):
         # Get the genotype network for the repertoire
-        network = self.caller.getNetworkFor(repertoire)
+        network = self.caller.genotype_network(repertoire)
 
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Create the structure analyzer object
         structAnalyzer = StructureAnalyzer(network, self.netBuilder)
@@ -464,7 +465,7 @@ class AnalysisHandler:
         if not self.overlapMatrix:
             # Create the overlap analyzer
             overlapAnalyzer = OverlapAnalyzer(self.repToGiantDict,
-                                              self.caller.getRepertoires())
+                                              self.caller.genotype_sets())
 
             # Compute overlap data
             self.overlapMatrix, repertoires, overlapDict = overlapAnalyzer.getOverlapData()
@@ -474,7 +475,7 @@ class AnalysisHandler:
                 # Use the overlap dict to populate vertex level attributes in all giants
 
                 # For each repertoire,
-                for repertoire in self.caller.getRepertoires():
+                for repertoire in self.caller.genotype_sets():
                     # Get giant
                     giant = self.repToGiantDict[repertoire]
 
@@ -510,7 +511,7 @@ class AnalysisHandler:
                     # the total No. of other repertoires
                     try:
                         ratio = float(len(giant["Overlapping_genotype_sets"])) / \
-                                (float(len(self.caller.getRepertoires())) - 1)
+                                (float(len(self.caller.genotype_sets())) - 1)
                     except ZeroDivisionError:
                         ratio = 0
 

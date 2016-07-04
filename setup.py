@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='genonets',
-    version='1.0.6',
+    version='1.1.1',
     description='Framework for creating and analyzing genotype networks from data.',
     author='Fahad Khalid',
     author_email='fahad.khalid@ieu.uzh.ch',
@@ -24,7 +24,6 @@ setup(
     package_data={
         'genonets': [
             'sample/*.py',
-            'sample/*.txt',
             'sample/data/*.txt'
         ]
     },

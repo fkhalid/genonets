@@ -38,11 +38,11 @@ def process(args):
     gn.save()
 
     # Save all genotype network level measures to 'Genotype_set_measures.txt'.
-    gn.saveNetResults()
+    gn.save_network_results()
 
     # Save all genotype level measures to '<genotypeSetName>_genotype_measures.txt'
     # files. One file per genotype set is generated.
-    gn.saveGenotypeResults()
+    gn.save_genotype_results()
 
 
 if __name__ == "__main__":

@@ -1,8 +1,7 @@
 """
-    genonets_constants
-    ~~~~~~~~~~~~~~~~~~
+    Defines constants used throughout the `Genonets` package.
 
-    Defines constans used throughout the package.
+    Constants are grouped into different classes according to function.
 
     :author: Fahad Khalid
     :license: MIT, see LICENSE for more details.
@@ -11,11 +10,16 @@
 from genonets_utils import Utils
 
 
+# Generic constants that do not belong to any specific category.
 class GenonetsConstants:
     ALL = 0
 
 
 class SupportedAlphabet:
+    """
+    Names of the supported alphabet types.
+    """
+
     binary = ['0', '1']
     rna = ['A', 'U', 'C', 'G']
     dna = ['A', 'T', 'C', 'G']
@@ -26,6 +30,18 @@ class SupportedAlphabet:
 
     @staticmethod
     def getAlphabet(alphabetType):
+        """
+        Get the list of letters corresponding to the given alphabet type.
+
+        :param alphabetType: One of the following strings (case sensitive),
+        * RNA
+        * DNA
+        * Binary
+        * Protein
+
+        :return: list: List of all letters contained in the alphabet type received
+                        as argument.
+        """
         return SupportedAlphabet.typeToList[alphabetType]
 
 
@@ -105,6 +121,7 @@ class ErrorCodes:
     INCONSISTENT_SEQ_LEN = 504
     ALPHABET_TYPE_MISMATCH = 505
     NO_USABLE_SCORES = 506
+    RC_ALPHABET_MISMATCH = 507
 
     # File I/O errors
     CANNOT_WRITE_TO_FILE = 550
@@ -129,7 +146,8 @@ class ErrorCodes:
         NOT_ENOUGH_REPS_OLAP: "Analysis error - Overlap computation can only be performed if there are least " +
                               "two phenotypes that have genotypes with Score values greater than Tau",
         CANNOT_WRITE_TO_FILE: "Could not write to file",
-        CANNOT_CREATE_DIRECTORY: "Error while trying to create directory"
+        CANNOT_CREATE_DIRECTORY: "Error while trying to create directory",
+        RC_ALPHABET_MISMATCH: "Reverse complements can only be considered if alphabet type is DNA"
     }
 
     @staticmethod

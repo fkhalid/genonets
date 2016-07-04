@@ -42,11 +42,11 @@ def process(args):
 
     # Save genotype network level measures for the given genotype sets to
     # 'Genotype_set_measures.txt'.
-    gn.saveNetResults(["Foxa2", "Bbx"])
+    gn.save_network_results(["Foxa2", "Bbx"])
 
     # Save all genotype level measures for the given genotype sets to
     # 'Foxa2_genotype_measures.txt' and 'Bbx_genotype_measures.txt' files.
-    gn.saveGenotypeResults(["Foxa2", "Bbx"])
+    gn.save_genotype_results(["Foxa2", "Bbx"])
 
 
 if __name__ == "__main__":

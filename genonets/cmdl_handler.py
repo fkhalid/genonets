@@ -1,7 +1,4 @@
 """
-    cmdl_handler
-    ~~~~~~~~~~~~
-
     Handles command line arguments.
 
     :author: Fahad Khalid
@@ -12,6 +9,8 @@ import argparse
 
 from genonets_writer import Writer
 from seq_bit_impl import BitManipFactory
+from genonets_constants import ErrorCodes
+from genonets_exceptions import GenonetsError
 
 
 # Parses the command line arguments using python's 'argparse' module
@@ -57,6 +56,13 @@ class CmdParser:
 
         # ---------------- Optional arguments ------------------ #
 
+        # Add 'use_reverse_complements' as an argument
+        parser.add_argument("-rc", "--use_reverse_complements", dest="use_reverse_complements", action="store_const",
+                            const=True,
+                            help="When specified, reverse complements are considered during creation " +
+                                 "and analysis of genotype networks for alphabet type DNA. This option is " +
+                                 "not valid for other alphabet types.")
+
         # Add 'num_processes' as an argument
         parser.add_argument("-np", "--num_processes", dest="num_procs", action="store",
                             type=int, default="4",
@@ -88,6 +94,17 @@ class CmdArgs:
         # Molecule type: RNA, DNA, Protein, etc.
         self.moleculeType = arguments.alphabetType
 
+        # 'Use reverse complements' flag
+        self.use_reverse_complements = True if arguments.use_reverse_complements else False
+
+        # Report exception if 'use_reverse_complements' has been passed as an argument with
+        # alphabet type other than DNA
+        if self.use_reverse_complements and self.moleculeType != "DNA":
+            print("Error: " +
+                  ErrorCodes.getErrDescription(ErrorCodes.RC_ALPHABET_MISMATCH))
+
+            raise GenonetsError(ErrorCodes.RC_ALPHABET_MISMATCH)
+
         # Flag to indicate whether shift mutations should
         # be considered
         if arguments.includeIndels.lower() == "true":
@@ -113,7 +130,7 @@ class CmdArgs:
         self.num_procs = arguments.num_procs
 
         # Verbose flag
-        self.verbose = arguments.verbose
+        self.verbose = True if arguments.verbose else False
 
         # Create a dictionary of parameters
         paramsDict = {
@@ -122,7 +139,9 @@ class CmdArgs:
             "inFilePath": self.inFilePath,
             "tau": str(self.tau),
             "outPath": self.outPath,
-            "num_procs": str(self.num_procs)
+            "useReverseComplements": str(self.use_reverse_complements),
+            "num_procs": str(self.num_procs),
+            "verbose": str(self.verbose)
         }
 
         # Print the parsed parameter values

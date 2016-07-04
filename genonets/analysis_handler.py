@@ -265,7 +265,7 @@ class AnalysisHandler:
 
     def covering(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Create an 'EvolvabilityAnalyzer' object that is required by
         # the 'CoveringAnalyzer'
@@ -296,7 +296,7 @@ class AnalysisHandler:
 
     def covering_in(self, repertoire):
         # Get the dominant genotype network for the repertoire
-        giant = self.caller.getDominantNetFor(repertoire)
+        giant = self.caller.dominant_network(repertoire)
 
         # Create an 'EvolvabilityAnalyzer' object that is required by
         # the 'CoveringAnalyzer'

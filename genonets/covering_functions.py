@@ -164,7 +164,7 @@ class CoveringAnalyzer:
 
         # For radius starting with 1,
         for r in xrange(1, radius + 1):
-            # If 'genotypes' is empty, there is not use in proceeding
+            # If 'genotypes' is empty, there is no use in proceeding
             # any further.
             if not genotypes:
                 break

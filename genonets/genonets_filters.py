@@ -8,6 +8,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import re
+
 
 class WriterFilter:
     def __init__(self):
@@ -50,8 +52,8 @@ class WriterFilter:
         "Clustering_coefficient": 7,
         "Distance from Summit": 8,
         "Accessible_paths_through": 9,
-        "Covering_radius": 10,
-        "Covering_list": 11
+        "Covering_radius": 100,
+        "Covering_list": 101
     }
 
     @staticmethod
@@ -109,7 +111,15 @@ class WriterFilter:
         try:
             return WriterFilter.ordered_seq_attrib[attribute]
         except KeyError:
-            # Any custom attribute added by the user will be assigned
-            # this arbitrary high value, so that the user-defined
-            # attributes are placed at the very end.
-            return 1000
+            # If it is a 'Distance_%d' type attribute,
+            if re.search("Distance_[0-9]", attribute):
+                # Get the number at the end
+                index = int(attribute.split("_")[1])
+
+                # Add 'index' to the order of 'Covering_list'
+                return WriterFilter.ordered_seq_attrib["Covering_list"] + index
+            else:
+                # Any custom attribute added by the user will be assigned
+                # this arbitrary high value, so that the user-defined
+                # attributes are placed at the very end.
+                return 1000

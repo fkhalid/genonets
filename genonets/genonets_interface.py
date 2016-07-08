@@ -375,6 +375,21 @@ class Genonets:
         if self.VERBOSE:
             sys.stdout.write("Done.\n")
 
+    def accessible_paths_between(self, genotype_set, source_genotype, target_genotype, path_length=0):
+        # If there does not already exist an analyzer object,
+        if not self.analyzer:
+            # Create one
+            self.analyzer = AnalysisHandler(self)
+
+        return self.analyzer.accessible_paths_between(genotype_set, source_genotype, target_genotype, path_length)
+
+    def vertex_id(self, genotype_set, genotype):
+        if not self.analyzer:
+            # Create one
+            self.analyzer = AnalysisHandler(self)
+
+        return self.analyzer.vertex_id(genotype_set, genotype)
+
     # Plots the given network.
     def plot(self, network, layout="auto"):
         self.netBuilder.plotNetwork(network, layout, self.cmdArgs.outPath)

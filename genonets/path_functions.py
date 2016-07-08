@@ -9,6 +9,7 @@
 """
 
 import igraph
+import collections
 
 # from memory_profiler import profile
 
@@ -68,6 +69,56 @@ class PathAnalyzer:
                     pathsThruVtx[vtx] += 1
 
         return pathsThruVtx
+
+    def accessible_paths_between(self, source, target, path_length=0):
+        # Source vertex
+        source_vertex = self.netUtils.getVertex(source, self.network)
+
+        # Target vertex
+        target_vertex = self.netUtils.getVertex(target, self.network)
+
+        paths_results = self.accessible_paths(source_vertex,
+                                              target_vertex,
+                                              path_length)
+
+        return paths_results
+
+    def accessible_paths(self, source_vertex, target_vertex, path_length):
+        # Get all shortest paths between source and target
+        all_shortest_paths = self.network.get_all_shortest_paths(source_vertex,
+                                                                 target_vertex,
+                                                                 mode=igraph.OUT)
+
+        # If we only need to calculate all accessible paths, regardless
+        # of the path length,
+        if path_length == 0:
+            # Get all shortest accessible paths
+            shortest_accessible_paths = [
+                self.network.vs[path].indices
+                for path in all_shortest_paths
+                if self.isAccessible(path)
+            ]
+        else:   # If only paths of 'path length' are required,
+            # If the shortest path length is the same as the required
+            # length,
+            if len(all_shortest_paths[0]) == path_length + 1:
+                shortest_accessible_paths = [
+                    self.network.vs[path]["sequences"]
+                    for path in all_shortest_paths
+                    if self.isAccessible(path)
+                ]
+            else:
+                # We did not find a path of the required length
+                all_shortest_paths = None
+                shortest_accessible_paths = None
+
+        # Construct the result as a named tuple
+        result = collections.namedtuple("Result", ["all", "accessible"])
+
+        return result(
+            all=all_shortest_paths,
+            accessible=shortest_accessible_paths
+        )
 
     # Get the ratio of accessible paths to all paths of the
     # given length.

@@ -185,6 +185,15 @@ class AnalysisHandler:
         # Add the count for each vertex as a vertex level attribute in giant
         giant.vs["Accessible_paths_through"] = lscape.pathAnalyzer.getPathsThruVtxs()
 
+    def accessible_paths_between(self, genotype_set, source_genotype, target_genotype, path_length=0):
+        # Get the dominant genotype network for the genotype set
+        giant = self.caller.dominant_network(genotype_set)
+
+        # Create the path analyzer
+        path_analyzer = PathAnalyzer(giant, self.netBuilder, self.deltaDict[genotype_set])
+
+        return path_analyzer.accessible_paths_between(source_genotype, target_genotype, path_length)
+
     def paths_ratios(self, repertoire):
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
@@ -378,6 +387,15 @@ class AnalysisHandler:
         # Compute and set vertex level properties
         giant.vs["Coreness"] = structAnalyzer.getCoreness()
         giant.vs["Clustering_coefficient"] = structAnalyzer.getClusteringCoefficients()
+
+    def vertex_id(self, genotype_set, genotype):
+        # Get the dominant genotype network for the genotype set
+        giant = self.caller.dominant_network(genotype_set)
+
+        # igraph 'Vertex' object corresponding to the genotype
+        vertex = self.netBuilder.getVertex(genotype, giant)
+
+        return vertex.index
 
     # The parameter 'r' is just a place holder, and is needed in the
     # signature just so that it can be called anonymously from

@@ -13,6 +13,9 @@ class WriterFilter:
     def __init__(self):
         pass
 
+    # Ordered list of genotype sets, initialized by the Genonets object
+    ORDERED_GENOTYPE_SETS = None
+
     # Network level attribute to order map
     ordered_net_attrib = {
         "Robustness": 1,
@@ -109,3 +112,12 @@ class WriterFilter:
             # this arbitrary high value, so that the user-defined
             # attributes are placed at the very end.
             return 1000
+
+    @staticmethod
+    def genotype_set_to_order(genotype_set):
+        try:
+            return WriterFilter.ORDERED_GENOTYPE_SETS.index(genotype_set)
+        except ValueError:
+            # If the requested genotype set was not found in the list, just
+            # return an arbitrarily high value.
+            return 9999999

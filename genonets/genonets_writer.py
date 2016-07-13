@@ -116,7 +116,8 @@ class Writer:
             netToWrite.write(fileName, format="gml")
 
     @staticmethod
-    def writeNetAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, order, repertoires=gc.ALL):
+    def writeNetAttribs(repToNetDict, repToGiantDict, netBuilder, path, attrsToIgnore, attribute_order,
+                        genotype_set_order, repertoires=gc.ALL):
         # If all repertoires should be considered,
         if repertoires == gc.ALL:
             # Get a list of all repertoires
@@ -141,7 +142,7 @@ class Writer:
 
         # Sort the attributes, so that they are written to file in a
         # fixed, pre-determined order
-        attributes.sort(key=order)
+        attributes.sort(key=attribute_order)
 
         # If the required directories have not already been created
         if not os.path.exists(os.path.dirname(path)):
@@ -157,6 +158,9 @@ class Writer:
             dataFile.write(attribute + "\t")
 
         dataFile.write("\n")
+
+        # Sort the list of genotype set according to the given ordering function
+        repertoires.sort(key=genotype_set_order)
 
         # For each repertoire,
         for repertoire in repertoires:

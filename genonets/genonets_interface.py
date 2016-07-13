@@ -56,8 +56,11 @@ class Genonets:
         self.cmdArgs = CmdArgs(args)
 
         # Read file and load input data into memory
-        self.inDataDict, self.deltaDict, self.seqToRepDict, self.seqLength = \
+        self.inDataDict, self.deltaDict, self.seqToRepDict, self.seqLength, self.ordered_genotype_sets = \
             self._build_data_dicts(self.cmdArgs.inFilePath)
+
+        # Pass the ordered list of genotype sets to the WriterFilter
+        WriterFilter.ORDERED_GENOTYPE_SETS = self.ordered_genotype_sets
 
         # Get the bit-sequence manipulator object corresponding to the
         # given molecule type.
@@ -317,6 +320,7 @@ class Genonets:
                                self.netBuilder, self.cmdArgs.outPath,
                                WriterFilter.netAttribsToIgnore,
                                WriterFilter.net_attribute_to_order,
+                               WriterFilter.genotype_set_to_order,
                                genotype_sets)
 
         if self.VERBOSE:
@@ -381,8 +385,8 @@ class Genonets:
     # ----------------------------------------------------------------------
 
     def _build_data_dicts(self, inFilePath):
-        return InReader.buildDataDicts(inFilePath, self.cmdArgs.tau,
-                                       self.cmdArgs.moleculeType)
+        return InReader.build_data_dicts(inFilePath, self.cmdArgs.tau,
+                                         self.cmdArgs.moleculeType)
 
     def _bit_manipulator(self):
         return BitManipFactory.getBitSeqManip(self.cmdArgs.moleculeType,

@@ -363,7 +363,7 @@ class AbstractBitSeqManipulator:
         # purposes: 1) To get the desired size, 2) To ensure there are
         # no ones, since left shifting ones at the left most index can
         # cause problems.
-        outputSequence = array('c', ["0" for i in range(k)])
+        outputSequence = array('c', ["0" for _ in range(k)])
 
         # For each n-bit sequence (in a k-mer occupying n*k bits in an
         # integer),

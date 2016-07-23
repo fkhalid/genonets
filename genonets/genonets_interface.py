@@ -618,7 +618,7 @@ class Genonets:
             incr_last = num_repertoires % num_processes
 
             # Create a list of increment values per iteration
-            index_incrs = [num_processes for i in range(num_full_iters)] \
+            index_incrs = [num_processes for _ in range(num_full_iters)] \
                 if num_full_iters != 0 else []
 
             # If required, add the last increment

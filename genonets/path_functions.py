@@ -52,7 +52,7 @@ class PathAnalyzer:
     def getPathsThruVtxs(self):
         # List: Each element is the No. of paths through the vertex Id
         # 		corresponding to the index
-        pathsThruVtx = [0 for i in range(self.network.vcount())]
+        pathsThruVtx = [0 for _ in range(self.network.vcount())]
 
         # Go through accessible paths corresponding to each vertex
         for vtxId in range(self.network.vcount()):

@@ -63,9 +63,9 @@ class AnalysisHandler:
         # Dictionary to store 'analysis type' to 'function'
         # mapping
         self.analysisToFunc = {
-            Ac.PEAKS: self.peaks,
+            # Ac.PEAKS: self.peaks,
             Ac.PATHS: self.paths,
-            Ac.PATHS_RATIOS: self.paths_ratios,
+            # Ac.PATHS_RATIOS: self.paths_ratios,
             Ac.EPISTASIS: self.epistasis,
             Ac.ROBUSTNESS: self.robustness,
             Ac.EVOLVABILITY: self.evolvability,
@@ -73,9 +73,9 @@ class AnalysisHandler:
             Ac.NEIGHBOR_ABUNDANCE: self.neighborAbundance,
             Ac.PHENOTYPIC_DIVERSITY: self.phenotypicDiversity,
             Ac.STRUCTURE: self.structure,
-            Ac.OVERLAP: self.overlap,
-            Ac.COVERING: self.covering,
-            Ac.COVERING_IN: self.covering_in
+            Ac.OVERLAP: self.overlap
+            # Ac.COVERING: self.covering,
+            # Ac.COVERING_IN: self.covering_in
         }
 
         # Flag to indicate whether or not the genotypes should be
@@ -310,7 +310,7 @@ class AnalysisHandler:
                                             self.isDoubleStranded)
 
         # Create a 'StructureAnalyzer' object
-        struct_analyzer = StructureAnalyzer(giant, self.netBuilder)
+        struct_analyzer = StructureAnalyzer(giant, giant, self.netBuilder)
 
         # Diameter of giant
         diameter = struct_analyzer.getDiameter()
@@ -431,7 +431,7 @@ class AnalysisHandler:
         giant = self.caller.dominant_network(repertoire)
 
         # Create the structure analyzer object
-        structAnalyzer = StructureAnalyzer(network, self.netBuilder)
+        structAnalyzer = StructureAnalyzer(network, giant, self.netBuilder)
 
         # Compute and set network/giant level properties
         network["Genotype_network_sizes"] = str(structAnalyzer.getComponentSizes())
@@ -450,6 +450,23 @@ class AnalysisHandler:
         # Compute and set vertex level properties
         giant.vs["Coreness"] = structAnalyzer.getCoreness()
         giant.vs["Clustering_coefficient"] = structAnalyzer.getClusteringCoefficients()
+
+        # Assortativity by type
+        genotype_attributes = [
+            'escores',
+            'Robustness',
+            'Evolvability',
+            'Coreness',
+            'Accessible_paths_through'
+        ]
+
+        for attribute in genotype_attributes:
+            # Name of the giant level attribute in which to store the assortativity
+            # coefficient.
+            result_attribute_name = 'Assortativity' + '_' + attribute
+
+            # Store the result as a giant level attribute
+            giant[result_attribute_name] = structAnalyzer.assortativity_by_attribute(attribute)
 
     # The parameter 'r' is just a place holder, and is needed in the
     # signature just so that it can be called anonymously from

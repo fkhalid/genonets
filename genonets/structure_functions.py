@@ -13,7 +13,7 @@ import igraph
 
 class StructureAnalyzer:
     # Constructor
-    def __init__(self, network, netBuilder):
+    def __init__(self, network, giant, netBuilder):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -22,10 +22,11 @@ class StructureAnalyzer:
         self.netBuilder = netBuilder
 
         # Reference to giant
-        self.giant = self.netBuilder.getGiantComponent(self.network)
+        self.giant = giant
+        # self.giant = self.netBuilder.getGiantComponent(self.network)
 
     # ----------------------------------------------------------------
-    #	Network level properties
+    #   Network level properties
     # ----------------------------------------------------------------
 
     def getComponentSizes(self):
@@ -38,7 +39,7 @@ class StructureAnalyzer:
         return self.giant.vcount()
 
     def getPercentDominantSize(self):
-        return (float(self.giant.vcount()) / float(self.network.vcount()))
+        return float(self.giant.vcount()) / float(self.network.vcount())
 
     def getEdgeDensity(self):
         return self.giant.density()
@@ -48,6 +49,11 @@ class StructureAnalyzer:
 
     def getAssortativity(self):
         return self.giant.assortativity_degree()
+
+    def assortativity_by_attribute(self, attribute):
+        # print('\nAttributes in giant: ' + str(self.giant.attributes()))
+
+        return self.giant.assortativity(attribute, directed=False)
 
     def getDiameter(self):
         return self.giant.diameter()
@@ -76,7 +82,7 @@ class StructureAnalyzer:
         return []
 
     # ----------------------------------------------------------------
-    #	Vertex level properties
+    #   Vertex level properties
     # ----------------------------------------------------------------
 
     def getCoreness(self):

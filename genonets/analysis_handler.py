@@ -63,7 +63,7 @@ class AnalysisHandler:
         # Dictionary to store 'analysis type' to 'function'
         # mapping
         self.analysisToFunc = {
-            # Ac.PEAKS: self.peaks,
+            Ac.PEAKS: self.peaks,
             Ac.PATHS: self.paths,
             # Ac.PATHS_RATIOS: self.paths_ratios,
             Ac.EPISTASIS: self.epistasis,
@@ -467,6 +467,23 @@ class AnalysisHandler:
 
             # Store the result as a giant level attribute
             giant[result_attribute_name] = structAnalyzer.assortativity_by_attribute(attribute)
+
+        # Community detection
+        community_result = structAnalyzer.community_detection()
+        giant['Modularity_score_communities'] = community_result.modularity_score
+        giant['Communities'] = community_result.communities
+
+        # Modularity score based on attributes
+        modularity_attributes = [
+            'Accessible_paths_through',
+            'Distance from Summit',
+            'Coreness'
+        ]
+
+        for attribute in modularity_attributes:
+            result_attribute_name = 'Modularity_score_' + attribute
+
+            giant[result_attribute_name] = structAnalyzer.modularity_score(giant.vs[attribute])
 
     # The parameter 'r' is just a place holder, and is needed in the
     # signature just so that it can be called anonymously from

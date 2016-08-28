@@ -9,6 +9,7 @@
 """
 
 import igraph
+import collections
 
 
 class StructureAnalyzer:
@@ -80,6 +81,30 @@ class StructureAnalyzer:
                     return sPath[0]
 
         return []
+
+    def community_detection(self):
+        # Perform community detection
+        vertex_dendrogram = self.giant.community_fastgreedy()
+
+        # No. of clusters
+        num_clusters = vertex_dendrogram.optimal_count
+
+        # Modularity score based on the community detection
+        score = self.modularity_score(vertex_dendrogram.as_clustering())
+
+        result = collections.namedtuple('result', [
+            'communities',
+            'modularity_score'
+        ])
+
+        return result(
+            communities=num_clusters,
+            modularity_score=score
+        )
+
+    def modularity_score(self, membership):
+        return self.giant.modularity(membership)
+
 
     # ----------------------------------------------------------------
     #   Vertex level properties

@@ -65,7 +65,7 @@ class AnalysisHandler:
         self.analysisToFunc = {
             Ac.PEAKS: self.peaks,
             Ac.PATHS: self.paths,
-            # Ac.PATHS_RATIOS: self.paths_ratios,
+            Ac.PATHS_RATIOS: self.paths_ratios,
             Ac.EPISTASIS: self.epistasis,
             Ac.ROBUSTNESS: self.robustness,
             Ac.EVOLVABILITY: self.evolvability,
@@ -73,9 +73,9 @@ class AnalysisHandler:
             Ac.NEIGHBOR_ABUNDANCE: self.neighborAbundance,
             Ac.PHENOTYPIC_DIVERSITY: self.phenotypicDiversity,
             Ac.STRUCTURE: self.structure,
-            Ac.OVERLAP: self.overlap
-            # Ac.COVERING: self.covering,
-            # Ac.COVERING_IN: self.covering_in
+            Ac.OVERLAP: self.overlap,
+            Ac.COVERING: self.covering,
+            Ac.COVERING_IN: self.covering_in
         }
 
         # Flag to indicate whether or not the genotypes should be

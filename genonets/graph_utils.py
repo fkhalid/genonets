@@ -87,6 +87,15 @@ class NetworkBuilder:
             for neighbor in self.getNeighbors(sequence, network)
         ]
 
+        # If reverse complements should be considered,
+        if self.bitManip.useRC:
+            # Add the reverse complement of each neighbor to the
+            # list of neighbors
+            genoNetNeighbors.extend([
+                self.bitManip.getReverseComplement(neighbor)
+                for neighbor in genoNetNeighbors
+            ])
+
         # Get a list of sequences that are 1-neighbors, but not part of the
         # genotype network. This is achieved by taking the difference of
         # two sets, i.e., elements in allNeighbors not in genoNetNeighbors
@@ -97,20 +106,41 @@ class NetworkBuilder:
     # Get all unique external neighbors for the given genotype network
     def getAllExtNeighbors(self, network):
         # List to be populated with external neighbors
-        extNeighbors = []
+        extNeighbors = set()
+        # extNeighbors = []
 
         # Get all sequences
         sequences = network.vs["sequences"]
 
         # For each sequence, get the list of external neighbors and
         # append it to extNeighbors
-        for sequence in sequences:
-            extNeighbors.extend(self.getExternalNeighbors(sequence, network))
+        if self.bitManip.useRC:
+            for sequence in sequences:
+                # External neighbors for the given sequence
+                n_seq = set(self.getExternalNeighbors(sequence, network))
+
+                # From n_seq, remove sequences common to both sets
+                n_seq -= extNeighbors & n_seq
+
+                # If n_seq is not empty,
+                if n_seq:
+                    # Reverse complements
+                    rc_seq = set([self.bitManip.getReverseComplement(n) for n in n_seq])
+
+                    # Remove those that already occur in the other set
+                    rc_seq -= extNeighbors & rc_seq
+
+                    # Combine the sets
+                    extNeighbors |= rc_seq
+        else:
+            for sequence in sequences:
+                extNeighbors |= set(self.getExternalNeighbors(sequence, network))
+                # extNeighbors.extend(self.getExternalNeighbors(sequence, network))
 
         # Remove redundant sequences
-        extNeighbors = list(set(extNeighbors))
+        # extNeighbors = list(set(extNeighbors))
 
-        return extNeighbors
+        return list(extNeighbors)
 
     # Get the vertex based on the sequence string from the
     # given network

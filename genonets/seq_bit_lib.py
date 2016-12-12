@@ -186,6 +186,14 @@ class AbstractBitSeqManipulator:
             # Also, do not include the mutant that results in the source sequence.
             neighbors.extend(self.getUniqueNeighbors(rsNeighbors, neighbors, sequence))
 
+        if self.useRC:
+            # If the reverse complement of the given sequence has been
+            # added as a neighbor, remove it
+            try:
+                neighbors.remove(self.getReverseComplement(sequence))
+            except ValueError:
+                pass
+
         return neighbors
 
     # Depending on the shiftType, i.e., "left" or "right", returns the

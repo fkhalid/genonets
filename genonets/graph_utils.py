@@ -80,6 +80,17 @@ class NetworkBuilder:
             self.bitManip.generateNeighbors(self.bitManip.seqToBits(sequence))
         ]
 
+        # Make sure both a genotype and its reverse complement are not
+        # in the list of external neighbors
+        allNeighbors_norc = []
+        for n in allNeighbors:
+            rc = self.bitManip.getReverseComplement(n)
+
+            if rc not in allNeighbors:
+                allNeighbors_norc.append(n)
+
+        allNeighbors = allNeighbors_norc
+
         # Get a list of 1-neighbors that are part of the given genotype
         # network
         genoNetNeighbors = [

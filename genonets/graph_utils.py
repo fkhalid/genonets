@@ -75,19 +75,24 @@ class NetworkBuilder:
     # strings. The caller must be aware of this.
     def getExternalNeighbors(self, sequence, network):
         # Get a list of all possible 1-neighbors of the given sequence
-        allNeighbors = [
-            neighbor for neighbor in
-            self.bitManip.generateNeighbors(self.bitManip.seqToBits(sequence))
-        ]
+        allNeighbors = self.bitManip.generateNeighbors(
+            self.bitManip.seqToBits(sequence))
+        # allNeighbors = [
+        #     neighbor for neighbor in
+        #     self.bitManip.generateNeighbors(self.bitManip.seqToBits(sequence))
+        # ]
 
         # Make sure both a genotype and its reverse complement are not
         # in the list of external neighbors
         allNeighbors_norc = []
-        for n in allNeighbors:
+        allNeighbors_copy = list(allNeighbors)
+        for n in allNeighbors_copy:
             rc = self.bitManip.getReverseComplement(n)
 
-            if rc not in allNeighbors:
+            if rc == n or rc not in allNeighbors:
                 allNeighbors_norc.append(n)
+            else:
+                allNeighbors.remove(n)
 
         allNeighbors = allNeighbors_norc
 

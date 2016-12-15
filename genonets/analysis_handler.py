@@ -301,8 +301,10 @@ class AnalysisHandler:
         evoTargets = [evoTuples[i][1] for i in range(len(evoTuples))]
 
         giant.vs["Evolvability"] = evoScores
-        giant.vs["Evolves_to_genotypes_in"] = [evoTargets[i].keys()
-                                               for i in range(len(evoTargets))]
+        giant.vs["Evolves_to_genotypes_in"] = [
+            evoTargets[i].keys()
+            for i in range(len(evoTargets))
+        ]
         giant.vs["Evolvability_targets"] = evoTargets
 
     def accessibility(self, repertoire):
@@ -393,7 +395,9 @@ class AnalysisHandler:
         if not self.overlapMatrix:
             # Create the overlap analyzer
             overlapAnalyzer = OverlapAnalyzer(self.repToGiantDict,
-                                              self.caller.genotype_sets())
+                                              self.caller.genotype_sets(),
+                                              self.bitManip,
+                                              self.isDoubleStranded)
 
             # Compute overlap data
             self.overlapMatrix, repertoires, overlapDict = overlapAnalyzer.getOverlapData()

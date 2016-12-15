@@ -11,12 +11,19 @@
 
 class OverlapAnalyzer:
     # Constructor
-    def __init__(self, repToGiantDict, repertoires):
+    def __init__(self, repToGiantDict, repertoires, bitManip, isDoubleStranded):
         # Copy of dict: key=repertoire, value=giant
         self.repToGiantDict = repToGiantDict
 
         # List of available repertoires
         self.repertoires = repertoires
+
+        # Reference to the bit manipulator object
+        self.bitManip = bitManip
+
+        # Flag to indicate whether reverse complements should be
+        # considered for genotypes.
+        self.isDoubelStranded = isDoubleStranded
 
     def getOverlapData(self):
         if len(self.repertoires) < 2:
@@ -36,8 +43,8 @@ class OverlapAnalyzer:
 
         # Initialize the overlap matrix with zeros
         overlapMat = [
-            [0 for x in range(len(self.repertoires))]
-            for x in range(len(self.repertoires))
+            [0 for _ in range(len(self.repertoires))]
+            for _ in range(len(self.repertoires))
         ]
 
         # For each repertoire,
@@ -76,4 +83,19 @@ class OverlapAnalyzer:
     # Returns a list of sequences that are common to the two input sequence
     # lists
     def getOverlapList(self, seqs1, seqs2):
+        # If reverse complements should be considered,
+        if self.isDoubelStranded:
+            # Reverse complements of 'seqs2' in bit format
+            rc_seqs2 = [
+                self.bitManip.getReverseComplement(self.bitManip.seqToBits(s))
+                for s in seqs2
+            ]
+
+            # Reverse complements in string format
+            rc_seqs2 = [self.bitManip.bitsToSeq(rc) for rc in rc_seqs2]
+
+            # Add the reverse complements to 'seqs2', while ensuring uniqueness
+            # of each added sequence.
+            seqs2.extend(list(set(seqs2) | set(rc_seqs2)))
+
         return list(set(seqs1) & set(seqs2))

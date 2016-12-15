@@ -186,6 +186,11 @@ class AbstractBitSeqManipulator:
             # Also, do not include the mutant that results in the source sequence.
             neighbors.extend(self.getUniqueNeighbors(rsNeighbors, neighbors, sequence))
 
+        # TODO:
+        #   The sequences for which the reverse complement is the same as the sequence,
+        #   a shift mutation can result in the source sequence being added to the list
+        #   of neighbors. However, these are already eliminated in the previous code
+        #   block. Then, is the following condition really necessary??
         if self.useRC:
             # If the reverse complement of the given sequence has been
             # added as a neighbor, remove it
@@ -206,16 +211,20 @@ class AbstractBitSeqManipulator:
             index = self.seqLength - 1
 
             # Get all left shift mutants
-            mutants = [self.mutAftrLftShift(source, index, target)
-                       for target in self.bitToLetterDict.keys()]
+            mutants = [
+                self.mutAftrLftShift(source, index, target)
+                for target in self.bitToLetterDict.keys()
+            ]
         else:  # Right shift
             # The letter index at which to perform the mutations is
             # '0' for a left shift
             index = 0
 
             # Get all right shift mutants
-            mutants = [self.mutateLetter(source, index, target)
-                       for target in self.bitToLetterDict.keys()]
+            mutants = [
+                self.mutateLetter(source, index, target)
+                for target in self.bitToLetterDict.keys()
+            ]
 
         return mutants
 

@@ -75,30 +75,28 @@ class NetworkBuilder:
     # strings. The caller must be aware of this.
     def getExternalNeighbors(self, sequence, network):
         # Get a list of all possible 1-neighbors of the given sequence
-        allNeighbors = self.bitManip.generateNeighbors(
+        all_neighbors = self.bitManip.generateNeighbors(
             self.bitManip.seqToBits(sequence))
-        # allNeighbors = [
-        #     neighbor for neighbor in
-        #     self.bitManip.generateNeighbors(self.bitManip.seqToBits(sequence))
-        # ]
 
-        # Make sure both a genotype and its reverse complement are not
-        # in the list of external neighbors
-        allNeighbors_norc = []
-        allNeighbors_copy = list(allNeighbors)
-        for n in allNeighbors_copy:
-            rc = self.bitManip.getReverseComplement(n)
+        # If reverse complements should be considered,
+        if self.bitManip.useRC:
+            # Make sure only a genotype or its reverse complement are in
+            # the list of external neighbors, and not both.
+            # 'list(allNeighbors)' creates a new list object
+            for neighbor in list(all_neighbors):
+                # Reverse complement of the neighbor
+                rc = self.bitManip.getReverseComplement(neighbor)
 
-            if rc == n or rc not in allNeighbors:
-                allNeighbors_norc.append(n)
-            else:
-                allNeighbors.remove(n)
-
-        allNeighbors = allNeighbors_norc
+                # If the reverse complement is not the same as the neighbor,
+                # and the reverse complement is already in the list of
+                # external neighbors, remove the neighbor itself from the
+                # list.
+                if rc != neighbor and rc in all_neighbors:
+                    all_neighbors.remove(neighbor)
 
         # Get a list of 1-neighbors that are part of the given genotype
         # network
-        genoNetNeighbors = [
+        neighbors_within_net = [
             self.bitManip.seqToBits(network.vs[neighbor]["sequences"])
             for neighbor in self.getNeighbors(sequence, network)
         ]
@@ -107,56 +105,69 @@ class NetworkBuilder:
         if self.bitManip.useRC:
             # Add the reverse complement of each neighbor to the
             # list of neighbors
-            genoNetNeighbors.extend([
+            neighbors_within_net.extend([
                 self.bitManip.getReverseComplement(neighbor)
-                for neighbor in genoNetNeighbors
+                for neighbor in neighbors_within_net
             ])
 
         # Get a list of sequences that are 1-neighbors, but not part of the
         # genotype network. This is achieved by taking the difference of
-        # two sets, i.e., elements in allNeighbors not in genoNetNeighbors
-        externNeighbors = list(set(allNeighbors) - set(genoNetNeighbors))
+        # two sets, i.e., elements in all_neighbors not in neighbors_within_net
+        extern_neighbors = list(set(all_neighbors) - set(neighbors_within_net))
 
-        return externNeighbors
+        return extern_neighbors
 
     # Get all unique external neighbors for the given genotype network
     def getAllExtNeighbors(self, network):
         # List to be populated with external neighbors
-        extNeighbors = set()
-        # extNeighbors = []
+        ext_neighbors = set()
 
         # Get all sequences
         sequences = network.vs["sequences"]
 
-        # For each sequence, get the list of external neighbors and
-        # append it to extNeighbors
+        # If reverse complements should be considered,
         if self.bitManip.useRC:
-            for sequence in sequences:
-                # External neighbors for the given sequence
-                n_seq = set(self.getExternalNeighbors(sequence, network))
-
-                # From n_seq, remove sequences common to both sets
-                n_seq -= extNeighbors & n_seq
-
-                # If n_seq is not empty,
-                if n_seq:
-                    # Reverse complements
-                    rc_seq = set([self.bitManip.getReverseComplement(n) for n in n_seq])
-
-                    # Remove those that already occur in the other set
-                    rc_seq -= extNeighbors & rc_seq
-
-                    # Combine the sets
-                    extNeighbors |= rc_seq
+            # With proper handling of reverse complements, generate
+            # a set of unique external neighbors.
+            ext_neighbors = self.external_neighbors_rc(sequences, network)
         else:
+            # For each genotype,
             for sequence in sequences:
-                extNeighbors |= set(self.getExternalNeighbors(sequence, network))
-                # extNeighbors.extend(self.getExternalNeighbors(sequence, network))
+                # Append unique external neighbors to the set that will be
+                # returned
+                ext_neighbors |= set(self.getExternalNeighbors(sequence, network))
 
-        # Remove redundant sequences
-        # extNeighbors = list(set(extNeighbors))
+        return list(ext_neighbors)
 
-        return list(extNeighbors)
+    def external_neighbors_rc(self, sequences, network):
+        # Set to be populated with external neighbors
+        external_neighbors = set()
+
+        # For each sequence in the network,
+        for sequence in sequences:
+            # Compute external neighbors for the given sequence
+            sequence_neighbors = set(self.getExternalNeighbors(sequence, network))
+
+            # Remove those genotypes from sequence neighbors that are already in
+            # the set of external neighbors
+            sequence_neighbors -= external_neighbors & sequence_neighbors
+
+            # If at least one genotype is left in sequence_neighbors,
+            if sequence_neighbors:
+                # Compute reverse complements of sequence neighbors
+                sequence_neighbors_rc = set([
+                    self.bitManip.getReverseComplement(n)
+                    for n in sequence_neighbors
+                ])
+
+                # Remove those reverse complements that already are already in
+                # the set of external neighbors
+                sequence_neighbors_rc -= external_neighbors & sequence_neighbors_rc
+
+                # Combine the sets
+                external_neighbors |= sequence_neighbors_rc
+
+        return external_neighbors
 
     # Get the vertex based on the sequence string from the
     # given network

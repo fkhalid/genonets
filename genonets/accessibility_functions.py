@@ -132,7 +132,7 @@ class AccessibilityAnalyzer:
 
             # Multiply the fraction with the target's abundance, i.e., the size
             # of the target genotype network
-            abundanceFrac = float(fraction) * float(len(targetSeqs))
+            abundanceFrac = float(fraction) * float(len(set(targetSeqs)))
 
             # Add the fraction to the total abundance value
             abundance += abundanceFrac

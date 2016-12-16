@@ -18,10 +18,14 @@ import igraph
 # type.
 class NetworkBuilder:
     # Constructor
-    def __init__(self, seqBitManip):
+    def __init__(self, seqBitManip, use_reverse_complements):
         # Store reference to the sequence/bit manipulator object
         # in use
         self.bitManip = seqBitManip
+
+        # Flog to indicate whether or not reverse complements should
+        # be used
+        self.use_reverse_complements = use_reverse_complements
 
     # Return 'True' if the source sequence is connected to the target
     # sequence, and 'False' otherwise.
@@ -79,7 +83,7 @@ class NetworkBuilder:
             self.bitManip.seqToBits(sequence))
 
         # If reverse complements should be considered,
-        if self.bitManip.useRC:
+        if self.use_reverse_complements:
             # Make sure only a genotype or its reverse complement are in
             # the list of external neighbors, and not both.
             # 'list(allNeighbors)' creates a new list object
@@ -102,7 +106,7 @@ class NetworkBuilder:
         ]
 
         # If reverse complements should be considered,
-        if self.bitManip.useRC:
+        if self.use_reverse_complements:
             # Add the reverse complement of each neighbor to the
             # list of neighbors
             neighbors_within_net.extend([
@@ -126,7 +130,7 @@ class NetworkBuilder:
         sequences = network.vs["sequences"]
 
         # If reverse complements should be considered,
-        if self.bitManip.useRC:
+        if self.use_reverse_complements:
             # With proper handling of reverse complements, generate
             # a set of unique external neighbors.
             ext_neighbors = self.external_neighbors_rc(sequences, network)

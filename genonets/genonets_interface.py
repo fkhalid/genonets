@@ -66,8 +66,8 @@ class Genonets:
         # given molecule type.
         self.bitManip = self._bit_manipulator()
 
-        # Get the NetworkUtils object
-        self.netBuilder = NetworkBuilder(self.bitManip)
+        # Get the NetworkBuilder object
+        self.netBuilder = NetworkBuilder(self.bitManip, self.cmdArgs.use_reverse_complements)
 
         # Dictionary: Key=Repertoire, Value=Network. Created when required.
         self.repToNetDict = {}

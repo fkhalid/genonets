@@ -51,7 +51,7 @@ class NetworkBuilder:
         # Add sequences to all vertices
         network.vs["sequences"] = sequences
 
-        # Add bit formatted sequences to all vertices
+        # Sequences in bit format
         # Note: For very long sequences, the size of the corresponding
         # integer value becomes too long for igraph to be able
         # to deal with it (since igraph is C based). Therefore,

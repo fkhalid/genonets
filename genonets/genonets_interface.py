@@ -503,7 +503,7 @@ class Genonets:
         scores = [seqScrDict[sequence] for sequence in sequences]
 
         # Create a network builder object
-        netBuilder = NetworkBuilder(bitManip)
+        netBuilder = NetworkBuilder(bitManip, args.use_reverse_complements)
 
         # Create the genotype network
         network = netBuilder.createGenoNet(repertoire, sequences, scores)
@@ -618,7 +618,7 @@ class Genonets:
             incr_last = num_repertoires % num_processes
 
             # Create a list of increment values per iteration
-            index_incrs = [num_processes for i in range(num_full_iters)] \
+            index_incrs = [num_processes for _ in range(num_full_iters)] \
                 if num_full_iters != 0 else []
 
             # If required, add the last increment

@@ -8,6 +8,14 @@ Documentation, including tutorials and API documentation, is available `here <ht
 
 ----
 
+New in version 1.1.5
+~~~~~~~~~~~~~~~~~~~~
+
+Bug fix: The fix affects the results of Robustness analysis; only when Genonets is used with '-rc' or
+'--use_reverse_complements' options. The impact of this change is higher on genotype level results, but
+minimal on genotype set level results. The details of the issue can be found
+`here <https://github.com/fkhalid/genonets/issues/10>`_.
+
 New in version 1.1.3
 ~~~~~~~~~~~~~~~~~~~~
 

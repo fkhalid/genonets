@@ -13,7 +13,7 @@ import numpy as np
 
 class RobustnessAnalyzer:
     # Constructor
-    def __init__(self, network, netBuilder):
+    def __init__(self, network, netBuilder, is_double_stranded):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -23,6 +23,10 @@ class RobustnessAnalyzer:
 
         # Get a reference to the BitSeqManipulator in use
         self.bitManip = netBuilder.bitManip
+
+        # Flag indicating whether the genotypes correspond to double
+        # stranded molecules
+        self.is_double_stranded = is_double_stranded
 
         # Reference to the list of tuples, (seq, robustness)
         # populated when required
@@ -64,6 +68,30 @@ class RobustnessAnalyzer:
         # Get a list of all possible 1-neighbors for this sequence
         allNeighbors = self.bitManip.generateNeighbors(
             self.bitManip.seqToBits(sequence))
+
+        # If reverse complements should be considered,
+        if self.is_double_stranded:
+            # Reverse complement of the focal genotype
+            rc = self.bitManip.getReverseComplement(
+                self.bitManip.seqToBits(sequence))
+
+            # If the reverse complement is also a 1-mutant,
+            if rc in allNeighbors:
+                # Do not consider it as one of all possible 1-mutants
+                allNeighbors.remove(rc)
+
+            # Make sure a genotype and its reverse complement are not both
+            # considered separate neighbors
+            for neighbor in list(allNeighbors):
+                # Reverse complement of the neighbor
+                rc_n = self.bitManip.getReverseComplement(neighbor)
+
+                # If the reverse complement is not the same as the neighbor,
+                # and the reverse complement is already in the list of
+                # external neighbors, remove the neighbor itself from the
+                # list.
+                if rc_n != neighbor and rc_n in allNeighbors:
+                    allNeighbors.remove(neighbor)
 
         # Count the number of all possible 1-neighbors of this sequence
         numNeighbors = len(allNeighbors)

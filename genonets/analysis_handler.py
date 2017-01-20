@@ -77,8 +77,7 @@ class AnalysisHandler:
 
         # Flag to indicate whether or not the genotypes should be
         # considered double stranded, i.e., whether or not
-        # reverse complements should be used in evolvability
-        # computations.
+        # reverse complements should be used in various analyses
         self.isDoubleStranded = self.caller.cmdArgs.use_reverse_complements
 
         # If 'Evolvability' analysis has been requested, initialize
@@ -249,7 +248,9 @@ class AnalysisHandler:
         giant = self.caller.dominant_network(repertoire)
 
         # Construct a RobustnessAnalyzer object
-        robAnalyzer = RobustnessAnalyzer(giant, self.netBuilder)
+        robAnalyzer = RobustnessAnalyzer(giant,
+                                         self.netBuilder,
+                                         self.isDoubleStranded)
 
         # Compute repertoire robustness and set it as a network
         # attribute

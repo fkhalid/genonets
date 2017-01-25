@@ -13,7 +13,7 @@ import collections
 
 
 class CoveringAnalyzer:
-    def __init__(self, network, net_builder, evo_analyzer, sequence_length, total_phenotypes):
+    def __init__(self, network, net_builder, evo_analyzer, sequence_length, total_phenotypes, is_double_stranded):
         # Reference to the network on which to perform this analysis
         self.network = network
 
@@ -31,6 +31,10 @@ class CoveringAnalyzer:
 
         # Reference to Bit Manipulator
         self.bm = self.netBuilder.bitManip
+
+        # Flag to indicate whether or not reverse complements should
+        # be considered
+        self.is_double_stranded = is_double_stranded
 
         # Set - All genotypes within the network in bit format
         self.bit_genotypes = frozenset(
@@ -147,7 +151,7 @@ class CoveringAnalyzer:
 
         # List to hold the covering value for each value of 'r';
         # initialization here with all '0's.
-        covering = [float("NaN") for i in xrange(radius)]
+        covering = [float("NaN") for _ in xrange(radius)]
 
         # Set of all target repertoires covered within the radius
         target_reps = set()
@@ -161,6 +165,14 @@ class CoveringAnalyzer:
         # genotypes within the focal GN, since these must always be
         # ignored while calculating overlap with other phenotypes.
         parents = set(self.bit_genotypes)
+
+        # If reverse complements should be considered,
+        if self.is_double_stranded:
+            # Add the reverse complements to the set
+            parents |= {
+                self.bm.getReverseComplement(g)
+                for g in self.bit_genotypes
+            }
 
         # For radius starting with 1,
         for r in xrange(1, radius + 1):
@@ -177,6 +189,11 @@ class CoveringAnalyzer:
             for genotype in genotypes:
                 # Compute all possible 1-neighbors
                 neighbors = set(self.bm.generateNeighbors(genotype))
+
+                # If reverse complements should be considered,
+                if self.is_double_stranded:
+                    # Remove redundant genotypes from the list of neighbors
+                    neighbors = self.remove_redundant_neighbors(genotype, neighbors)
 
                 # Keep only those neighbors that are not part of the
                 # 'parents' set.
@@ -230,3 +247,27 @@ class CoveringAnalyzer:
             covering=covering_val,
             targets=targets
         )
+
+    def remove_redundant_neighbors(self, genotype, neighbors):
+        # Reverse complement of the focal genotype
+        rc = self.bm.getReverseComplement(genotype)
+
+        # If the reverse complement is also a 1-mutant,
+        if rc in neighbors:
+            # Do not consider it as one of all possible 1-mutants
+            neighbors.remove(rc)
+
+        # Make sure a genotype and its reverse complement are not both
+        # considered separate neighbors
+        for neighbor in list(neighbors):
+            # Reverse complement of the neighbor
+            rc_n = self.bm.getReverseComplement(neighbor)
+
+            # If the reverse complement is not the same as the neighbor,
+            # and the reverse complement is already in the list of
+            # neighbors, remove the neighbor itself from the
+            # list.
+            if rc_n != neighbor and rc_n in neighbors:
+                neighbors.remove(neighbor)
+
+        return neighbors

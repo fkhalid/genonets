@@ -287,10 +287,10 @@ class AnalysisHandler:
                                              self.netBuilder,
                                              evo_analyzer,
                                              sequence_length,
-                                             len(self.inDataDict))
+                                             len(self.inDataDict),
+                                             self.isDoubleStranded)
 
         covering_results = covering_analyzer.covering_all(radius=sequence_length)
-        # covering_results = covering_analyzer.covering_all(radius=4)
 
         giant.vs["Covering_list"] = [result.covering for result in covering_results]
         giant.vs["Covering_radius"] = [result.radius for result in covering_results]
@@ -321,7 +321,8 @@ class AnalysisHandler:
                                              self.netBuilder,
                                              evo_analyzer,
                                              self.caller.seqLength,
-                                             len(self.inDataDict))
+                                             len(self.inDataDict),
+                                             self.isDoubleStranded)
 
         # Compute ratios of unique covering per genotype
         results = covering_analyzer.covering_unique(diameter)

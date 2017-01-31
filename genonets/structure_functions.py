@@ -9,11 +9,12 @@
 """
 
 import igraph
+import collections
 
 
 class StructureAnalyzer:
     # Constructor
-    def __init__(self, network, netBuilder):
+    def __init__(self, network, giant, netBuilder):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -22,7 +23,8 @@ class StructureAnalyzer:
         self.netBuilder = netBuilder
 
         # Reference to giant
-        self.giant = self.netBuilder.getGiantComponent(self.network)
+        self.giant = giant
+        # self.giant = self.netBuilder.getGiantComponent(self.network)
 
     # ----------------------------------------------------------------
     #	Network level properties
@@ -38,7 +40,7 @@ class StructureAnalyzer:
         return self.giant.vcount()
 
     def getPercentDominantSize(self):
-        return (float(self.giant.vcount()) / float(self.network.vcount()))
+        return float(self.giant.vcount()) / float(self.network.vcount())
 
     def getEdgeDensity(self):
         return self.giant.density()
@@ -48,6 +50,9 @@ class StructureAnalyzer:
 
     def getAssortativity(self):
         return self.giant.assortativity_degree()
+
+    def assortativity_by_attribute(self, attribute):
+        return self.giant.assortativity(attribute, directed=False)
 
     def getDiameter(self):
         return self.giant.diameter()
@@ -74,6 +79,29 @@ class StructureAnalyzer:
                     return sPath[0]
 
         return []
+
+    def community_detection(self):
+        # Perform community detection
+        vertex_dendrogram = self.giant.community_fastgreedy()
+
+        # No. of clusters
+        num_clusters = vertex_dendrogram.optimal_count
+
+        # Modularity score based on the community detection
+        score = self.modularity_score(vertex_dendrogram.as_clustering())
+
+        result = collections.namedtuple('result', [
+            'communities',
+            'modularity_score'
+        ])
+
+        return result(
+            communities=num_clusters,
+            modularity_score=score
+        )
+
+    def modularity_score(self, membership):
+        return self.giant.modularity(membership)
 
     # ----------------------------------------------------------------
     #	Vertex level properties

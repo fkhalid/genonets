@@ -311,7 +311,7 @@ class AnalysisHandler:
                                             self.isDoubleStranded)
 
         # Create a 'StructureAnalyzer' object
-        struct_analyzer = StructureAnalyzer(giant, self.netBuilder)
+        struct_analyzer = StructureAnalyzer(giant, giant, self.netBuilder)
 
         # Diameter of giant
         diameter = struct_analyzer.getDiameter()
@@ -433,7 +433,7 @@ class AnalysisHandler:
         giant = self.caller.dominant_network(repertoire)
 
         # Create the structure analyzer object
-        structAnalyzer = StructureAnalyzer(network, self.netBuilder)
+        structAnalyzer = StructureAnalyzer(network, giant, self.netBuilder)
 
         # Compute and set network/giant level properties
         network["Genotype_network_sizes"] = str(structAnalyzer.getComponentSizes())
@@ -452,6 +452,40 @@ class AnalysisHandler:
         # Compute and set vertex level properties
         giant.vs["Coreness"] = structAnalyzer.getCoreness()
         giant.vs["Clustering_coefficient"] = structAnalyzer.getClusteringCoefficients()
+
+        # Assortativity by type
+        genotype_attributes = [
+            'escores',
+            'Robustness',
+            'Evolvability',
+            'Coreness',
+            'Accessible_paths_through'
+        ]
+
+        for attribute in genotype_attributes:
+            # Name of the giant level attribute in which to store the assortativity
+            # coefficient.
+            result_attribute_name = 'Assortativity' + '_' + attribute
+
+            # Store the result as a giant level attribute
+            giant[result_attribute_name] = structAnalyzer.assortativity_by_attribute(attribute)
+
+        # Community detection
+        community_result = structAnalyzer.community_detection()
+        giant['Modularity_score_communities'] = community_result.modularity_score
+        giant['Communities'] = community_result.communities
+
+        # Modularity score based on attributes
+        modularity_attributes = [
+            'Accessible_paths_through',
+            'Distance from Summit',
+            'Coreness'
+        ]
+
+        for attribute in modularity_attributes:
+            result_attribute_name = 'Modularity_score_' + attribute
+
+            giant[result_attribute_name] = structAnalyzer.modularity_score(giant.vs[attribute])
 
     # The parameter 'r' is just a place holder, and is needed in the
     # signature just so that it can be called anonymously from

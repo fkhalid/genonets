@@ -12,7 +12,7 @@ New in version 1.1.6
 ~~~~~~~~~~~~~~~~~~~~
 
 Enhancement: The order in which genotype set names appear in the result file 'Genotype_set_ovelrap.txt', is now the
-same order in which genotype set names appear in the input file.
+same order in which genotype set names appear in the input file. The corresponding issue is reported
 `here <https://github.com/fkhalid/genonets/issues/11>`_.
 
 New in version 1.1.5

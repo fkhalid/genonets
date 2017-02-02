@@ -13,6 +13,7 @@ import sys
 import json  # For proper list stringification
 
 from genonets_writer import Writer
+from genonets_filters import WriterFilter
 from path_functions import PathAnalyzer
 from landscape_functions import Landscape
 from overlap_functions import OverlapAnalyzer
@@ -398,9 +399,12 @@ class AnalysisHandler:
             overlapAnalyzer = OverlapAnalyzer(self.repToGiantDict,
                                               self.caller.genotype_sets(),
                                               self.bitManip,
-                                              self.isDoubleStranded)
+                                              self.isDoubleStranded,
+                                              WriterFilter.genotype_set_to_order)
 
-            # Compute overlap data
+            # Compute overlap data. Note: The list of genotype sets is returned from
+            # the function to make sure the order used inside the function is the one
+            # used for further calculations here.
             self.overlapMatrix, repertoires, overlapDict = overlapAnalyzer.getOverlapData()
 
             # If the overlap dict was populated

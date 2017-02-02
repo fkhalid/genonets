@@ -18,6 +18,7 @@
 
 from genonets.cmdl_handler import CmdParser  # For parsing command line arguments
 from genonets.genonets_interface import Genonets  # Interface to Genonets API
+from genonets.genonets_constants import AnalysisConstants as Ac
 
 
 def process(args):
@@ -26,10 +27,10 @@ def process(args):
     gn = Genonets(args)
 
     # Use 'gn' to create genotype networks for all genotype sets.
-    gn.create()
+    gn.create(parallel=True)
 
     # Perform all available analyses on all genotype networks.
-    gn.analyze()
+    gn.analyze(analyses=[Ac.EVOLVABILITY, Ac.OVERLAP], parallel=True)
 
     # Write all genotype networks to files in GML format. For a genotype network
     # with two or more components, two files are generated: One corresponds to the

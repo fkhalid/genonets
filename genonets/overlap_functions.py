@@ -11,7 +11,7 @@
 
 class OverlapAnalyzer:
     # Constructor
-    def __init__(self, repToGiantDict, repertoires, bitManip, isDoubleStranded):
+    def __init__(self, repToGiantDict, repertoires, bitManip, isDoubleStranded, ordering_function):
         # Copy of dict: key=repertoire, value=giant
         self.repToGiantDict = repToGiantDict
 
@@ -24,6 +24,10 @@ class OverlapAnalyzer:
         # Flag to indicate whether reverse complements should be
         # considered for genotypes.
         self.isDoubelStranded = isDoubleStranded
+
+        # Sort the list of genotype sets such that the order in the list
+        # is the same as that in the input input file
+        self.repertoires.sort(key=ordering_function)
 
     def getOverlapData(self):
         if len(self.repertoires) < 2:

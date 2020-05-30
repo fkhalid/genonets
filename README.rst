@@ -8,6 +8,14 @@ Documentation, including tutorials and API documentation, is available `here <ht
 
 ----
 
+New in version 1.1.7
+~~~~~~~~~~~~~~~~~~~~
+
+Performance optimization: The code for computation of peaks has been optimized
+so that it runs significantly faster than the previous version. The changes made
+only affect performance; the algorithm remains the same. The corresponding issue is reported
+`here <https://github.com/fkhalid/genonets/issues/12>`_.
+
 New in version 1.1.6
 ~~~~~~~~~~~~~~~~~~~~
 

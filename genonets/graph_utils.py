@@ -8,8 +8,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import math
 import json
+
 import igraph
 
 
@@ -185,6 +185,13 @@ class NetworkBuilder:
     # of the given sequence within the given network.
     def getNeighbors(self, sequence, network):
         return network.neighbors(self.getVertex(sequence, network))
+
+    # Returns the list of sequences that are 1-neighbors of the given
+    # sequence
+    def getNeighborSequences(self, sequence, network):
+        v_ids = network.neighbors(self.getVertex(sequence, network))
+
+        return [network.vs['sequences'][i] for i in v_ids]
 
     # Plot the given network using the given layout.
     def plotNetwork(self, network, layout, outPath):

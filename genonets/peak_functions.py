@@ -34,6 +34,12 @@ class PeakAnalyzer:
         # Set once peaks have been identified
         self.peaks = None
 
+        # Neighbor map
+        self._neighbor_map = {
+            s: set(self.netUtils.getNeighborSequences(s, self.network))
+            for s in network.vs['sequences']
+        }
+
     # Returns the peak dict which has seq as one of the keys
     def getPeakWithSeq(self, seq):
         # Get all peaks
@@ -61,9 +67,11 @@ class PeakAnalyzer:
         if not self.peaks or recompute:
             # Get a structured array with tuples (sequence, escore),
             # sorted in descending order of e-scores.
-            sortedArr = Utils.getSortedSeqEscArr(self.network,
-                                                 self.bitManip.seqLength,
-                                                 sortOrder="descending")
+            sortedArr = Utils.getSortedSeqEscArr(
+                self.network,
+                self.bitManip.seqLength,
+                sortOrder="descending"
+            )
 
             # Identify peaks
             self.peaks = self.buildPeaks(sortedArr)
@@ -176,8 +184,10 @@ class PeakAnalyzer:
         neutralZone = [item for item in binMembers if item['sequence'] in neighSeqs]
 
         # Get all non-neighbor elements in the bin
-        nonNeighs = [binMembers[i] for i in range(len(binMembers)) \
-                     if binMembers[i] not in neutralZone]
+        nonNeighs = [
+            binMembers[i] for i in range(len(binMembers))
+            if binMembers[i] not in neutralZone
+        ]
 
         # Do a breadth-first search of the neutral zone to find elements in
         # the non-neighbors list that might be indirected connected.
@@ -205,8 +215,7 @@ class PeakAnalyzer:
             for nonNeigh in nonNeighs:
                 # If the non-neighbor is connected to the ith element in the
                 # neutral zone,
-                if self.netUtils.areConnected(nonNeigh['sequence'], \
-                                              neutralZone[i]['sequence']):
+                if neutralZone[i]['sequence'] in self._neighbor_map[nonNeigh['sequence']]:
                     # Append the non-neighbor to the neutral zone
                     neutralZone.append(nonNeigh)
 
@@ -230,8 +239,10 @@ class PeakAnalyzer:
         #		element + delta >= e-score of the peak summit, because
         #		if it weren't, the focal element here would not have
         #		made it to the non-neighbors list.
-        return [peakId for peakId in peaks.keys() \
-                if focalElement in peaks[peakId]["non-neighbors"]]
+        return [
+            peakId for peakId in peaks.keys()
+            if focalElement['sequence'] in peaks[peakId]["non-neighbors"]
+        ]
 
     # For each element in the neutral zone, checks whether it is connected
     # to an existing peak, except for peaks that are in 'peakNonNeighs'.
@@ -241,10 +252,20 @@ class PeakAnalyzer:
         # connected.
         neighboringPeaks = []
 
+        # Create a set of those peaks that such that the focal element
+        # does not lie within the corresponding bin. No need to check
+        # for indirect connectivity.
+        filtered_peaks = {
+            pid: peaks[pid] for pid in peaks
+            if pid not in peakNonNeighs
+        }
+
         # For each element in the neutral zone
         for element in neutralZone:
             # Get peaks Id of all neighboring peaks for this element
-            peaksAsNeighs = self.getNeighPeaksFor(element, peakNonNeighs, peaks)
+            peaksAsNeighs = self.getNeighPeaksFor(
+                element['sequence'], filtered_peaks
+            )
 
             # The list should be empty if no existing peaks neighbor this
             # element
@@ -259,37 +280,15 @@ class PeakAnalyzer:
     # Checks if the given element is connected to a peak that is not in
     # 'peakNonNeighs'.
     # Returns a list of 'peakIds' for the neighboring peaks if any.
-    def getNeighPeaksFor(self, element, peakNonNeighs, peaks):
-        peakIds = []
+    def getNeighPeaksFor(self, element, peaks):
+        # List of peak Ids that contain one or more sequences with
+        # which the given element is a neighbor
+        return [
+            pid for pid in peaks
+            if not self._neighbor_map[element].isdisjoint(
+                peaks[pid]['list'])
+        ]
 
-        # For each existing peak,
-        for peakId in peaks.keys():
-            # If the focal element lies within the bin for this peak,
-            if peakId in peakNonNeighs:
-                # No need to check for indirect connectivity. Move on
-                # to the next peak.
-                continue
-
-            # Get the list of connected elelments for this peak
-            pathList = peaks[peakId]["list"]
-
-            # For each element in the path list,
-            for item in pathList:
-                # Check if the given element is connected to current item
-                # in the path list. The assumption here is that the first
-                # items in the list are the peak sequences themselves.
-                if self.netUtils.areConnected(item['sequence'], element['sequence']):
-                    # The neutral zone has a connected to the peak. Therefore,
-                    # add the peak ID to the list of connected peaks.
-                    peakIds.append(peakId)
-
-                    # Move on to the next peak
-                    break
-
-        return peakIds
-
-    # Creates a peak which comprises the given neutral zone. Also, stores
-    # the list of unconncted bin members.
     def createPeak(self, neutralZone, nonNeighs):
         # Dictionary: There are two keys, 1) List of sequences that
         # constitute the peak, and 2) list of sequences that are
@@ -300,17 +299,19 @@ class PeakAnalyzer:
         # so that the focal element that was appended at the end becomes
         # the head.
         neutralZone.reverse()
-        peak["sequences"] = [neutralZone[i][0] \
-                             for i in range(len(neutralZone))]
+        peak["sequences"] = [
+            neutralZone[i][0] for i in range(len(neutralZone))
+        ]
 
         # Initialize the list of the connected sequences with sequences
         # in the peak. This simplifies comparisons when searching through
         # the list for connectivity.
-        peak["list"] = neutralZone
+        peak["list"] = set([e['sequence'] for e in neutralZone])
 
         # Store the non-neighboring elements from the same band to simplify
         # lookup operation during peak determination.
-        peak["non-neighbors"] = nonNeighs
+        # print(nonNeighs)
+        peak["non-neighbors"] = set([n['sequence'] for n in nonNeighs])
 
         return peak
 
@@ -320,11 +321,15 @@ class PeakAnalyzer:
         for peakId in neighboringPeaks:
             # Append the neutral zone to the list of elements found to
             # be connected to the peak.
-            peaks[peakId]["list"].extend(neutralZone)
+            peaks[peakId]['list'].update([
+                e['sequence'] for e in neutralZone
+            ])
 
     # Returns the list of sequences that constitute the neighborhood of the
     # given element
     def getNeighSeqs(self, element):
-        return [self.network.vs[neighbor]["sequences"] \
-                for neighbor in self.netUtils.getNeighbors( \
-                element['sequence'], self.network)]
+        return [
+            self.network.vs[neighbor]["sequences"]
+            for neighbor in self.netUtils.getNeighbors(
+                element['sequence'], self.network)
+        ]

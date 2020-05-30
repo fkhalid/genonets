@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='genonets',
-    version='1.1.6',
+    version='1.1.7',
     description='Framework for creating and analyzing genotype networks from data.',
     author='Fahad Khalid',
     author_email='fahad.khalid@ieu.uzh.ch',
@@ -28,7 +28,7 @@ setup(
         ]
     },
     install_requires=[
-        'python-igraph>=0.6',
+        'python-igraph==0.7.1.post6',
         'numpy>=1.8.2'
     ]
 )

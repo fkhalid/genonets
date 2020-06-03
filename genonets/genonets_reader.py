@@ -15,6 +15,93 @@ from genonets_constants import ErrorCodes
 from genonets_constants import SupportedAlphabet
 
 
+class GeneticCodeReader:
+    def __init__(self):
+        pass
+
+    COL_HEADERS = {'Codon', 'Letter'}
+
+    @staticmethod
+    def load_codon_to_letter_map(filename, alphabet_type):
+        codon_length = 0
+        codon_to_letter = {}
+
+        # Get the alphabet corresponding to the type received as
+        # argument
+        alphabet = set(SupportedAlphabet.getAlphabet(alphabet_type))
+
+        # Load the file
+        try:
+            mapping_file = open(filename, 'rU')
+        except Exception as e:
+            print('Error: Could not open the codon-to-letter '
+                  'mapping file: ' + filename)
+
+            raise GenonetsError(ErrorCodes.UNKNOWN_PARSING_ERROR)
+
+        # Read the file into a dictionary
+        reader = csv.DictReader(mapping_file, delimiter='\t')
+
+        if set(reader.fieldnames) ^ GeneticCodeReader.COL_HEADERS:
+            mapping_file.close()
+
+            print('Error: Unsupported headers in the codon-to-letter '
+                  'mapping file: ' + filename)
+
+            raise GenonetsError(ErrorCodes.INCONSISTENT_HEADER)
+
+        # For each row,
+        for row in reader:
+            # Check for missing values in this row
+            if any(row[col] in (None, "") for col in row.keys()):
+                mapping_file.close()
+
+                line_number = str(int(reader.line_num))
+
+                print('Error: Missing value on line No. ' + line_number)
+
+                raise GenonetsError(ErrorCodes.MISSING_VALUE,
+                                    "Line No. " + line_number)
+
+            # Get the codon
+            codon = row['Codon'].strip(' ')
+
+            if codon_length == 0:
+                codon_length = len(codon)
+            elif len(codon) != codon_length:
+                print('Error: Inconsisten codon length on line No. '
+                      + str(int(reader.line_num)))
+
+                raise GenonetsError(
+                    ErrorCodes.INCONSISTENT_SEQ_LEN,
+                    "Line No. " + str(int(reader.line_num)))
+
+            # Verify alphabet
+            if set(codon) - alphabet:
+                print('Error: Alphabet type mismatch on line No. '
+                      + str(int(reader.line_num)))
+
+                raise GenonetsError(
+                    ErrorCodes.ALPHABET_TYPE_MISMATCH,
+                    "Line No. " + str(int(reader.line_num)))
+
+            # Load the letter
+            letter = row['Letter'].strip(' ')
+
+            if len(letter) != 1:
+                print('Error: Length of a letter cannot be more than '
+                      'one. Line No. ' + str(int(reader.line_num)))
+
+                raise GenonetsError('Unsupported letter length.')
+
+            # Save the mapping
+            codon_to_letter[codon] = letter
+
+        mapping_file.close()
+
+        return codon_to_letter, codon_length
+
+
 class InReader:
     def __init__(self):
         pass

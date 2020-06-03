@@ -56,9 +56,23 @@ class CmdParser:
 
         # ---------------- Optional arguments ------------------ #
 
+        parser.add_argument('--genetic-code-file',
+                            dest='genetic_code_file',
+                            help='Path to the file which contains the mapping '
+                                 'from the genetic code to each letter in the '
+                                 'selected alphabet.')
+
+        parser.add_argument('--codon-alphabet',
+                            dest='codon_alphabet',
+                            choices=['DNA', 'RNA'],
+                            default='DNA',
+                            help='Alphabet to use for the codons in '
+                                 'the genetic code file.')
+
         # Add 'use_reverse_complements' as an argument
-        parser.add_argument("-rc", "--use_reverse_complements", dest="use_reverse_complements", action="store_const",
-                            const=True,
+        parser.add_argument("-rc", "--use_reverse_complements",
+                            dest="use_reverse_complements",
+                            action="store_const", const=True,
                             help="When specified, reverse complements are considered during creation " +
                                  "and analysis of genotype networks for alphabet type DNA. This option is " +
                                  "not valid for other alphabet types.")
@@ -126,6 +140,12 @@ class CmdArgs:
         if not self.outPath.endswith("/"):
             self.outPath += "/"
 
+        # Optional file with the codon-to-letter mapping
+        self.genetic_code_file = arguments.genetic_code_file
+
+        # Alphabet to use for codons in the codon-to-letter mapping
+        self.codon_alphabet = arguments.codon_alphabet
+
         # Maximum number of parallel processes to be used
         self.num_procs = arguments.num_procs
 
@@ -139,6 +159,8 @@ class CmdArgs:
             "inFilePath": self.inFilePath,
             "tau": str(self.tau),
             "outPath": self.outPath,
+            "genetic_code_file": self.genetic_code_file,
+            "codon_alphabet": self.codon_alphabet,
             "useReverseComplements": str(self.use_reverse_complements),
             "num_procs": str(self.num_procs),
             "verbose": str(self.verbose)
@@ -156,7 +178,7 @@ class CmdArgs:
         print("------------------------------")
 
         # For each parameter,
-        for param in paramsDict.keys():
+        for param in paramsDict:
             # Print the 'parameter : value' pair
             print(param + ": " + paramsDict[param])
 

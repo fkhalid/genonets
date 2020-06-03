@@ -41,6 +41,32 @@ class ProteinBitSeqManipulator(AbstractBitSeqManipulator):
     # Dictionary: Maps bit values to single letter amino acid codes
     bitToLetterDict = Utils.reverseDict(letterToBitDict)
 
+    # Constructor
+    def __init__(self, seqLength, useIndels, letter_to_neighbors):
+        AbstractBitSeqManipulator.__init__(self, seqLength, useIndels)
+
+        self.letter_to_neighbors = letter_to_neighbors
+
+    def areNeighbors(self, seq1, seq2):
+        # Check if seq1 and seq2 are 1-neighbors
+        if AbstractBitSeqManipulator.areNeighbors(self, seq1, seq2):
+            # Check if the mutation is allowed by the genetic code
+            for i in range(self.seqLength):
+                # Get the letter at index 'i'
+                bitValue1 = self.getLetterAtIndex(seq1, i)
+                bitValue2 = self.getLetterAtIndex(seq2, i)
+
+                # If there was a mutation here,
+                if bitValue1 != bitValue2:
+                    letter1 = self.bitToLetterDict[bitValue1]
+                    letter2 = self.bitToLetterDict[bitValue2]
+
+                    if letter2 not in self.letter_to_neighbors[letter1]:
+                        return False
+
+            return True
+
+        return False
 
 # Abstract base class the provides common attributes for RNA
 # DNA sequence manipulation as bits. Only derived concrete
@@ -148,13 +174,13 @@ class BitManipFactory:
     # Based on the given molecule type, returns the corresponding
     # bit seq manipulator object.
     @staticmethod
-    def getBitSeqManip(moleculeType, seqLength, useIndels, useReverseComplements=False):
+    def getBitSeqManip(moleculeType, seqLength, useIndels, letter_to_neighbors, useReverseComplements=False):
         if moleculeType == "RNA":
             return RNABitSeqManipulator(seqLength, useIndels)
         elif moleculeType == "DNA":
             return DNABitSeqManipulator(seqLength, useIndels,  useReverseComplements)
         elif moleculeType == "Protein":
-            return ProteinBitSeqManipulator(seqLength, useIndels)
+            return ProteinBitSeqManipulator(seqLength, useIndels, letter_to_neighbors)
         elif moleculeType == "Binary":
             return BinaryBitSeqManipulator(seqLength, useIndels)
         else:

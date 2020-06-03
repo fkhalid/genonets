@@ -32,21 +32,29 @@ def process(args):
 
     # Perform only 'Robustness' and 'Evolvability' analyses on just two of
     # the genotype sets available in the input file, i.e., 'Foxa2' and 'Bbx'.
-    gn.analyze(["Foxa2", "Bbx"], analyses=[ac.ROBUSTNESS, ac.EVOLVABILITY])
+    gn.analyze(analyses=[
+        ac.ROBUSTNESS,
+        ac.STRUCTURE,
+        ac.PEAKS,
+        ac.PHENOTYPIC_DIVERSITY,
+        ac.NEIGHBOR_ABUNDANCE,
+        ac.PATHS_RATIOS,
+        ac.EPISTASIS
+    ])
 
     # Write the given genotype networks to files in GML format.
     # For a genotype network with two or more components, two files are generated:
     # One corresponds to the entire network with all components, and the other
     # corresponds to the dominant component only.
-    gn.save(["Foxa2", "Bbx"])
+    gn.save()
 
     # Save genotype network level measures for the given genotype sets to
     # 'Genotype_set_measures.txt'.
-    gn.save_network_results(["Foxa2", "Bbx"])
+    gn.save_network_results()
 
     # Save all genotype level measures for the given genotype sets to
     # 'Foxa2_genotype_measures.txt' and 'Bbx_genotype_measures.txt' files.
-    gn.save_genotype_results(["Foxa2", "Bbx"])
+    gn.save_genotype_results()
 
 
 if __name__ == "__main__":

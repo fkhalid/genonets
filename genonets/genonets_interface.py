@@ -56,20 +56,17 @@ class Genonets:
         # Handle program arguments
         self.cmdArgs = CmdArgs(args)
 
-        # Read file and load input data into memory
-        self.inDataDict, self.deltaDict, self.seqToRepDict, self.seqLength, self.ordered_genotype_sets = \
-            self._build_data_dicts(self.cmdArgs.inFilePath)
-
-        # Pass the ordered list of genotype sets to the WriterFilter
-        WriterFilter.ORDERED_GENOTYPE_SETS = self.ordered_genotype_sets
-
+        # Dict {letter: list of letters that are 1-neighbors}
         letter_to_neighbors = None
 
+        # If the genetic code should be consulted
         if self.cmdArgs.genetic_code_file:
+            # Load the codon-to-letter map and also the length of the codon
             self.codon_to_letter_map, self.codon_length = GeneticCodeReader.load_codon_to_letter_map(
                 self.cmdArgs.genetic_code_file, self.cmdArgs.codon_alphabet
             )
 
+            # Bit manipulator for the codons
             codon_bitmanip = BitManipFactory.getBitSeqManip(
                 self.cmdArgs.codon_alphabet,
                 self.codon_length,
@@ -77,23 +74,41 @@ class Genonets:
                 self.cmdArgs.use_reverse_complements # TODO: perhaps we should ask the user if reverse complements should be used for codons ...
             )
 
+            # List of codons
             codons = self.codon_to_letter_map.keys()
 
+            # Initialize the dict
             letter_to_neighbors = {letter: [] for letter in set(self.codon_to_letter_map.values())}
 
+            # For each codon,
             for codon in self.codon_to_letter_map:
+                # Create a set with all codons but the current
                 other_codons = set(codons) - {codon}
 
-                for c in other_codons:
+                # For each of the other codons,
+                for other in other_codons:
+                    # Check if this and the other codon are 1-neighbors
                     are_neighbors = codon_bitmanip.areNeighbors(
                         codon_bitmanip.seqToBits(codon),
-                        codon_bitmanip.seqToBits(c)
+                        codon_bitmanip.seqToBits(other)
                     )
 
                     if are_neighbors:
-                        letter_to_neighbors[self.codon_to_letter_map[codon]].append(self.codon_to_letter_map[c])
+                        # To the list of neighboring letters of the lettee encoded by the currect
+                        # codon, append the letter encoded by the other codon.
+                        letter_to_neighbors[self.codon_to_letter_map[codon]].append(self.codon_to_letter_map[other])
+
+                        # Make sure the letter encoded by the current codon does not appear in the
+                        # list of its neighboring letters
                         letter_to_neighbors[self.codon_to_letter_map[codon]] = \
                             list(set(letter_to_neighbors[self.codon_to_letter_map[codon]]) - {self.codon_to_letter_map[codon]})
+
+        # Read file and load input data into memory
+        self.inDataDict, self.deltaDict, self.seqToRepDict, self.seqLength, self.ordered_genotype_sets = \
+            self._build_data_dicts(self.cmdArgs.inFilePath, letter_to_neighbors)
+
+        # Pass the ordered list of genotype sets to the WriterFilter
+        WriterFilter.ORDERED_GENOTYPE_SETS = self.ordered_genotype_sets
 
         # Get the bit-sequence manipulator object corresponding to the
         # given molecule type.
@@ -417,16 +432,27 @@ class Genonets:
     #   public interface
     # ----------------------------------------------------------------------
 
-    def _build_data_dicts(self, inFilePath):
-        return InReader.build_data_dicts(inFilePath, self.cmdArgs.tau,
-                                         self.cmdArgs.moleculeType)
+    def _build_data_dicts(self, inFilePath, letter_to_neighbors):
+        return InReader.build_data_dicts(
+            inFilePath,
+            self.cmdArgs.tau,
+            self.cmdArgs.moleculeType,
+            letter_to_neighbors
+        )
 
     def _bit_manipulator(self, letter_to_neighbors):
-        return BitManipFactory.getBitSeqManip(self.cmdArgs.moleculeType,
-                                              self.seqLength,
-                                              self.cmdArgs.useIndels,
-                                              letter_to_neighbors,
-                                              self.cmdArgs.use_reverse_complements)
+        if letter_to_neighbors:
+            return BitManipFactory.getBitSeqManip(self.cmdArgs.moleculeType,
+                                                  self.seqLength,
+                                                  self.cmdArgs.useIndels,
+                                                  letter_to_neighbors,
+                                                  self.cmdArgs.use_reverse_complements)
+        else:
+            return BitManipFactory.getBitSeqManip(self.cmdArgs.moleculeType,
+                                                  self.seqLength,
+                                                  self.cmdArgs.useIndels,
+                                                  letter_to_neighbors,
+                                                  self.cmdArgs.use_reverse_complements)
 
     def _bitseqs_and_scores(self, repertoire):
         # Get the list of sequences for the given repertoire

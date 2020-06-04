@@ -115,12 +115,17 @@ class InReader:
     # TODO: This function can be extend to also return a reverse dictionary
     # with key=score, value=sequence ...
     @staticmethod
-    def build_data_dicts(in_file_path, tau, alphabet_type):
+    def build_data_dicts(in_file_path, tau, alphabet_type, letter_to_neighbors):
         # Data structures to be returned
         data_dict = {}
         delta_dict = {}
         genotypes = []      # List of unique genotypes across all genotype sets
         genotype_sets = []  # List of genotype sets in the order in which they are read from file
+
+        if letter_to_neighbors:
+            alphabet = set(letter_to_neighbors.keys())
+        else:
+            alphabet = set(SupportedAlphabet.getAlphabet(alphabet_type))
 
         # Genotype length to be determined
         genotype_length = 0
@@ -208,8 +213,12 @@ class InReader:
                     genotype_length = len(genotype)
 
                 try:
-                    InReader.verify_genotype(genotype, genotype_length, alphabet_type,
-                                             str(int(reader.line_num)))
+                    InReader.verify_genotype(
+                        genotype,
+                        genotype_length,
+                        alphabet,
+                        str(int(reader.line_num))
+                    )
                 except Exception as e:
                     in_file.close()
                     raise e
@@ -276,7 +285,7 @@ class InReader:
         return True
 
     @staticmethod
-    def verify_genotype(genotype, genotype_length, alphabet_type, line_number):
+    def verify_genotype(genotype, genotype_length, alphabet, line_number):
         # Verify the length
         if len(genotype) != genotype_length:
             print("Error: " +
@@ -286,10 +295,6 @@ class InReader:
             raise GenonetsError(
                 ErrorCodes.INCONSISTENT_SEQ_LEN,
                 "Line No. " + line_number)
-
-        # Get the alphabet corresponding to the type received as
-        # argument
-        alphabet = SupportedAlphabet.getAlphabet(alphabet_type)
 
         # Verify alphabet
         if any(letter not in alphabet for letter in genotype):

@@ -9,6 +9,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import sys
 import math
 
 from genonets_utils import Utils
@@ -31,7 +32,8 @@ class CustomBitSeqManipulator(AbstractBitSeqManipulator):
 
         # Mapping from letters to the corresponding bit representation
         self.letterToBitDict = dict(
-            (letter, bit) for bit, letter in enumerate(letter_to_neighbors)
+            (letter, bit)
+            for bit, letter in enumerate(letter_to_neighbors)
         )
 
         # Mapping from bit representation to the corresponding letter
@@ -45,15 +47,15 @@ class CustomBitSeqManipulator(AbstractBitSeqManipulator):
 
         # For each letter,
         for letter in letter_to_neighbors:
-            # For each letter in the letter to bit map,
-            if letter in self.letterToBitDict:
-                # Set the key to the bit representation of the letter, and
-                # value to the set of bit representations of the 1-neighbor
-                # letters.
-                self._letter_to_neighbor_bits[self.letterToBitDict[letter]] = {
-                    self.letterToBitDict[n] for n in letter_to_neighbors[letter]
-                    if n in self.letterToBitDict    # Just so * is ignored
-                }
+            # Letter in numeric bit representation
+            bit_letter = self.letterToBitDict[letter]
+
+            # Set the key to the bit representation of the letter, and
+            # value to the set of bit representations of the 1-neighbor
+            # letters.
+            self._letter_to_neighbor_bits[bit_letter] = {
+                self.letterToBitDict[n] for n in letter_to_neighbors[letter]
+            }
 
     def _are_neighbors(self, seq1, seq2):
         # If the distance between seq1 and seq2 is a point
@@ -120,8 +122,8 @@ class CustomBitSeqManipulator(AbstractBitSeqManipulator):
             # Index of the letter at which the two sequences differ
             i = max(0, index / self.bitCodeLen)
 
-            # Get the bit values for letter at index 'i' both the source
-            # and mutated sequences
+            # Get the bit values for letter at index 'i' in both the
+            # source and mutated sequences
             bit_seq_1 = self.getLetterAtIndex(seq1, i)
             bit_seq_2 = self.getLetterAtIndex(seq2, i)
 
@@ -210,168 +212,6 @@ class ProteinBitSeqManipulator(AbstractBitSeqManipulator):
     # Dictionary: Maps bit values to single letter amino acid codes
     bitToLetterDict = Utils.reverseDict(letterToBitDict)
 
-    # # Constructor
-    # def __init__(self, seqLength, useIndels, letter_to_neighbors):
-    #     AbstractBitSeqManipulator.__init__(self, seqLength, useIndels)
-    #
-    #     self.letter_to_neighbors = letter_to_neighbors
-    #
-    #     self.letter_to_neighbor_bits = {}
-    #
-    #     for letter in letter_to_neighbors:
-    #         if letter in self.letterToBitDict:
-    #             self.letter_to_neighbor_bits[self.letterToBitDict[letter]] = {
-    #                 self.letterToBitDict[n] for n in letter_to_neighbors[letter]
-    #                 if n in self.letterToBitDict    # Just so * is ignored
-    #             }
-
-    # def _are_neighbors(self, seq1, seq2):
-    #     # If the distance between seq1 and seq2 is a point
-    #     # mutation, they are neighbors; no need to check further.
-    #     if self.distanceBwSeqs(seq1, seq2) == 1:
-    #         return 'point'
-    #
-    #     # If shift mutations should not be considered,
-    #     if not self.useIndels:
-    #         return None
-    #
-    #     # Since seq2 is not separated by a point mutation, test for
-    #     # a left shift mutation
-    #
-    #     # Get the right most letter of seq2
-    #     rmn = self.getLetterAtIndex(seq2, self.seqLength - 1)
-    #
-    #     # Left shift seq1 by one letter (n bits)
-    #     temp = seq1 << self.bitCodeLen
-    #
-    #     # Mutate the right most nucleotide in temp and see if that results
-    #     # in seq2. If so, seq1 and seq2 are 1-neighbors separated by
-    #     # a single left shift mutation.
-    #     if seq2 == self.mutAftrLftShift(temp, self.seqLength - 1, rmn):
-    #         return 'left'
-    #
-    #     # Since seq2 is neither separated by a point mutation nor by
-    #     # a left shit, test for a right shift mutation
-    #
-    #     # Get the left most nucleotide of seq2
-    #     lmn = self.getLetterAtIndex(seq2, 0)
-    #
-    #     # Right shift seq1 by one nucleotide (2 bits)
-    #     temp = seq1 >> self.bitCodeLen
-    #
-    #     # Mutate the right most nucleotide temp and see if that results
-    #     # in seq2. If so, seq1 and seq2 are 1-neighbors separated by
-    #     # a single right shift mutation. If not, we have exhausted all
-    #     # possibilities, which means seq1 and seq2 are not 1-neighbors.
-    #     if seq2 == self.mutateLetter(temp, 0, lmn):
-    #         return 'right'
-    #     else:
-    #         return None
-
-    # def _mutation_is_allowed(self, seq1, seq2, i):
-    #     # Get the letter at index 'i'
-    #     bitValue1 = self.getLetterAtIndex(seq1, i)
-    #     bitValue2 = self.getLetterAtIndex(seq2, i)
-    #
-    #     # If there was a mutation here,
-    #     if bitValue1 != bitValue2:
-    #         letter1 = self.bitToLetterDict[bitValue1]
-    #         letter2 = self.bitToLetterDict[bitValue2]
-    #
-    #         if letter2 not in self.letter_to_neighbors[letter1]:
-    #             return False
-    #
-    #     return True
-
-    # def areNeighbors(self, seq1, seq2):
-    #     # Check if seq1 and seq2 are 1-neighbors
-    #     result = self._are_neighbors(seq1, seq2)
-    #
-    #     if self.letter_to_neighbors and result == 'point':
-    #         diff = "{0:{fill}{code_length}b}".format(
-    #             seq1 ^ seq2, fill='0', code_length=self.seqLength * self.bitCodeLen)
-    #         index = diff.index('1')
-    #         i = max(0, index / self.bitCodeLen)
-    #
-    #         # Get the letter at index 'i'
-    #         bitValue1 = self.getLetterAtIndex(seq1, i)
-    #         bitValue2 = self.getLetterAtIndex(seq2, i)
-    #
-    #         # If there was a mutation here,
-    #         if bitValue1 != bitValue2:
-    #             letter1 = self.bitToLetterDict[bitValue1]
-    #             letter2 = self.bitToLetterDict[bitValue2]
-    #
-    #             if letter2 not in self.letter_to_neighbors[letter1]:
-    #                 return False
-    #
-    #         return True
-    #         # Check if the mutation is allowed by the genetic code
-    #         # for i in range(self.seqLength):
-    #         #     # if not self._mutation_is_allowed(seq1, seq2, i):
-    #         #     #     return False
-    #         #     # Get the letter at index 'i'
-    #         #     bitValue1 = self.getLetterAtIndex(seq1, i)
-    #         #     bitValue2 = self.getLetterAtIndex(seq2, i)
-    #         #
-    #         #     # If there was a mutation here,
-    #         #     if bitValue1 != bitValue2:
-    #         #         letter1 = self.bitToLetterDict[bitValue1]
-    #         #         letter2 = self.bitToLetterDict[bitValue2]
-    #         #
-    #         #         if letter2 not in self.letter_to_neighbors[letter1]:
-    #         #             return False
-    #     elif result in {'point', 'right', 'left'}:
-    #         return True
-    #
-    #     return False
-    #
-    # def generateNeighbors(self, sequence):
-    #     # No. of nucleotides in the sequence
-    #     k = self.seqLength
-    #
-    #     # Generate all possible single letter mutants
-    #     # TODO: Modify the following comprehension such that letter
-    #     #  being mutated can only be mutated to one of the other
-    #     #  letters allowed by the genetic code
-    #     neighbors = [
-    #         self.mutateLetter(sequence, i, target)
-    #         for i in range(k)
-    #         for target in self.letter_to_neighbor_bits[self.getLetterAtIndex(sequence, i)]
-    #     ]
-    #
-    #     # If shift mutations should be considered,
-    #     if self.useIndels:
-    #         # Generate all possible left shift mutations
-    #
-    #         # Left shift sequence by one letter, i.e., n bits
-    #         temp = sequence << self.bitCodeLen
-    #
-    #         # Generate all possible left shift mutants by mutating the right most
-    #         # nucleotide 4 times.
-    #         lsNeighbors = self.getShiftMutants("left", temp)
-    #
-    #         # Append the list of left shift mutants to the neighborhood. Avoid duplication,
-    #         # which is possible for sequences where the same letter occupies all positions.
-    #         # Also, do not include the mutant that results in the source sequence.
-    #         neighbors.extend(self.getUniqueNeighbors(lsNeighbors, neighbors, sequence))
-    #
-    #         # Generate all right shift mutants
-    #
-    #         # Right shift sequence by one nucleotide (2 bits)
-    #         temp = sequence >> self.bitCodeLen
-    #
-    #         # Generate all possible right shift mutations by mutating the right most
-    #         # nucleotide 4 times. However, do not include the mutant that results
-    #         # in the source sequence.
-    #         rsNeighbors = self.getShiftMutants("right", temp)
-    #
-    #         # Append the list of right shift mutants to the neighborhood. Avoid duplication,
-    #         # which is possible for sequences where the same letter occupies all positions.
-    #         # Also, do not include the mutant that results in the source sequence.
-    #         neighbors.extend(self.getUniqueNeighbors(rsNeighbors, neighbors, sequence))
-    #
-    #     return neighbors
 
 # Abstract base class the provides common attributes for RNA
 # DNA sequence manipulation as bits. Only derived concrete
@@ -488,7 +328,6 @@ class BitManipFactory:
         elif moleculeType == "DNA":
             return DNABitSeqManipulator(seqLength, useIndels,  useReverseComplements)
         elif moleculeType == "Protein":
-            # return ProteinBitSeqManipulator(seqLength, useIndels, letter_to_neighbors)
             return ProteinBitSeqManipulator(seqLength, useIndels)
         elif moleculeType == "Binary":
             return BinaryBitSeqManipulator(seqLength, useIndels)
@@ -496,4 +335,5 @@ class BitManipFactory:
             print("Unsupported moleculeType: " + str(moleculeType))
             print("Exiting program ...")
 
-            exit()
+            # TODO: raise an exception rather than calling exit() ...
+            sys.exit(1)

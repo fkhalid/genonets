@@ -36,8 +36,8 @@ def process(args):
         ac.ROBUSTNESS,
         ac.STRUCTURE,
         ac.PEAKS,
-        ac.PHENOTYPIC_DIVERSITY,
-        ac.NEIGHBOR_ABUNDANCE,
+        # ac.PHENOTYPIC_DIVERSITY,
+        # ac.NEIGHBOR_ABUNDANCE,
         ac.PATHS_RATIOS,
         ac.EPISTASIS
     ])

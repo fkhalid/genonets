@@ -122,9 +122,13 @@ class InReader:
         genotypes = []      # List of unique genotypes across all genotype sets
         genotype_sets = []  # List of genotype sets in the order in which they are read from file
 
+        # If a codon-to-letter mapping should be used,
         if letter_to_neighbors:
+            # Alphabet comprises the letters available in the mapping
             alphabet = set(letter_to_neighbors.keys())
         else:
+            # Alphabet comprises the letters available in the
+            # selected alphabet type
             alphabet = set(SupportedAlphabet.getAlphabet(alphabet_type))
 
         # Genotype length to be determined

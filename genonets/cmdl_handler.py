@@ -56,19 +56,6 @@ class CmdParser:
 
         # ---------------- Optional arguments ------------------ #
 
-        parser.add_argument('--genetic-code-file',
-                            dest='genetic_code_file',
-                            help='Path to the file which contains the mapping '
-                                 'from the genetic code to each letter in the '
-                                 'selected alphabet.')
-
-        parser.add_argument('--codon-alphabet',
-                            dest='codon_alphabet',
-                            choices=['DNA', 'RNA'],
-                            default='DNA',
-                            help='Alphabet to use for the codons in '
-                                 'the genetic code file.')
-
         # Add 'use_reverse_complements' as an argument
         parser.add_argument("-rc", "--use_reverse_complements",
                             dest="use_reverse_complements",
@@ -87,6 +74,37 @@ class CmdParser:
                             const=True,
                             help="Processing steps are printed to the screen during " +
                                  "program execution.")
+
+        parser.add_argument('--genetic-code-file',
+                            dest='genetic_code_file',
+                            help='Path to the file which contains the mapping '
+                                 'from the genetic code to each letter in the '
+                                 'selected alphabet.')
+
+        parser.add_argument('--codon-alphabet',
+                            dest='codon_alphabet',
+                            choices=['DNA', 'RNA'],
+                            default='DNA',
+                            help='Alphabet to use for the codons in '
+                                 'the genetic code file.')
+
+        parser.add_argument('--codon-include-indels',
+                            dest='include_indels_for_codons',
+                            action='store_const', const=True,
+                            default=False,
+                            help='When specified, indels are considered '
+                                 'when checking for mutations in codons'
+                                 '.')
+
+        parser.add_argument('--codon-use-rc',
+                            dest='use_rc_for_codons',
+                            action='store_const', const=True,
+                            default=False,
+                            help='When specified, reverse complements '
+                                 'are considered when checking for '
+                                 'mutations in codons. This is only '
+                                 'applicable when the alphabet for '
+                                 'codons is DNA.')
 
         # Keep an object level copy of the arguments dict
         if arguments:
@@ -140,17 +158,31 @@ class CmdArgs:
         if not self.outPath.endswith("/"):
             self.outPath += "/"
 
+        # Maximum number of parallel processes to be used
+        self.num_procs = arguments.num_procs
+
+        # Verbose flag
+        self.verbose = True if arguments.verbose else False
+
         # Optional file with the codon-to-letter mapping
         self.genetic_code_file = arguments.genetic_code_file
 
         # Alphabet to use for codons in the codon-to-letter mapping
         self.codon_alphabet = arguments.codon_alphabet
 
-        # Maximum number of parallel processes to be used
-        self.num_procs = arguments.num_procs
+        # Flag to indicate whether or not consider indels when working
+        # on codons
+        self.include_indels_for_codons = arguments.include_indels_for_codons
 
-        # Verbose flag
-        self.verbose = True if arguments.verbose else False
+        # Flag to indicate whether or not reverse complements
+        # should be considered in codons
+        self.use_rc_for_codons = arguments.use_rc_for_codons
+
+        if self.codon_alphabet != 'DNA' and self.use_rc_for_codons:
+            print('Ignoring option --codon-use-rc: This option can '
+                  'only be used when the codon alphabet is DNA; it is '
+                  'not supported for codon alphabet '
+                  + self.codon_alphabet)
 
         # Create a dictionary of parameters
         paramsDict = {
@@ -159,11 +191,13 @@ class CmdArgs:
             "inFilePath": self.inFilePath,
             "tau": str(self.tau),
             "outPath": self.outPath,
-            "genetic_code_file": self.genetic_code_file,
-            "codon_alphabet": self.codon_alphabet,
             "useReverseComplements": str(self.use_reverse_complements),
             "num_procs": str(self.num_procs),
-            "verbose": str(self.verbose)
+            "verbose": str(self.verbose),
+            "genetic_code_file": self.genetic_code_file,
+            "codon_alphabet": self.codon_alphabet,
+            "include_indels_for_codons": str(self.include_indels_for_codons),
+            "use_rc_for_codons": str(self.use_rc_for_codons)
         }
 
         # Print the parsed parameter values

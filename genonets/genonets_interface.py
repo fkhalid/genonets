@@ -56,63 +56,20 @@ class Genonets:
         # Handle program arguments
         self.cmdArgs = CmdArgs(args)
 
-        # Dict {letter: list of letters that are 1-neighbors}
-        letter_to_neighbors = None
-
-        # If the genetic code should be consulted
-        if self.cmdArgs.genetic_code_file:
-            # Load the codon-to-letter map and also the length of the codon
-            self.codon_to_letter_map, self.codon_length = GeneticCodeReader.load_codon_to_letter_map(
-                self.cmdArgs.genetic_code_file, self.cmdArgs.codon_alphabet
-            )
-
-            # Bit manipulator for the codons
-            codon_bitmanip = BitManipFactory.getBitSeqManip(
-                self.cmdArgs.codon_alphabet,
-                self.codon_length,
-                self.cmdArgs.useIndels, # TODO: perhaps we should ask the user if indels should be used for codons ...
-                self.cmdArgs.use_reverse_complements # TODO: perhaps we should ask the user if reverse complements should be used for codons ...
-            )
-
-            # List of codons
-            codons = self.codon_to_letter_map.keys()
-
-            # Initialize the dict
-            letter_to_neighbors = {letter: [] for letter in set(self.codon_to_letter_map.values())}
-
-            # For each codon,
-            for codon in self.codon_to_letter_map:
-                # Create a set with all codons but the current
-                other_codons = set(codons) - {codon}
-
-                # For each of the other codons,
-                for other in other_codons:
-                    # Check if this and the other codon are 1-neighbors
-                    are_neighbors = codon_bitmanip.areNeighbors(
-                        codon_bitmanip.seqToBits(codon),
-                        codon_bitmanip.seqToBits(other)
-                    )
-
-                    if are_neighbors:
-                        # To the list of neighboring letters of the lettee encoded by the currect
-                        # codon, append the letter encoded by the other codon.
-                        letter_to_neighbors[self.codon_to_letter_map[codon]].append(self.codon_to_letter_map[other])
-
-                        # Make sure the letter encoded by the current codon does not appear in the
-                        # list of its neighboring letters
-                        letter_to_neighbors[self.codon_to_letter_map[codon]] = \
-                            list(set(letter_to_neighbors[self.codon_to_letter_map[codon]]) - {self.codon_to_letter_map[codon]})
+        # Dict {letter: list of letters that are 1-neighbors}.
+        # Should be 'None' if the codon-to-letter map was not provided.
+        self.letter_to_neighbors = self._create_letter_to_neighbor_map()
 
         # Read file and load input data into memory
         self.inDataDict, self.deltaDict, self.seqToRepDict, self.seqLength, self.ordered_genotype_sets = \
-            self._build_data_dicts(self.cmdArgs.inFilePath, letter_to_neighbors)
+            self._build_data_dicts(self.cmdArgs.inFilePath, self.letter_to_neighbors)
 
         # Pass the ordered list of genotype sets to the WriterFilter
         WriterFilter.ORDERED_GENOTYPE_SETS = self.ordered_genotype_sets
 
         # Get the bit-sequence manipulator object corresponding to the
         # given molecule type.
-        self.bitManip = self._bit_manipulator(letter_to_neighbors)
+        self.bitManip = self._bit_manipulator()
 
         # Get the NetworkBuilder object
         self.netBuilder = NetworkBuilder(self.bitManip, self.cmdArgs.use_reverse_complements)
@@ -137,6 +94,67 @@ class Genonets:
         if process:
             # Perform all processing steps
             self._process_all(parallel)
+
+    def _create_letter_to_neighbor_map(self):
+        # Dict {letter: list of letters that are 1-neighbors}
+        letter_to_neighbors = None
+
+        # If the genetic code should be consulted
+        if self.cmdArgs.genetic_code_file:
+            # Load the codon-to-letter map and also the length of the codon
+            self.codon_to_letter_map, self.codon_length = \
+                GeneticCodeReader.load_codon_to_letter_map(
+                    self.cmdArgs.genetic_code_file,
+                    self.cmdArgs.codon_alphabet
+                )
+
+            # Bit manipulator for codons
+            codon_bitmanip = BitManipFactory.getBitSeqManip(
+                self.cmdArgs.codon_alphabet,
+                self.codon_length,
+                self.cmdArgs.include_indels_for_codons,
+                self.cmdArgs.use_rc_for_codons
+            )
+
+            # List of codons
+            codons = set(self.codon_to_letter_map.keys())
+
+            # Initialize the dict {letter: [list of 1-neighbor letters]}
+            letter_to_neighbors = {
+                letter: []
+                for letter in set(self.codon_to_letter_map.values())
+            }
+
+            # For each codon,
+            for codon in codons:
+                # Create a set with all codons but the current
+                other_codons = codons - {codon}
+
+                # Letter encoded by the codon being processed
+                codon_encoded_letter = self.codon_to_letter_map[codon]
+
+                # For each of the other codons,
+                for other in other_codons:
+                    # Check if codon and other are 1-neighbors
+                    are_neighbors = codon_bitmanip.areNeighbors(
+                        codon_bitmanip.seqToBits(codon),
+                        codon_bitmanip.seqToBits(other)
+                    )
+
+                    if are_neighbors:
+                        # Letter encoded by the other codon
+                        other_encoded_letter = self.codon_to_letter_map[other]
+
+                        # To the list of neighboring letters of the letter encoded by the current
+                        # codon, append the letter encoded by the other codon.
+                        letter_to_neighbors[codon_encoded_letter].append(other_encoded_letter)
+
+                # Make sure the letter encoded by the current codon does not appear in the
+                # list of its neighboring letters
+                letter_to_neighbors[codon_encoded_letter] = \
+                    list(set(letter_to_neighbors[codon_encoded_letter]) - {codon_encoded_letter})
+
+        return letter_to_neighbors
 
     def create(self, genotype_sets=Gc.ALL, parallel=False):
         """
@@ -440,19 +458,12 @@ class Genonets:
             letter_to_neighbors
         )
 
-    def _bit_manipulator(self, letter_to_neighbors):
-        if letter_to_neighbors:
-            return BitManipFactory.getBitSeqManip(self.cmdArgs.moleculeType,
-                                                  self.seqLength,
-                                                  self.cmdArgs.useIndels,
-                                                  letter_to_neighbors,
-                                                  self.cmdArgs.use_reverse_complements)
-        else:
-            return BitManipFactory.getBitSeqManip(self.cmdArgs.moleculeType,
-                                                  self.seqLength,
-                                                  self.cmdArgs.useIndels,
-                                                  letter_to_neighbors,
-                                                  self.cmdArgs.use_reverse_complements)
+    def _bit_manipulator(self):
+        return BitManipFactory.getBitSeqManip(self.cmdArgs.moleculeType,
+                                              self.seqLength,
+                                              self.cmdArgs.useIndels,
+                                              self.letter_to_neighbors,
+                                              self.cmdArgs.use_reverse_complements)
 
     def _bitseqs_and_scores(self, repertoire):
         # Get the list of sequences for the given repertoire

@@ -20,6 +20,7 @@ class GeneticCodeReader:
         pass
 
     COL_HEADERS = {'Codon', 'Letter'}
+    LETTERS_TO_IGNORE = {'*'}
 
     @staticmethod
     def load_codon_to_letter_map(filename, alphabet_type):
@@ -94,8 +95,10 @@ class GeneticCodeReader:
 
                 raise GenonetsError('Unsupported letter length.')
 
-            # Save the mapping
-            codon_to_letter[codon] = letter
+            # Unless the letter should be ignored,
+            if letter not in GeneticCodeReader.LETTERS_TO_IGNORE:
+                # Save the mapping
+                codon_to_letter[codon] = letter
 
         mapping_file.close()
 

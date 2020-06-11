@@ -6,6 +6,7 @@
 """
 
 import argparse
+import collections
 
 from genonets_writer import Writer
 from seq_bit_impl import BitManipFactory
@@ -66,7 +67,7 @@ class CmdParser:
 
         # Add 'num_processes' as an argument
         parser.add_argument("-np", "--num_processes", dest="num_procs", action="store",
-                            type=int, default="4",
+                            type=int, default="1",
                             help="No. of processes to be used in parallel processing")
 
         # Add 'verbose' as an argument
@@ -77,6 +78,7 @@ class CmdParser:
 
         parser.add_argument('--genetic-code-file',
                             dest='genetic_code_file',
+                            default=None,
                             help='Path to the file which contains the mapping '
                                  'from the genetic code to each letter in the '
                                  'selected alphabet.')
@@ -185,20 +187,19 @@ class CmdArgs:
                   + self.codon_alphabet)
 
         # Create a dictionary of parameters
-        paramsDict = {
-            "alphabetType": self.moleculeType,
-            "includeIndels": str(self.useIndels),
-            "inFilePath": self.inFilePath,
-            "tau": str(self.tau),
-            "outPath": self.outPath,
-            "useReverseComplements": str(self.use_reverse_complements),
-            "num_procs": str(self.num_procs),
-            "verbose": str(self.verbose),
-            "genetic_code_file": self.genetic_code_file,
-            "codon_alphabet": self.codon_alphabet,
-            "include_indels_for_codons": str(self.include_indels_for_codons),
-            "use_rc_for_codons": str(self.use_rc_for_codons)
-        }
+        paramsDict = collections.OrderedDict()
+        paramsDict['Genotype alphabet'] = str(self.moleculeType)
+        paramsDict['Include indels for Genotypes'] = str(self.useIndels)
+        paramsDict['Genonets input file'] = str(self.inFilePath)
+        paramsDict['Tau'] = str(self.tau)
+        paramsDict['Output path'] = str(self.outPath)
+        paramsDict['Use reverse complements for genotypes'] = str(self.use_reverse_complements)
+        paramsDict['No. of parallel processes'] = str(self.num_procs)
+        paramsDict['Verbose'] = str(self.verbose)
+        paramsDict['Genetic code input file'] = str(self.genetic_code_file)
+        paramsDict['Codon alphabet'] = str(self.codon_alphabet)
+        paramsDict['Include indels for Codons'] = str(self.include_indels_for_codons)
+        paramsDict['Use reverse complements for codons'] = str(self.include_indels_for_codons)
 
         # Print the parsed parameter values
         self.printInParams(paramsDict)

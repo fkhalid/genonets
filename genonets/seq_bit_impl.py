@@ -21,11 +21,11 @@ class CustomBitSeqManipulator(AbstractBitSeqManipulator):
     #       from each letter to its complement, which should be provided
     #       by the user ...
     def __init__(self, seqLength, useIndels, letter_to_neighbors):
-        # No. of unique letters in the alphabet
-        self._alphabet_size = len(set(letter_to_neighbors.keys()))
-
         # Mapping from letters to all 1-neighbors
         self._letter_to_neighbors = letter_to_neighbors
+
+        # No. of unique letters in the alphabet
+        self._alphabet_size = len(self._letter_to_neighbors)
 
         # No. of bits required to encode the alphabet
         self.bitCodeLen = int(math.ceil(math.log(self._alphabet_size, 2)))
@@ -46,7 +46,7 @@ class CustomBitSeqManipulator(AbstractBitSeqManipulator):
         self._letter_to_neighbor_bits = {}
 
         # For each letter,
-        for letter in letter_to_neighbors:
+        for letter in self._letter_to_neighbors:
             # Letter in numeric bit representation
             bit_letter = self.letterToBitDict[letter]
 
@@ -54,49 +54,44 @@ class CustomBitSeqManipulator(AbstractBitSeqManipulator):
             # value to the set of bit representations of the 1-neighbor
             # letters.
             self._letter_to_neighbor_bits[bit_letter] = {
-                self.letterToBitDict[n] for n in letter_to_neighbors[letter]
+                self.letterToBitDict[n]
+                for n in letter_to_neighbors[letter]
             }
 
     def _are_neighbors(self, seq1, seq2):
+        # If shift mutations should be considered,
+        if self.useIndels:
+            # Get the right most letter of seq2
+            rmn = self.getLetterAtIndex(seq2, self.seqLength - 1)
+
+            # Left shift seq1 by one letter (n bits)
+            temp = seq1 << self.bitCodeLen
+
+            # Mutate the right most letter in temp and see if that results
+            # in seq2. If so, seq1 and seq2 are 1-neighbors separated by
+            # a single left shift mutation.
+            if seq2 == self.mutAftrLftShift(temp, self.seqLength - 1, rmn):
+                return 'left'
+
+            # Since seq2 is not separated by a left shit, test for a
+            # right shift mutation
+
+            # Get the left most letter of seq2
+            lmn = self.getLetterAtIndex(seq2, 0)
+
+            # Right shift seq1 by one letter
+            temp = seq1 >> self.bitCodeLen
+
+            # Mutate the right most letter temp and see if that results
+            # in seq2. If so, seq1 and seq2 are 1-neighbors separated by
+            # a single right shift mutation.
+            if seq2 == self.mutateLetter(temp, 0, lmn):
+                return 'right'
+
         # If the distance between seq1 and seq2 is a point
-        # mutation, they are neighbors; no need to check further.
+        # mutation
         if self.distanceBwSeqs(seq1, seq2) == 1:
             return 'point'
-
-        # If shift mutations should not be considered,
-        if not self.useIndels:
-            return None
-
-        # Since seq2 is not separated by a point mutation, test for
-        # a left shift mutation
-
-        # Get the right most letter of seq2
-        rmn = self.getLetterAtIndex(seq2, self.seqLength - 1)
-
-        # Left shift seq1 by one letter (n bits)
-        temp = seq1 << self.bitCodeLen
-
-        # Mutate the right most nucleotide in temp and see if that results
-        # in seq2. If so, seq1 and seq2 are 1-neighbors separated by
-        # a single left shift mutation.
-        if seq2 == self.mutAftrLftShift(temp, self.seqLength - 1, rmn):
-            return 'left'
-
-        # Since seq2 is neither separated by a point mutation nor by
-        # a left shit, test for a right shift mutation
-
-        # Get the left most nucleotide of seq2
-        lmn = self.getLetterAtIndex(seq2, 0)
-
-        # Right shift seq1 by one nucleotide (2 bits)
-        temp = seq1 >> self.bitCodeLen
-
-        # Mutate the right most nucleotide temp and see if that results
-        # in seq2. If so, seq1 and seq2 are 1-neighbors separated by
-        # a single right shift mutation. If not, we have exhausted all
-        # possibilities, which means seq1 and seq2 are not 1-neighbors.
-        if seq2 == self.mutateLetter(temp, 0, lmn):
-            return 'right'
         else:
             return None
 

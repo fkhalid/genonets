@@ -95,67 +95,6 @@ class Genonets:
             # Perform all processing steps
             self._process_all(parallel)
 
-    def _create_letter_to_neighbor_map(self):
-        # Dict {letter: list of letters that are 1-neighbors}
-        letter_to_neighbors = None
-
-        # If the genetic code should be consulted
-        if self.cmdArgs.genetic_code_file:
-            # Load the codon-to-letter map and also the length of the codon
-            self.codon_to_letter_map, self.codon_length = \
-                GeneticCodeReader.load_codon_to_letter_map(
-                    self.cmdArgs.genetic_code_file,
-                    self.cmdArgs.codon_alphabet
-                )
-
-            # Bit manipulator for codons
-            codon_bitmanip = BitManipFactory.getBitSeqManip(
-                self.cmdArgs.codon_alphabet,
-                self.codon_length,
-                self.cmdArgs.include_indels_for_codons,
-                self.cmdArgs.use_rc_for_codons
-            )
-
-            # List of codons
-            codons = set(self.codon_to_letter_map.keys())
-
-            # Initialize the dict {letter: [list of 1-neighbor letters]}
-            letter_to_neighbors = {
-                letter: []
-                for letter in set(self.codon_to_letter_map.values())
-            }
-
-            # For each codon,
-            for codon in codons:
-                # Create a set with all codons but the current
-                other_codons = codons - {codon}
-
-                # Letter encoded by the codon being processed
-                codon_encoded_letter = self.codon_to_letter_map[codon]
-
-                # For each of the other codons,
-                for other in other_codons:
-                    # Check if codon and other are 1-neighbors
-                    are_neighbors = codon_bitmanip.areNeighbors(
-                        codon_bitmanip.seqToBits(codon),
-                        codon_bitmanip.seqToBits(other)
-                    )
-
-                    if are_neighbors:
-                        # Letter encoded by the other codon
-                        other_encoded_letter = self.codon_to_letter_map[other]
-
-                        # To the list of neighboring letters of the letter encoded by the current
-                        # codon, append the letter encoded by the other codon.
-                        letter_to_neighbors[codon_encoded_letter].append(other_encoded_letter)
-
-                # Make sure the letter encoded by the current codon does not appear in the
-                # list of its neighboring letters
-                letter_to_neighbors[codon_encoded_letter] = \
-                    list(set(letter_to_neighbors[codon_encoded_letter]) - {codon_encoded_letter})
-
-        return letter_to_neighbors
-
     def create(self, genotype_sets=Gc.ALL, parallel=False):
         """
         Create genotype networks for the given list of genotype set names.
@@ -450,6 +389,67 @@ class Genonets:
     #   public interface
     # ----------------------------------------------------------------------
 
+    def _create_letter_to_neighbor_map(self):
+        # Dict {letter: list of letters that are 1-neighbors}
+        letter_to_neighbors = None
+
+        # If the genetic code should be consulted
+        if self.cmdArgs.genetic_code_file:
+            # Load the codon-to-letter map and also the length of the codon
+            self.codon_to_letter_map, self.codon_length = \
+                GeneticCodeReader.load_codon_to_letter_map(
+                    self.cmdArgs.genetic_code_file,
+                    self.cmdArgs.codon_alphabet
+                )
+
+            # Bit manipulator for codons
+            codon_bitmanip = BitManipFactory.getBitSeqManip(
+                self.cmdArgs.codon_alphabet,
+                self.codon_length,
+                self.cmdArgs.include_indels_for_codons,
+                self.cmdArgs.use_rc_for_codons
+            )
+
+            # List of codons
+            codons = set(self.codon_to_letter_map.keys())
+
+            # Initialize the dict {letter: [list of 1-neighbor letters]}
+            letter_to_neighbors = {
+                letter: []
+                for letter in set(self.codon_to_letter_map.values())
+            }
+
+            # For each codon,
+            for codon in codons:
+                # Create a set with all codons but the current
+                other_codons = codons - {codon}
+
+                # Letter encoded by the codon being processed
+                codon_encoded_letter = self.codon_to_letter_map[codon]
+
+                # For each of the other codons,
+                for other in other_codons:
+                    # Check if codon and other are 1-neighbors
+                    are_neighbors = codon_bitmanip.areNeighbors(
+                        codon_bitmanip.seqToBits(codon),
+                        codon_bitmanip.seqToBits(other)
+                    )
+
+                    if are_neighbors:
+                        # Letter encoded by the other codon
+                        other_encoded_letter = self.codon_to_letter_map[other]
+
+                        # To the list of neighboring letters of the letter encoded by the current
+                        # codon, append the letter encoded by the other codon.
+                        letter_to_neighbors[codon_encoded_letter].append(other_encoded_letter)
+
+                # Make sure the letter encoded by the current codon does not appear in the
+                # list of its neighboring letters
+                letter_to_neighbors[codon_encoded_letter] = \
+                    list(set(letter_to_neighbors[codon_encoded_letter]) - {codon_encoded_letter})
+
+        return letter_to_neighbors
+
     def _build_data_dicts(self, inFilePath, letter_to_neighbors):
         return InReader.build_data_dicts(
             inFilePath,
@@ -498,6 +498,10 @@ class Genonets:
             # dictionary: Key=Repertoire, Value=Network
             self.repToNetDict[repertoire] = \
                 self.netBuilder.createGenoNet(repertoire, seqs, scores)
+
+            net = self.repToNetDict[repertoire]
+            sys.stdout.write("[Vertices: {}, Edges: {}]".format(
+                net.vcount(), net.ecount()) + " ... ")
 
             # Get the number of components in the network
             numComponents = len(self.netBuilder.getComponents(

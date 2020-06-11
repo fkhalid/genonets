@@ -199,7 +199,7 @@ class CmdArgs:
         paramsDict['Genetic code input file'] = str(self.genetic_code_file)
         paramsDict['Codon alphabet'] = str(self.codon_alphabet)
         paramsDict['Include indels for Codons'] = str(self.include_indels_for_codons)
-        paramsDict['Use reverse complements for codons'] = str(self.include_indels_for_codons)
+        paramsDict['Use reverse complements for codons'] = str(self.use_rc_for_codons)
 
         # Print the parsed parameter values
         self.printInParams(paramsDict)

@@ -69,7 +69,7 @@ class GeneticCodeReader:
             if codon_length == 0:
                 codon_length = len(codon)
             elif len(codon) != codon_length:
-                print('Error: Inconsisten codon length on line No. '
+                print('Error: Inconsistent codon length on line No. '
                       + str(int(reader.line_num)))
 
                 raise GenonetsError(

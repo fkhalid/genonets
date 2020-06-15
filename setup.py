@@ -29,6 +29,6 @@ setup(
     },
     install_requires=[
         'python-igraph==0.7.1.post6',
-        'numpy>=1.8.2'
+        'numpy==1.8.2'
     ]
 )

@@ -33,13 +33,15 @@ def process(args):
     # Perform only 'Robustness' and 'Evolvability' analyses on just two of
     # the genotype sets available in the input file, i.e., 'Foxa2' and 'Bbx'.
     gn.analyze(analyses=[
-        ac.ROBUSTNESS,
+        # ac.ROBUSTNESS,
+        # ac.EVOLVABILITY,
+        # ac.ACCESSIBILITY,
         # ac.STRUCTURE,
         # ac.PEAKS,
         # # ac.PHENOTYPIC_DIVERSITY,
         # # ac.NEIGHBOR_ABUNDANCE,
         # ac.PATHS_RATIOS,
-        # ac.EPISTASIS
+        ac.EPISTASIS
     ])
 
     # Write the given genotype networks to files in GML format.

@@ -8,6 +8,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import sys
+
 
 class EvolvabilityAnalyzer:
     # Constructor
@@ -47,22 +49,35 @@ class EvolvabilityAnalyzer:
         # Reference to the list of evolvability values for all sequences
         self.evoTuples = None
 
+        self._counter = 0
+
     @staticmethod
     def updateSeqToRepDict(seqToRepDict_original, repToGiantDict):
         # Make a deep copy of the dict
         seqToRepDict = seqToRepDict_original.copy()
 
         # For each sequence key in the dict,
-        for seq in seqToRepDict.keys():
+        for seq in seqToRepDict:
             # Update the list of repertoires corresponding to this
             # sequence with only those repertoires for which this
             # sequence exists in the giant.
             seqToRepDict[seq] = [
                 rep for rep in seqToRepDict[seq]
-                if seq in repToGiantDict[rep].vs["sequences"]
+                if EvolvabilityAnalyzer.is_sequence_in_network(seq, repToGiantDict[rep])
+                #if seq in repToGiantDict[rep].vs["name"]
             ]
 
         return seqToRepDict
+
+    @staticmethod
+    def is_sequence_in_network(sequence, network):
+        try:
+            network.vs.find(sequence)
+            vertex_exists = True
+        except ValueError:
+            vertex_exists = False
+
+        return vertex_exists
 
     @staticmethod
     def buildRcToSeqDict(seqToRepDict, bm):
@@ -134,10 +149,17 @@ class EvolvabilityAnalyzer:
                 for seq in self.network.vs["sequences"]
             ]
 
+        self._counter = 0
+
         return self.evoTuples
 
     # Returns evolvability score for the given sequence
     def getSeqEvo(self, sequence):
+        sys.stdout.write(str(self._counter) + '\r')
+        sys.stdout.flush()
+
+        self._counter += 1
+
         # Get a list of sequences that are 1-neighbors, but not part of the
         # genotype network
         externNeighbors = self.netBuilder.getExternalNeighbors(sequence, self.network)

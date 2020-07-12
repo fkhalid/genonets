@@ -8,6 +8,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import sys
+
 from genonets_constants import EpistasisConstants as epi
 
 
@@ -52,8 +54,13 @@ class EpistasisAnalyzer:
         # List of epistasis class corresponding to each square
         self.sqrEpi = []
 
+        print('\ngetEpiAll:\n')
+
         # For each square
-        for square in squares:
+        for i, square in enumerate(squares):
+            sys.stdout.write(str(i) + '\r')
+            sys.stdout.flush()
+
             # Determine to which class of epistasis this square belongs
             epiClass = self.getEpistasis(square)
 
@@ -157,6 +164,8 @@ class EpistasisAnalyzer:
     # Return all squares found in the genotype network
     # TODO: Look into performance optimization ...
     def getSquares(self, recompute=False):
+        print('\ngetSquares:\n')
+
         # If squares computation has been done already, and the
         # caller has not explicitly asked for re-running the
         # algorithms,
@@ -175,7 +184,10 @@ class EpistasisAnalyzer:
         sequences = self.network.vs["sequences"]
 
         # For each sequence in the network
-        for sequence in sequences:
+        for i, sequence in enumerate(sequences):
+            sys.stdout.write(str(i) + '\r')
+            sys.stdout.flush()
+
             # Get all 1-neighbor sequences
             neighbors = [self.network.vs[vid]["sequences"]
                          for vid in
@@ -232,14 +244,21 @@ class EpistasisAnalyzer:
 
     # Returns a list of neighbors common to both elements in the pair. The
     # parent is not considered as a common neighbor.
+    # TODO: hotspot to be optimized ...
     def getCommonNeighbors(self, pair, parent):
         # Get neighbors for the first sequence in the pair
-        neighbors1 = [self.network.vs[vid]["sequences"] for vid in \
-                      self.network.neighbors(self.seqToVidDict[pair[0]])]
+        neighbors1 = self.netUtils.getNeighborSequences(pair[0], self.network)
+        # neighbors1 = [
+        #     self.network.vs[vid]["sequences"]
+        #     for vid in self.network.neighbors(self.seqToVidDict[pair[0]])
+        # ]
+        # neighbors1 = [self.network.vs[vid]["sequences"] for vid in \
+        #               self.network.neighbors(self.seqToVidDict[pair[0]])]
 
         # Get neighbors for the second sequence in the pair
-        neighbors2 = [self.network.vs[vid]["sequences"] for vid in \
-                      self.network.neighbors(self.seqToVidDict[pair[1]])]
+        neighbors2 = self.netUtils.getNeighborSequences(pair[1], self.network)
+        # neighbors2 = [self.network.vs[vid]["sequences"] for vid in \
+        #               self.network.neighbors(self.seqToVidDict[pair[1]])]
 
         # Get a list of common neighbors
         commonNeighbors = list(set(neighbors1) & set(neighbors2))

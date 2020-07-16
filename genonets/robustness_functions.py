@@ -8,9 +8,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import sys
-
 import numpy as np
+from tqdm import tqdm
 
 
 class RobustnessAnalyzer:
@@ -34,8 +33,6 @@ class RobustnessAnalyzer:
         # populated when required
         self.robustnessVals = None
 
-        self._counter = 0
-
     # Returns the arithmetic mean of the all values in the
     # robustness list.
     def getAvgRobustness(self):
@@ -46,19 +43,16 @@ class RobustnessAnalyzer:
     # consist of robustness values for all sequences represented by
     # vertices of the given network.
     def getRobustnessAll(self, recompute=False):
+        print('\n')
+
         # If either the robustness values have not been computed already,
         # or the caller has explicitly requested re-computing,
         if not self.robustnessVals or recompute:
             # Get robustness values for all sequences in the network
             self.robustnessVals = [
                 self.getGenotypeRobustness(seq)
-                for seq in self.network.vs["sequences"]
+                for seq in tqdm(self.network.vs["sequences"])
             ]
-
-        self._counter = 0
-
-        sys.stdout.write('Done.')
-        sys.stdout.flush()
 
         return self.robustnessVals
 
@@ -68,11 +62,6 @@ class RobustnessAnalyzer:
     # Wagner, Proc. R. Soc. B 2008 275 91-100;
     # DOI: 10.1098/rspb.2007.1137. Published 7 January 2008
     def getGenotypeRobustness(self, sequence):
-        sys.stdout.write(str(self._counter) + '\r')
-        sys.stdout.flush()
-
-        self._counter += 1
-
         # Degree of the vertex corresponding to the sequence
         degree = self.network.degree(sequence)
 

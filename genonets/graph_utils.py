@@ -8,10 +8,10 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import sys
 import json
 
 import igraph
+from tqdm import tqdm
 
 
 # Provides methods for constructing and manipulating genotype
@@ -95,10 +95,7 @@ class NetworkBuilder:
             #   between neighbors and RCs.
 
             # For each genotype,
-            for i in range(len(bitseqs)):
-                sys.stdout.write(str(i) + '\r')
-                sys.stdout.flush()
-
+            for i in tqdm(xrange(len(bitseqs))):
                 # Generate all possible 1-neighbors
                 all_neighbors = set(
                     self.bitManip.generateNeighbors(bitseqs[i]))
@@ -116,133 +113,10 @@ class NetworkBuilder:
                     if i < j:
                         edges.append((i, j))
 
-            sys.stdout.write('Done.')
-            sys.stdout.flush()
-
         # Connect the two with an edge
         network.add_edges(edges)
 
         return network
-
-    # # Create a genotype network using the give list of sequences
-    # def createGenoNet(self, repertoire, sequences, scores):
-    #     # Initialize the empty network
-    #     network = igraph.Graph()
-    #
-    #     # Set repertoire name as a graph attribute
-    #     network["name"] = repertoire
-    #
-    #     # Create vertices
-    #     network.add_vertices(len(sequences))
-    #
-    #     # Add scores to all vertices
-    #     # FIXME: Change back from 'escores' to 'scores'
-    #     network.vs["escores"] = scores
-    #
-    #     # Add sequences to all vertices
-    #     network.vs["sequences"] = sequences
-    #
-    #     # Sequences in bit format
-    #     # Note: For very long sequences, the size of the corresponding
-    #     # integer value becomes too long for igraph to be able
-    #     # to deal with it (since igraph is C based). Therefore,
-    #     # bitseqs cannot be stored in the graph.
-    #     bitseqs = [self.bitManip.seqToBits(seq) for seq in sequences]
-    #
-    #     # TODO
-    #     # For each sequence,
-    #     #   Generate all neighbors
-    #     #   Intersection between neighbors and all bitseqs
-    #     #   Find indices of common bitseqs to create the edge pairs
-    #     #   Add edge pairs to the list of all edges
-    #     seq_to_index = {
-    #         bitseqs[index]: index for index in range(len(bitseqs))
-    #     }
-    #     seq_to_rc = None
-    #     if self.use_reverse_complements:
-    #         rcs = {
-    #             self.bitManip.getReverseComplement(seq)
-    #             for seq in bitseqs
-    #         }
-    #         seq_to_rc = {
-    #             bitseqs[index]: (index, self.bitManip.getReverseComplement(bitseqs[index]))
-    #             for index in range(len(bitseqs))
-    #         }
-    #     bit_seq_set = set(bitseqs)
-    #     edges = []
-    #
-    #     print('\n')
-    #
-    #     # FIXME: does not work with reverse complements ...
-    #     #   generate_neighbors can optionally generate RCS for all
-    #     #   neighbors
-    #     #   we can keep a set of RCs for each seq
-    #     #   when testing for intersection, we can also test for intersection
-    #     #   between neighbors and RCs.
-    #
-    #     # For each genotype,
-    #     for i in range(len(bitseqs)):
-    #         sys.stdout.write(str(i) + '\r')
-    #         sys.stdout.flush()
-    #         # Generate all possible 1-neighbors
-    #         all_neighbors = set(
-    #             self.bitManip.generateNeighbors(bitseqs[i]))
-    #
-    #         if self.use_reverse_complements:
-    #             neighbor_rcs = {
-    #                 self.bitManip.getReverseComplement(n)
-    #                 for n in all_neighbors
-    #             }
-    #             rc_to_neighbor = {
-    #                 self.bitManip.getReverseComplement(n): n
-    #                 for n in all_neighbors
-    #             }
-    #
-    #             neighbor_rcs &= rcs
-    #
-    #         # Set of 1-neighbors that exist in the given set of
-    #         # sequences
-    #         all_neighbors &= bit_seq_set
-    #
-    #         if self.use_reverse_complements:
-    #             ns_from_rcs = {
-    #                 rc_to_neighbor[rc] for rc in neighbor_rcs
-    #             }
-    #
-    #             all_neighbors |= ns_from_rcs
-    #
-    #         # Get indices
-    #         for n in all_neighbors:
-    #             # Index of n in the list
-    #             j = seq_to_index[n]
-    #             # j = bitseqs.index(n)
-    #
-    #             # Create the edge
-    #             if i < j:
-    #                 edges.append((i, j))
-    #
-    #     sys.stdout.write('Done.')
-    #     sys.stdout.flush()
-    #
-    #     # Get a list of pairs of indices which represent paris of
-    #     # sequences that are 1-neighbors, i.e., only one mutation
-    #     # apart.
-    #     # edges = [
-    #     #     (i, j)
-    #     #     for i in range(len(bitseqs) - 1)
-    #     #     for j in range(i + 1, len(bitseqs))
-    #     #     if self.bitManip.areNeighbors(bitseqs[i], bitseqs[j])
-    #     # ]
-    #
-    #     # Connect the two with an edge
-    #     network.add_edges(edges)
-    #
-    #     return network
-
-    # For the given sequence, returns a list of 1-neighbors that are not part of
-    # the given genotype network.
-    # Note: The list of external neighbors returned comprises bitseqs, not
-    # strings. The caller must be aware of this.
 
     def getExternalNeighbors(self, sequence, network):
         # Get a list of all possible 1-neighbors of the given sequence
@@ -345,7 +219,6 @@ class NetworkBuilder:
     def getVertex(self, sequence, network):
         try:
             return network.vs.find(sequence)
-            # return network.vs.find(sequences=sequence)
         except ValueError:
             print("Error! ... Non-existent vertex requested: " + str(sequence))
 
@@ -359,7 +232,6 @@ class NetworkBuilder:
     def getNeighborSequences(self, sequence, network):
         v_ids = network.neighbors(self.getVertex(sequence, network))
 
-        # return [network.vs['sequences'][i] for i in v_ids]
         return network.vs.select(v_ids)['name']
 
     # Plot the given network using the given layout.

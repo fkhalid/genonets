@@ -86,6 +86,7 @@ class WriterFilter:
     @staticmethod
     def seqAttribsToIgnore():
         return [
+            "name",
             "sequences",
             "label",
             "escores",

@@ -8,6 +8,9 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import igraph
+from tqdm import tqdm
+
 from genonets_utils import Utils
 
 
@@ -35,28 +38,25 @@ class PeakAnalyzer:
         self.peaks = None
 
         # Neighbor map
-        self._neighbor_map = {
-            s: set(self.netUtils.getNeighborSequences(s, self.network))
-            for s in network.vs['sequences']
-        }
+        self._neighbor_map = None
 
-    # Returns the peak dict which has seq as one of the keys
-    def getPeakWithSeq(self, seq):
-        # Get all peaks
-        peaks = self.getPeaks()
-
-        # For each peak
-        for peakId in peaks.keys():
-            # Get the peak dict
-            peak = peaks[peakId]
-
-            # Check if the given seq is in the peak
-            if seq in peak["sequences"]:
-                return peak
-
-        # TODO: replace with proper exception handling ...
-        print("Error: Count not find " + seq + " in any peak!!!!")
-        return None
+    # # Returns the peak dict which has seq as one of the keys
+    # def getPeakWithSeq(self, seq):
+    #     # Get all peaks
+    #     peaks = self.getPeaks()
+    #
+    #     # For each peak
+    #     for peakId in peaks:
+    #         # Get the peak dict
+    #         peak = peaks[peakId]
+    #
+    #         # Check if the given seq is in the peak
+    #         if seq in peak["sequences"]:
+    #             return peak
+    #
+    #     # TODO: replace with proper exception handling ...
+    #     print("Error: Count not find " + seq + " in any peak!!!!")
+    #     return None
 
     # The function to be exposed to the calling object. Triggers the
     # peak detection algorithm and returns the result as a dictionary
@@ -73,6 +73,12 @@ class PeakAnalyzer:
                 sortOrder="descending"
             )
 
+            # Populate the neighbor map
+            self._neighbor_map = {
+                s: set(self.netUtils.getNeighborSequences(s, self.network))
+                for s in self.network.vs['sequences']
+            }
+
             # Identify peaks
             self.peaks = self.buildPeaks(sortedArr)
 
@@ -80,6 +86,8 @@ class PeakAnalyzer:
 
     # Orchistration function for the peak detection algorithm.
     def buildPeaks(self, elements):
+        print('Building peaks ...')
+
         peaks = {}
 
         # List of elements that have been processed independently, or as
@@ -88,7 +96,7 @@ class PeakAnalyzer:
 
         # Process each element, where elements are sorted in the
         # descending order of e-scores.
-        for i in range(len(elements)):
+        for i in tqdm(xrange(len(elements))):
             # If the element is in the list of already processed elements,
             if elements[i] in processed:
                 # Skip iteration
@@ -139,6 +147,8 @@ class PeakAnalyzer:
                 # so that none of them is processed independently.
                 if len(neutralZone) > 1:
                     processed.extend(neutralZone)
+
+        print('Done.')
 
         return peaks
 
@@ -332,4 +342,26 @@ class PeakAnalyzer:
             self.network.vs[neighbor]["sequences"]
             for neighbor in self.netUtils.getNeighbors(
                 element['sequence'], self.network)
+        ]
+
+    def populateDistsToSummit(self):
+        print('Calculating distance to summit ...')
+
+        # Get the summit sequence
+        summit = Utils.getSeqWithMaxScore(
+            self.network, self.bitManip.seqLength)
+
+        # Get vertex that represents summit
+        trgtVrtx = self.netUtils.getVertex(summit, self.network)
+
+        # Reference to the list of sequences in the network
+        vertices = [
+            self.netUtils.getVertex(seq, self.network)
+            for seq in self.network.vs["sequences"]
+        ]
+
+        self.network.vs["Distance from Summit"] = [
+            len(self.network.get_shortest_paths(
+                srcVrtx, to=trgtVrtx, weights=None, mode=igraph.OUT, output="epath")[0])
+            for srcVrtx in tqdm(vertices)
         ]

@@ -108,6 +108,14 @@ class CmdParser:
                                  'applicable when the alphabet for '
                                  'codons is DNA.')
 
+        # Add 'num_processes' as an argument
+        parser.add_argument("-es", "--epistasis-sample",
+                            dest="epistasis_sample_size",
+                            action="store",
+                            type=int, default="0",
+                            help="Sample size for epistasis calculation."
+                                 " 0 disables sampling")
+
         # Keep an object level copy of the arguments dict
         if arguments:
             # Parse the string of arguments received
@@ -180,6 +188,9 @@ class CmdArgs:
         # should be considered in codons
         self.use_rc_for_codons = arguments.use_rc_for_codons
 
+        # Sample size for epistasis
+        self.epistasis_sample_size = arguments.epistasis_sample_size
+
         if self.codon_alphabet != 'DNA' and self.use_rc_for_codons:
             print('Ignoring option --codon-use-rc: This option can '
                   'only be used when the codon alphabet is DNA; it is '
@@ -200,6 +211,7 @@ class CmdArgs:
         paramsDict['Codon alphabet'] = str(self.codon_alphabet)
         paramsDict['Include indels for Codons'] = str(self.include_indels_for_codons)
         paramsDict['Use reverse complements for codons'] = str(self.use_rc_for_codons)
+        paramsDict['Epistasis sample size'] = str(self.epistasis_sample_size)
 
         # Print the parsed parameter values
         self.printInParams(paramsDict)

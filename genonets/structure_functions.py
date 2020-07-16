@@ -10,11 +10,12 @@
 """
 
 import igraph
+from tqdm import tqdm
 
 
-class StructureAnalyzer :
+class StructureAnalyzer:
     # Constructor
-    def __init__(self, network, netBuilder) :
+    def __init__(self, network, netBuilder):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -25,36 +26,48 @@ class StructureAnalyzer :
         # Reference to giant
         self.giant = self.netBuilder.getGiantComponent(self.network)
 
+        # Diameter value
+        self._diameter = None
+
     # ----------------------------------------------------------------
     #	Network level properties
     # ----------------------------------------------------------------
 
-    def getComponentSizes(self) :
+    def getComponentSizes(self):
         return self.netBuilder.getComponents(self.network)
 
-    def getNumComponents(self) :
+    def getNumComponents(self):
         return len(self.netBuilder.getComponents(self.network))
 
-    def getDominantSize(self) :
+    def getDominantSize(self):
         return self.giant.vcount()
 
-    def getPercentDominantSize(self) :
+    def getPercentDominantSize(self):
         return (float(self.giant.vcount()) / float(self.network.vcount()))
 
-    def getEdgeDensity(self) :
+    def getEdgeDensity(self):
         return self.giant.density()
 
-    def getAvgClstrCoeff(self) :
+    def getAvgClstrCoeff(self):
         return self.giant.transitivity_avglocal_undirected()
 
-    def getAssortativity(self) :
+    def getAssortativity(self):
         return self.giant.assortativity_degree()
 
-    def getDiameter(self) :
-        return self.giant.diameter()
+    # Note: Calculation of diameter can be very expensive for large
+    #       networks. Therefore, it should be calculated only once.
+    # FIXME: Can be very expensive for large networks ...
+    def getDiameter(self):
+        if self._diameter is None:
+            self._diameter = self.giant.diameter()
 
-    def getDiameterPath(self) :
+        return self._diameter
+
+    def getDiameterPath(self):
+        print('\nDiameter path:')
+
         # Get network diameter
+        # FIXME: Can be very expensive for large networks ...
         diameter = self.getDiameter()
 
         # Get the vertex sequence
@@ -62,15 +75,15 @@ class StructureAnalyzer :
 
         # Calculate shortest paths between each pair of vertices in the
         # network until one is found of size 'diameter'.
-        for i in range(len(vSeq) - 1) :
-            for j in range(i+1, len(vSeq)) :
+        for i in tqdm(range(len(vSeq) - 1)):
+            for j in range(i+1, len(vSeq)):
                 # Calculate shortest path between vertx 'i' and vertex 'j'
                 sPath = self.giant.get_shortest_paths(vSeq[i], vSeq[j],
                     mode=igraph.OUT, output="vpath")
 
                 # Return the path is the No. of vertices in the path
                 # is diameter + 1, i.e, the No. of edges = diameter.
-                if len(sPath[0]) == (diameter + 1) :
+                if len(sPath[0]) == (diameter + 1):
                     return sPath[0]
 
         return []
@@ -79,12 +92,12 @@ class StructureAnalyzer :
     #	Vertex level properties
     # ----------------------------------------------------------------
 
-    def getCoreness(self) :
+    def getCoreness(self):
         return self.giant.coreness()
 
     # Returns the clustering coefficients for all sequences in the giant
     # component.
-    def getClusteringCoefficients(self) :
+    def getClusteringCoefficients(self):
         # Get all sequences
         sequences = self.giant.vs
 

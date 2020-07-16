@@ -8,14 +8,16 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import sys
+import random
+
+from tqdm import tqdm
 
 from genonets_constants import EpistasisConstants as epi
 
 
 class EpistasisAnalyzer:
     # Constructor
-    def __init__(self, network, netUtils, seqToEscrDict, delta, bitManip):
+    def __init__(self, network, netUtils, seqToEscrDict, delta, bitManip, sample_size, verbose):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -32,35 +34,52 @@ class EpistasisAnalyzer:
         # Reference to the bit manipulator object
         self.bitManip = bitManip
 
-        # Dict {sequence : vertex ID}
-        self.seqToVidDict = self.buildSeqToVidDict()
+        # Sample size to use for epistasis
+        self._sample_size = sample_size
 
-        # To store the computed squares
-        self.squares = None
+        # Flag to indicate whether output should be verbose
+        self._verbose = verbose
+
+        # To store the computed squares, where each element in a
+        # square is a vertex id
+        self.squares = []
+
+        # Dict {verterx ID: [square ids in which this vertex appears]}
+        self.vtxToSqrs = {v.index: [] for v in network.vs}
 
         # To store the computed epistasis class per square
         self.sqrEpi = None
+
+        if self._verbose:
+            print('\nConstructing neighbor map ...')
+
+        # Neighbor map
+        self._neighbor_map = {
+            s: set(self.netUtils.getNeighborSequences(s, self.network))
+            for s in tqdm(network.vs['sequences'])
+        }
 
     # Computes epistasis for the given network
     def getEpiAll(self):
         # Dictionary to keep count of the number of squares that
         # show each class of epistasis.
-        epistasis = {epi.MAGNITUDE: 0, epi.SIGN: 0,
-                     epi.RECIPROCAL_SIGN: 0, epi.NO_EPISTASIS: 0}
+        epistasis = {
+            epi.MAGNITUDE: 0,
+            epi.SIGN: 0,
+            epi.RECIPROCAL_SIGN: 0,
+            epi.NO_EPISTASIS: 0
+        }
 
         # Get all squares
-        squares = self.getSquares()
+        self.getSquares()
 
         # List of epistasis class corresponding to each square
         self.sqrEpi = []
 
-        print('\ngetEpiAll:\n')
+        print('Calculating epistasis ...')
 
         # For each square
-        for i, square in enumerate(squares):
-            sys.stdout.write(str(i) + '\r')
-            sys.stdout.flush()
-
+        for square in tqdm(self.squares):
             # Determine to which class of epistasis this square belongs
             epiClass = self.getEpistasis(square)
 
@@ -75,23 +94,22 @@ class EpistasisAnalyzer:
         del epistasis[epi.NO_EPISTASIS]
 
         # Convert counts into ratios
-        for epiClass in epistasis.keys():
+        for epiClass in epistasis:
             try:
-                epistasis[epiClass] = float(epistasis[epiClass]) / float(len(squares))
+                epistasis[epiClass] = float(epistasis[epiClass]) / float(len(self.squares))
             except ZeroDivisionError:
                 epistasis[epiClass] = 0
 
         return epistasis
 
     def getEpistasis(self, square):
-        epsilon = 0
         epiClass = epi.NO_EPISTASIS
 
         # Get e-scores for all corners of the square
-        esrc_AB = self.seqToEscrDict[square[3]]
-        esrc_ab = self.seqToEscrDict[square[0]]
-        esrc_Ab = self.seqToEscrDict[square[2]]
-        esrc_aB = self.seqToEscrDict[square[1]]
+        esrc_AB = self.seqToEscrDict[self.network.vs[square[3]]['name']]
+        esrc_ab = self.seqToEscrDict[self.network.vs[square[0]]['name']]
+        esrc_Ab = self.seqToEscrDict[self.network.vs[square[2]]['name']]
+        esrc_aB = self.seqToEscrDict[self.network.vs[square[1]]['name']]
 
         # Calculate the magnitude of epistasis
         epsilon = esrc_AB + esrc_ab - esrc_Ab - esrc_aB
@@ -105,16 +123,14 @@ class EpistasisAnalyzer:
             # Check if we have a case where all mutational effects are 0
             if epiClass == epi.NO_EPISTASIS:
                 # No epistasis
-                epsilon = 0
+                pass
         else:
             # No epistasis
-            epsilon = 0
+            pass
 
         return epiClass
 
     def getEpiClass(self, esrc_ab, esrc_aB, esrc_Ab, esrc_AB):
-        epiClass = 0
-
         # Calculate mutational effects
         dE_ab_Ab = esrc_Ab - esrc_ab
         dE_aB_AB = esrc_AB - esrc_aB
@@ -155,16 +171,9 @@ class EpistasisAnalyzer:
     # Squares
     # ----------------------------
 
-    def buildSeqToVidDict(self):
-        # Reference to the list of sequences
-        sequences = self.network.vs["sequences"]
-
-        return {sequences[i]: i for i in range(len(sequences))}
-
     # Return all squares found in the genotype network
-    # TODO: Look into performance optimization ...
     def getSquares(self, recompute=False):
-        print('\ngetSquares:\n')
+        print('Constructing squares ...')
 
         # If squares computation has been done already, and the
         # caller has not explicitly asked for re-running the
@@ -173,26 +182,16 @@ class EpistasisAnalyzer:
             # Return the pre-computed results
             return self.squares
 
-        # List of squares to be populated
-        squares = []
-
         # Set of unique squares (permutation agnostic) with sequences
-        # in bit format
-        bitSqrs = set()
+        sqrs_set = set()
 
         # Get the list of all sequences
         sequences = self.network.vs["sequences"]
 
         # For each sequence in the network
-        for i, sequence in enumerate(sequences):
-            sys.stdout.write(str(i) + '\r')
-            sys.stdout.flush()
-
+        for sequence in tqdm(sequences):
             # Get all 1-neighbor sequences
-            neighbors = [self.network.vs[vid]["sequences"]
-                         for vid in
-                         self.network.neighbors(
-                             self.netUtils.getVertex(sequence, self.network))]
+            neighbors = list(self._neighbor_map[sequence])
 
             # If the number of neighbors is less than two, there's no point
             # in continuing any further
@@ -203,14 +202,26 @@ class EpistasisAnalyzer:
             # Construct all possible pairs of neighbors, where symmetric pairs
             # are considered only once. Also, pairs that neighbor each other
             # are not considered.
-            pairs = [(neighbors[i], neighbors[j])
-                     for i in range(len(neighbors) - 1)
-                     for j in range(i + 1, len(neighbors))
-                     if not self.netUtils.areConnected(
-                    neighbors[i], neighbors[j])]
+            if self._sample_size == 0:
+                pairs = [
+                    (neighbors[i], neighbors[j])
+                    for i in xrange(len(neighbors) - 1)
+                    for j in xrange(i + 1, len(neighbors))
+                    if neighbors[j] not in self._neighbor_map[neighbors[i]]
+                    and neighbors[i] not in self._neighbor_map[neighbors[j]]
+                ]
+            else:
+                pairs = [
+                    (neighbors[i], neighbors[j])
+                    for i in random.sample(xrange(len(neighbors) - 1), min(self._sample_size, len(neighbors)))
+                    for j in random.sample(xrange(i + 1, len(neighbors)), min(self._sample_size, len(neighbors) - (i + 1)))
+                    if neighbors[j] not in self._neighbor_map[neighbors[i]]
+                       and neighbors[i] not in self._neighbor_map[neighbors[j]]
+                ]
 
             # For each pair of neighbors
-            for pair in pairs:
+            while pairs:
+                pair = pairs.pop()
                 # Get neighbors common to both sequences in the pair, but
                 # without the sequence itself
                 commonNeighs = self.getCommonNeighbors(pair, sequence)
@@ -222,87 +233,54 @@ class EpistasisAnalyzer:
                     # single mutation from parent is sufficient.
                     if node not in neighbors:
                         # Construct the square
-                        square = [sequence, pair[0], pair[1], node]
-                        # Square as a set of bitseqs
-                        bitSqr = frozenset([self.bitManip.seqToBits(sequence),
-                                            self.bitManip.seqToBits(pair[0]),
-                                            self.bitManip.seqToBits(pair[1]),
-                                            self.bitManip.seqToBits(node)])
+                        square = [
+                            self.network.vs.find(sequence).index,
+                            self.network.vs.find(pair[0]).index,
+                            self.network.vs.find(pair[1]).index,
+                            self.network.vs.find(node).index
+                        ]
+                        square_set = frozenset(square)
 
                         # If the square has not already been found.
                         # Note: This is a set operation, which means due to
-                        # the lack or ordering, all permutations will be tested
+                        # the lack of ordering, all permutations will be tested
                         # with just this one condition.
-                        if not bitSqr in bitSqrs:
-                            squares.append(square)
-                            bitSqrs.add(bitSqr)
+                        if square_set not in sqrs_set:
+                            sqrs_set.add(square_set)
+                            self.squares.append(square)
 
-        # Keep a reference for re-use
-        self.squares = squares
+                            for v_id in square:
+                                self.vtxToSqrs[v_id].append(len(self.squares) - 1)
 
-        return squares
+                del commonNeighs
+
+            del pairs
+
+        if self._verbose:
+            print('No. of squares: \n' + str(len(self.squares)))
+
+        return self.squares
 
     # Returns a list of neighbors common to both elements in the pair. The
     # parent is not considered as a common neighbor.
-    # TODO: hotspot to be optimized ...
     def getCommonNeighbors(self, pair, parent):
         # Get neighbors for the first sequence in the pair
-        neighbors1 = self.netUtils.getNeighborSequences(pair[0], self.network)
-        # neighbors1 = [
-        #     self.network.vs[vid]["sequences"]
-        #     for vid in self.network.neighbors(self.seqToVidDict[pair[0]])
-        # ]
-        # neighbors1 = [self.network.vs[vid]["sequences"] for vid in \
-        #               self.network.neighbors(self.seqToVidDict[pair[0]])]
+        neighbors1 = self._neighbor_map[pair[0]]
 
         # Get neighbors for the second sequence in the pair
-        neighbors2 = self.netUtils.getNeighborSequences(pair[1], self.network)
-        # neighbors2 = [self.network.vs[vid]["sequences"] for vid in \
-        #               self.network.neighbors(self.seqToVidDict[pair[1]])]
+        neighbors2 = self._neighbor_map[pair[1]]
 
         # Get a list of common neighbors
-        commonNeighbors = list(set(neighbors1) & set(neighbors2))
+        commonNeighbors = neighbors1 & neighbors2
 
         # Remove the parent
-        commonNeighbors.remove(parent)
+        commonNeighbors.discard(parent)
 
         return commonNeighbors
 
     # Return a dict - {verterx id : [square ids in which this vertex appears]}
     def getVertexToSquaresDict(self):
-        # Make sure there is at least one square
-        if not self.squares or len(self.squares) < 1:
-            return {}, []
-
-        # Get the list of all sequences
-        sequences = self.network.vs["sequences"]
-
-        # Initialize the dict: Keys = vertex ids corresponding to sequence indices
-        # in the list of sequences; Values = empty lists to be populated later with
-        # square ids
-        vtxToSqrs = {vId: [] for vId in range(len(sequences))}
-
-        # List of squares with vertex ids instead of sequences as square elements
-        squares = []
-
-        # For each square,
-        for sqrIndx in range(len(self.squares)):
-            sqr = []
-            # For each sequence in the square,
-            for sequence in self.squares[sqrIndx]:
-                # Get the vertex id corresponding to the sequence
-                seqIndx = sequences.index(sequence)
-
-                # Add the square Id as value to the vertex Id
-                vtxToSqrs[seqIndx].append(sqrIndx)
-
-                # Add vertex id to sqr
-                sqr.append(seqIndx)
-
-            # Append the square to the list of squares
-            squares.append(sqr)
-
-        return vtxToSqrs, squares
+        return self.vtxToSqrs, self.squares
 
     def getSqrEpi(self):
         return self.sqrEpi

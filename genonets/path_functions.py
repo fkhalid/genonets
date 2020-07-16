@@ -9,7 +9,7 @@
 """
 
 import igraph
-
+from tqdm import tqdm
 # from memory_profiler import profile
 
 from genonets_utils import Utils
@@ -17,7 +17,7 @@ from genonets_utils import Utils
 
 class PathAnalyzer:
     # Constructor
-    def __init__(self, network, netUtils, delta):
+    def __init__(self, network, netUtils, delta, verbose):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -31,6 +31,9 @@ class PathAnalyzer:
         # Keep a copy of the delta value
         self.delta = delta
 
+        # Flag to indicate whether output should be verbose
+        self._verbose = verbose
+
         # Summit vertex, to be populated later.
         self.summitId = None
 
@@ -41,7 +44,7 @@ class PathAnalyzer:
         self.allPathsToPeak = self.initPathsToPeak()
 
     def initPathsToPeak(self):
-        return {vId: [] for vId in range(len(self.network.vs["sequences"]))}
+        return {v.index: [] for v in self.network.vs}
 
     def getSummitId(self):
         return self.summitId
@@ -50,14 +53,16 @@ class PathAnalyzer:
         return self.allPathsToPeak
 
     def getPathsThruVtxs(self):
+        print('\nCalculating paths through vertices ...')
+
         # List: Each element is the No. of paths through the vertex Id
         # 		corresponding to the index
-        pathsThruVtx = [0 for i in range(self.network.vcount())]
+        pathsThruVtx = [0 for _ in xrange(self.network.vcount())]
 
         # Go through accessible paths corresponding to each vertex
-        for vtxId in range(self.network.vcount()):
+        for vertex in tqdm(self.network.vs):
             # Get the list of accessible paths for this vertex
-            vtxPaths = self.network.vs[vtxId]["pathsToSummit"]
+            vtxPaths = self.network.vs[vertex.index]["pathsToSummit"]
 
             # For each path,
             for path in vtxPaths:
@@ -72,6 +77,8 @@ class PathAnalyzer:
     # Get the ratio of accessible paths to all paths of the
     # given length.
     def getAccessiblePaths(self, pathLength=0):
+        print('\nCalculating accessible paths ...')
+
         # Stats for the entire network
         totalPaths = 0  # Total mutational paths (only shortest)
         allAccPaths = 0  # No. of accessible paths (only shortest)
@@ -93,7 +100,7 @@ class PathAnalyzer:
         sequences.remove(summit)
 
         # For each sequence in the network
-        for source in sequences:
+        for source in tqdm(sequences):
             # If we only need to calculate all accessible paths, regardless
             # of the path length,
             if pathLength == 0:
@@ -101,9 +108,8 @@ class PathAnalyzer:
                 # shortest paths from source to summit
                 self.getShortestAccPaths(source, trgtVrtx, pathLength)
             else:   # Ratios should be calculated
-                shrtPaths, accPaths = self.getShortestAccPaths(source,
-                                                               trgtVrtx,
-                                                               pathLength + 1)
+                shrtPaths, accPaths = self.getShortestAccPaths(
+                    source, trgtVrtx, pathLength + 1)
 
                 # If at least one shortest path of length == 'pathLength' was
                 # found,
@@ -128,9 +134,8 @@ class PathAnalyzer:
         srcVrtx = self.netUtils.getVertex(source, self.network)
 
         # Get all shortest paths between source and target
-        allShrtPaths = self.network.get_all_shortest_paths(srcVrtx,
-                                                           trgtVrtx,
-                                                           mode=igraph.OUT)
+        allShrtPaths = self.network.get_all_shortest_paths(
+            srcVrtx, trgtVrtx, mode=igraph.OUT)
 
         # If we only need to calculate all accessible paths, regardless
         # of the path length,
@@ -178,7 +183,7 @@ class PathAnalyzer:
         # encountered inside the loop
         maxYet = -0.5
         # For each escore in the list
-        for i in range(len(escores) - 1):
+        for i in xrange(len(escores) - 1):
             # If the current score is higher than the max so far,
             if escores[i] > maxYet:
                 # Assign current escore to max

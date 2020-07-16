@@ -14,10 +14,11 @@ import json  # For proper list stringification
 
 from genonets_writer import Writer
 from genonets_filters import WriterFilter
+from peak_functions import PeakAnalyzer
 from path_functions import PathAnalyzer
-from landscape_functions import Landscape
 from overlap_functions import OverlapAnalyzer
 from structure_functions import StructureAnalyzer
+from epistasis_functions import EpistasisAnalyzer
 from robustness_functions import RobustnessAnalyzer
 from evolvability_functions import EvolvabilityAnalyzer
 from accessibility_functions import AccessibilityAnalyzer
@@ -64,6 +65,7 @@ class AnalysisHandler:
         # mapping
         self.analysisToFunc = {
             Ac.PEAKS: self.peaks,
+            Ac.DISTANCE_TO_SUMMIT: self.distance_to_summit,
             Ac.PATHS: self.paths,
             Ac.PATHS_RATIOS: self.paths_ratios,
             Ac.EPISTASIS: self.epistasis,
@@ -133,22 +135,27 @@ class AnalysisHandler:
         if self.VERBOSE and not self.parallel:
             sys.stdout.write("Done.")
 
-    def getLandscapeObj(self, giant, repertoire):
-        # Get the landscape object
-        lscape = Landscape(giant, self.netBuilder, self.inDataDict[repertoire],
-                           self.deltaDict[repertoire], self.bitManip)
+    def distance_to_summit(self, repertoire):
+        # Get the dominant genotype network for the repertoire
+        giant = self.caller.dominant_network(repertoire)
 
-        return lscape
+        # Create the peak analyzer
+        peakAnalyzer = PeakAnalyzer(
+            giant, self.netBuilder, self.deltaDict[repertoire])
+
+        # For each vertex, add distance to summit as a vertex attribute
+        peakAnalyzer.populateDistsToSummit()
 
     def peaks(self, repertoire):
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
-        # Get the landscape object
-        lscape = self.getLandscapeObj(giant, repertoire)
+        # Create the peak analyzer
+        peakAnalyzer = PeakAnalyzer(
+            giant, self.netBuilder, self.deltaDict[repertoire])
 
         # Get peaks
-        peaks = lscape.getPeaks(recompute=True)
+        peaks = peakAnalyzer.getPeaks(recompute=True)
 
         # Set the computed values as a network attribute
         giant["Number_of_peaks"] = len(peaks)
@@ -156,42 +163,44 @@ class AnalysisHandler:
         # Store a dict - {key=peakId, value=[sequences in the peak]}
         giant["Peaks"] = {
             peakId: peaks[peakId]["sequences"]
-            for peakId in peaks.keys()
+            for peakId in peaks
         }
-
-        # For each vertex, add distance to summit as a vertex attribute
-        lscape.populateDistsToSummit()
 
     def paths(self, repertoire):
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
-        # Get the landscape object
-        lscape = self.getLandscapeObj(giant, repertoire)
+        # 'PathAnalyzer' object
+        path_analyzer = PathAnalyzer(
+            giant, self.netBuilder, self.deltaDict[repertoire],
+            self.VERBOSE
+        )
 
         # Get paths
-        lscape.getAccessiblePaths(0)
+        path_analyzer.getAccessiblePaths(pathLength=0)
 
         # Set the computed value as a network attribute
-        giant["Summit"] = lscape.pathAnalyzer.getSummitId()
+        giant["Summit"] = path_analyzer.getSummitId()
 
         # Vertex level attributes
-        allPathsToPeak = lscape.pathAnalyzer.getAllPathsToPeak()
+        allPathsToPeak = path_analyzer.getAllPathsToPeak()
         giant.vs["pathsToSummit"] = [
             allPathsToPeak[i]
-            for i in range(len(allPathsToPeak))
+            for i in xrange(len(allPathsToPeak))
         ]
 
         # Add the count for each vertex as a vertex level attribute in giant
-        giant.vs["Accessible_paths_through"] = lscape.pathAnalyzer.getPathsThruVtxs()
+        giant.vs["Accessible_paths_through"] = path_analyzer.getPathsThruVtxs()
 
     def paths_ratios(self, repertoire):
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
         # 'PathAnalyzer' object
-        path_analyzer = PathAnalyzer(giant, self.netBuilder,
-                                     self.deltaDict[repertoire])
+        path_analyzer = PathAnalyzer(
+            giant, self.netBuilder, self.deltaDict[repertoire],
+            self.VERBOSE
+        )
 
         # Run shortest paths calculation for all paths; regardless of path length.
         # This sets the 'max_path_length' value.
@@ -212,19 +221,22 @@ class AnalysisHandler:
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
-        # Get the landscape object
-        lscape = self.getLandscapeObj(giant, repertoire)
+        # Epistatis analyzer
+        epiAnalyzer = EpistasisAnalyzer(
+            giant, self.netBuilder, self.inDataDict[repertoire],
+            self.deltaDict[repertoire], self.bitManip,
+            self.caller.cmdArgs.epistasis_sample_size, self.VERBOSE)
 
         # Get epistasis
-        epistasis = lscape.getEpistasis()
+        epistasis = epiAnalyzer.getEpiAll()
 
         # Get the vertex to squares dict
-        vtxToSqrs, squares = lscape.epiAnalyzer.getVertexToSquaresDict()
+        vtxToSqrs, squares = epiAnalyzer.getVertexToSquaresDict()
 
         # Set the computed values as network attributes
         giant["Squares_list"] = json.dumps(squares)
-        giant["SqrEpi_list"] = json.dumps(lscape.epiAnalyzer.getSqrEpi())
-        giant["Number_of_squares"] = len(lscape.epiAnalyzer.squares)
+        giant["SqrEpi_list"] = json.dumps(epiAnalyzer.getSqrEpi())
+        giant["Number_of_squares"] = len(epiAnalyzer.squares)
         giant["Magnitude_epistasis"] = epistasis[Epi.MAGNITUDE]
         giant["Simple_sign_epistasis"] = epistasis[Epi.SIGN]
         giant["Reciprocal_sign_epistasis"] = epistasis[Epi.RECIPROCAL_SIGN]
@@ -235,7 +247,9 @@ class AnalysisHandler:
         if len(vtxToSqrs) > 0:
             # Since vtxToSqrs is a dict, it is important to convert it into an ordered
             # list for correct mapping to vertices
-            giant.vs["VtxToSqrs"] = [vtxToSqrs[i] for i in range(len(vtxToSqrs))]
+            giant.vs["VtxToSqrs"] = [
+                vtxToSqrs[v_id] for v_id in vtxToSqrs
+            ]
         else:
             # Empty list. This makes it possible for the user to distinguish between
             # no squares associated with a vertex, and epistasis function was not
@@ -275,6 +289,13 @@ class AnalysisHandler:
             self.isDoubleStranded)
 
     def evolvability(self, repertoire):
+        # Evolvability analysis only makes sense if there are at least
+        # two reportoires
+        if len(self.repToGiantDict) < 2:
+            print('Cancelling evolvability analysis, as it requires at '
+                  'least two genotype sets')
+            return
+
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
@@ -310,6 +331,13 @@ class AnalysisHandler:
         giant.vs["Evolvability_targets"] = evoTargets
 
     def accessibility(self, repertoire):
+        # Accessibility analysis only makes sense if there are at least
+        # two repertoires
+        if len(self.repToGiantDict) < 2:
+            print('Cancelling accessibility analysis, as it requires at '
+                  'least two genotype sets')
+            return
+
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
@@ -325,6 +353,13 @@ class AnalysisHandler:
         giant["Accessibility"] = accAnalyzer.getAccessibility()
 
     def neighborAbundance(self, repertoire):
+        # Neighbor abundance analysis only makes sense if there are at least
+        # two repertoires
+        if len(self.repToGiantDict) < 2:
+            print('Cancelling neighbor abundance analysis, as it requires at '
+                  'least two genotype sets')
+            return
+
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
@@ -341,6 +376,13 @@ class AnalysisHandler:
         giant["Neighbor_abundance"] = accAnalyzer.getNeighborAbundance()
 
     def phenotypicDiversity(self, repertoire):
+        # Phenotypic diversity analysis only makes sense if there are at least
+        # two repertoires
+        if len(self.repToGiantDict) < 2:
+            print('Cancelling phenotypic diversity analysis, as it requires at '
+                  'least two genotype sets')
+            return
+
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
@@ -366,21 +408,41 @@ class AnalysisHandler:
         structAnalyzer = StructureAnalyzer(network, self.netBuilder)
 
         # Compute and set network/giant level properties
+        if self.VERBOSE:
+            print('\nRetrieving component sizes ...')
         network["Genotype_network_sizes"] = str(structAnalyzer.getComponentSizes())
+        if self.VERBOSE:
+            print('Retrieving No. of components ...')
         network["Number_of_genotype_networks"] = structAnalyzer.getNumComponents()
+        if self.VERBOSE:
+            print('Retrieving size of dominant ...')
         network["Size_of_dominant_genotype_network"] = structAnalyzer.getDominantSize()
+        if self.VERBOSE:
+            print('Calculate percentange of the dominant size ...')
         network["Proportional_size_of_dominant_genotype_network"] = structAnalyzer.getPercentDominantSize()
+        if self.VERBOSE:
+            print('Retrieving edge density ...')
         giant["Edge_density"] = structAnalyzer.getEdgeDensity()
-        giant["Diameter"] = structAnalyzer.getDiameter()
+        # if self.VERBOSE:
+        #     print('Retrieving diameter ...')
+        # giant["Diameter"] = structAnalyzer.getDiameter()
+        if self.VERBOSE:
+            print('Retrieving average clustering coefficient ...')
         giant["Average_clustering_coefficient_of_dominant_genotype_network"] = structAnalyzer.getAvgClstrCoeff()
+        if self.VERBOSE:
+            print('Retrieving assortativity ...')
         giant["Assortativity"] = structAnalyzer.getAssortativity()
 
-        # The list of vertex Ids needs to be stringified, since otherwise these
-        # cannot be written to GML.
-        giant["diameterPath_list"] = json.dumps(structAnalyzer.getDiameterPath())
+        # # The list of vertex Ids needs to be stringified, since otherwise these
+        # # cannot be written to GML.
+        # giant["diameterPath_list"] = json.dumps(structAnalyzer.getDiameterPath())
 
         # Compute and set vertex level properties
+        if self.VERBOSE:
+            print('Retrieving coreness ...')
         giant.vs["Coreness"] = structAnalyzer.getCoreness()
+        if self.VERBOSE:
+            print('Retrieving clustering coefficients ...')
         giant.vs["Clustering_coefficient"] = structAnalyzer.getClusteringCoefficients()
 
     # The parameter 'r' is just a place holder, and is needed in the

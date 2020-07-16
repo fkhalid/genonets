@@ -56,13 +56,22 @@ class Genonets:
         # Handle program arguments
         self.cmdArgs = CmdArgs(args)
 
+        # Set the VERBOSE flag
+        self.VERBOSE = True if self.cmdArgs.verbose else False
+
         # Dict {letter: list of letters that are 1-neighbors}.
         # Should be 'None' if the codon-to-letter map was not provided.
         self.letter_to_neighbors = self._create_letter_to_neighbor_map()
 
+        if self.VERBOSE:
+            print("\nLoading input data ... ")
+
         # Read file and load input data into memory
         self.inDataDict, self.deltaDict, self.seqToRepDict, self.seqLength, self.ordered_genotype_sets = \
             self._build_data_dicts(self.cmdArgs.inFilePath, self.letter_to_neighbors)
+
+        if self.VERBOSE:
+            print("Done.\n")
 
         # Pass the ordered list of genotype sets to the WriterFilter
         WriterFilter.ORDERED_GENOTYPE_SETS = self.ordered_genotype_sets
@@ -86,9 +95,6 @@ class Genonets:
 
         # Reference to the analyzer object
         self.analyzer = None
-
-        # Set the VERBOSE flag
-        self.VERBOSE = True if self.cmdArgs.verbose else False
 
         # If the user has requested complete processing with default settings,
         if process:

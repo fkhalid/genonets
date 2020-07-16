@@ -8,7 +8,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import sys
+from tqdm import tqdm
 
 
 class AccessibilityAnalyzer:
@@ -43,7 +43,8 @@ class AccessibilityAnalyzer:
     # Computes the accessibility value for the given repertoire.
     # Ref: Cowperthwaite et al. (2008) PLoS Comp. Biol.
     def getAccessibility(self):
-        print('\ngetAcessibility:')
+        print('\nCalculating accessibility ...')
+
         # Value to be calculated and returned
         accessibility = 0
 
@@ -55,8 +56,8 @@ class AccessibilityAnalyzer:
 
         # Get all sequences (in bit format) for the given repertoire
         sequences = [
-            self.bitManip.seqToBits(seq) for seq in
-            self.network.vs["sequences"]
+            self.bitManip.seqToBits(seq)
+            for seq in self.network.vs["sequences"]
         ]
 
         # If reverse complements should be considered,
@@ -68,10 +69,7 @@ class AccessibilityAnalyzer:
             ])
 
         # For each target, compute F(j,i)
-        for i, target in enumerate(targets):
-            sys.stdout.write(str(i) + '\r')
-            sys.stdout.flush()
-
+        for target in tqdm(targets):
             # Get the genotype network for this target
             targetNet = self.repToGiantDict[target]
 
@@ -92,15 +90,13 @@ class AccessibilityAnalyzer:
             # Add the fraction to the total accessibility value
             accessibility += fraction
 
-        sys.stdout.write('Done.')
-        sys.stdout.flush()
-
         return accessibility
 
     # Computes the neighbor abundance for the given repertoire.
     # Ref: Cowperthwaite et al. (2008) PLoS Comp. Biol.
     def getNeighborAbundance(self):
-        print('\ngetNeighborAbundance:')
+        print('\nCalculating neighbor abundance ...')
+
         # Value to be calculated and returned
         abundance = 0
 
@@ -114,10 +110,7 @@ class AccessibilityAnalyzer:
         targets.remove(self.repertoire)
 
         # For each target, compute F(i, j)
-        for i, target in enumerate(targets):
-            sys.stdout.write(str(i) + '\r')
-            sys.stdout.flush()
-
+        for target in tqdm(targets):
             # Get target sequences in bit format
             targetSeqs = [
                 self.bitManip.seqToBits(seq) for seq in
@@ -150,15 +143,13 @@ class AccessibilityAnalyzer:
             # Add the fraction to the total abundance value
             abundance += abundanceFrac
 
-        sys.stdout.write('Done.')
-        sys.stdout.flush()
-
         return abundance
 
     # Computes the E-statistic value for the given repertoire.
     # Ref: Cowperthwaite et al. (2008) PLoS Comp. Biol.
     def getPhenotypicDivesity(self):
-        print('\ngetPhenotypicDivesity:')
+        print('\nCalculating phenotypic diversity ...')
+
         # Value to be calculated and returned
         diversity = 0
 
@@ -172,10 +163,7 @@ class AccessibilityAnalyzer:
         targets.remove(self.repertoire)
 
         # For each target, compute F(i, j)
-        for i, target in enumerate(targets):
-            sys.stdout.write(str(i) + '\r')
-            sys.stdout.flush()
-
+        for target in tqdm(targets):
             # Get target sequences in bit format
             targetSeqs = [
                 self.bitManip.seqToBits(seq) for seq in
@@ -203,8 +191,5 @@ class AccessibilityAnalyzer:
 
             # Add the fraction to the total diversity value
             diversity += (fraction * fraction)
-
-        sys.stdout.write('Done.')
-        sys.stdout.flush()
 
         return diversity

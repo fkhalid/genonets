@@ -64,7 +64,6 @@ class EvolvabilityAnalyzer:
             seqToRepDict[seq] = [
                 rep for rep in seqToRepDict[seq]
                 if EvolvabilityAnalyzer.is_sequence_in_network(seq, repToGiantDict[rep])
-                #if seq in repToGiantDict[rep].vs["name"]
             ]
 
         return seqToRepDict

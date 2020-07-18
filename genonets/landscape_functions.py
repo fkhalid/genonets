@@ -64,22 +64,19 @@ class Landscape :
     # Calculate mutational distances from summit for all vertices
     # ----------------------------------------------------------------
 
-    def populateDistsToSummit(self) :
-        # Convenient handle for bitManip
-        bm = self.bitManip
-
+    def populateDistsToSummit(self):
         # Get the summit sequence
-        summit = Utils.getSeqWithMaxScore(self.network,
-            self.bitManip.seqLength)
+        summit = Utils.getSeqWithMaxScore(
+            self.network, self.bitManip.seqLength)
 
         # Get vertex that represents summit
         trgtVrtx = self.netUtils.getVertex(summit, self.network)
 
-        # Reference to the list of sequences in the network
-        vertices = [ self.netUtils.getVertex(seq, self.network) \
-                     for seq in self.network.vs["sequences"] ]
-
-        self.network.vs["Distance from Summit"] = \
-            [ 	len(self.network.get_shortest_paths(srcVrtx, to=trgtVrtx, \
-                        weights=None, mode=igraph.OUT, output="epath")[0]) \
-                for srcVrtx in vertices ]
+        self.network.vs["Distance from Summit"] = [
+            len(
+                self.network.get_shortest_paths(
+                    srcVrtx, to=trgtVrtx, weights=None,
+                    mode=igraph.OUT, output="epath")[0]
+            )
+            for srcVrtx in self.network.vs
+        ]

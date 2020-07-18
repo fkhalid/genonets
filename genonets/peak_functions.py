@@ -8,6 +8,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
+from tqdm import tqdm
+
 from genonets_utils import Utils
 
 
@@ -40,13 +42,17 @@ class PeakAnalyzer:
             for s in network.vs['sequences']
         }
 
+        # List of elements that have been processed independently, or as
+        # part of a neighborhood, e.g., all elements in a plateau.
+        self._processed = set()
+
     # Returns the peak dict which has seq as one of the keys
     def getPeakWithSeq(self, seq):
         # Get all peaks
         peaks = self.getPeaks()
 
         # For each peak
-        for peakId in peaks.keys():
+        for peakId in peaks:
             # Get the peak dict
             peak = peaks[peakId]
 
@@ -82,15 +88,11 @@ class PeakAnalyzer:
     def buildPeaks(self, elements):
         peaks = {}
 
-        # List of elements that have been processed independently, or as
-        # part of a neighborhood, e.g., all elements in a plateau.
-        processed = []
-
         # Process each element, where elements are sorted in the
         # descending order of e-scores.
-        for i in range(len(elements)):
+        for i in tqdm(xrange(len(elements))):
             # If the element is in the list of already processed elements,
-            if elements[i] in processed:
+            if elements[i]['sequence'] in self._processed:
                 # Skip iteration
                 continue
 
@@ -128,7 +130,9 @@ class PeakAnalyzer:
                 # sequences can be peaks, and therefore do not need to
                 # be processed independently.
                 if len(neutralZone) > 1:
-                    processed.extend(neutralZone)
+                    self._processed.update({
+                        e['sequence'] for e in neutralZone
+                    })
             else:
                 # Create a new peak, and add all members of the neutral zone
                 # to this peak.
@@ -138,7 +142,9 @@ class PeakAnalyzer:
                 # If the peak is a plateau, mark all elements as processed,
                 # so that none of them is processed independently.
                 if len(neutralZone) > 1:
-                    processed.extend(neutralZone)
+                    self._processed.update({
+                        e['sequence'] for e in neutralZone
+                    })
 
         return peaks
 
@@ -151,10 +157,11 @@ class PeakAnalyzer:
 
         # Starting from the next element in the list and until the
         # end
-        for i in range(index + 1, len(elements)):
+        for i in xrange(index + 1, len(elements)):
             # If the escore is within the band
             if elements[i]['escore'] >= focalElement['escore'] - self.delta:
-                elBin.append(elements[i])
+                if elements[i]['sequence'] not in self._processed:
+                    elBin.append(elements[i])
             else:
                 # Once we've reached an element which lies in a lower
                 # band, we know that the remaining elements will also
@@ -176,12 +183,15 @@ class PeakAnalyzer:
     def getNeutralZone(self, focalElement, binMembers):
         # Get the list of sequences that constitute the neighborhood of the
         # focal element
-        neighSeqs = self.getNeighSeqs(focalElement)
+        neighSeqs = self._neighbor_map[focalElement['sequence']]
 
         # Get a list of elements that exist in the neighborhood of the
         # focal element. These are by definition already part of the neutral
         # zone.
-        neutralZone = [item for item in binMembers if item['sequence'] in neighSeqs]
+        neutralZone = [
+            item for item in binMembers
+            if item['sequence'] in neighSeqs
+        ]
 
         # Get all non-neighbor elements in the bin
         nonNeighs = [
@@ -324,12 +334,3 @@ class PeakAnalyzer:
             peaks[peakId]['list'].update([
                 e['sequence'] for e in neutralZone
             ])
-
-    # Returns the list of sequences that constitute the neighborhood of the
-    # given element
-    def getNeighSeqs(self, element):
-        return [
-            self.network.vs[neighbor]["sequences"]
-            for neighbor in self.netUtils.getNeighbors(
-                element['sequence'], self.network)
-        ]

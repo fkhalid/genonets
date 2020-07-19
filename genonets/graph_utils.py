@@ -51,6 +51,10 @@ class NetworkBuilder:
         # Add sequences to all vertices
         network.vs["sequences"] = sequences
 
+        # Set the 'name' attribute for each vertex with the
+        # corresponding sequence.
+        network.vs['name'] = sequences
+
         # Sequences in bit format
         # Note: For very long sequences, the size of the corresponding
         # integer value becomes too long for igraph to be able
@@ -177,7 +181,7 @@ class NetworkBuilder:
     # given network
     def getVertex(self, sequence, network):
         try:
-            return network.vs.find(sequences=sequence)
+            return network.vs.find(sequence)
         except ValueError:
             print("Error! ... Non-existent vertex requested: " + str(sequence))
 
@@ -191,7 +195,7 @@ class NetworkBuilder:
     def getNeighborSequences(self, sequence, network):
         v_ids = network.neighbors(self.getVertex(sequence, network))
 
-        return [network.vs['sequences'][i] for i in v_ids]
+        return network.vs.select(v_ids)['name']
 
     # Plot the given network using the given layout.
     def plotNetwork(self, network, layout, outPath):

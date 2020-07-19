@@ -66,6 +66,7 @@ class WriterFilter:
             ]
         elif level == "vertex":
             attrs = [
+                "name",
                 "label",
                 "pathsToSummit",
                 "VtxToSqrs"
@@ -86,6 +87,7 @@ class WriterFilter:
     @staticmethod
     def seqAttribsToIgnore():
         return [
+            "name",
             "sequences",
             "label",
             "escores",

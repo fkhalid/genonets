@@ -8,8 +8,6 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from tqdm import tqdm
-
 from genonets_utils import Utils
 
 
@@ -90,7 +88,7 @@ class PeakAnalyzer:
 
         # Process each element, where elements are sorted in the
         # descending order of e-scores.
-        for i in tqdm(xrange(len(elements))):
+        for i in xrange(len(elements)):
             # If the element is in the list of already processed elements,
             if elements[i]['sequence'] in self._processed:
                 # Skip iteration

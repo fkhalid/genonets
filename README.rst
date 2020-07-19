@@ -8,6 +8,13 @@ Documentation, including tutorials and API documentation, is available `here <ht
 
 ----
 
+New in version 1.1.8
+~~~~~~~~~~~~~~~~~~~~
+
+Bug fix: In certain cases, the computation of peaks would result in two or more peaks that share
+one or more genotypes. This behavior was incorrect, and has therefore been fixed. The corresponding
+issue is reported `here <https://github.com/fkhalid/genonets/issues/14>`_.
+
 New in version 1.1.7
 ~~~~~~~~~~~~~~~~~~~~
 

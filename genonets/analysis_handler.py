@@ -11,6 +11,7 @@
 
 import sys
 import json  # For proper list stringification
+import collections
 
 from genonets_writer import Writer
 from genonets_filters import WriterFilter
@@ -155,8 +156,8 @@ class AnalysisHandler:
 
         # Store a dict - {key=peakId, value=[sequences in the peak]}
         giant["Peaks"] = {
-            peakId: peaks[peakId]["sequences"]
-            for peakId in peaks.keys()
+            peakId: sorted(peaks[peakId]["sequences"])
+            for peakId in peaks
         }
 
         # Check if any two peaks overlap
@@ -314,7 +315,7 @@ class AnalysisHandler:
         giant["Evolvability"] = repertoireEvo
 
         # Stringify the list, since pythons lists cannot be written to GML.
-        giant["Evolvability_targets"] = json.dumps(targetRepertoires)
+        giant["Evolvability_targets"] = json.dumps(targetRepertoires.sort())
 
         # Set evolvability values for all vertices, i.e., sequences
         evoTuples = evoAnalyzer.getEvoAll()
@@ -324,7 +325,7 @@ class AnalysisHandler:
 
         giant.vs["Evolvability"] = evoScores
         giant.vs["Evolves_to_genotypes_in"] = [
-            evoTargets[i].keys()
+            sorted(evoTargets[i].keys())
             for i in range(len(evoTargets))
         ]
         giant.vs["Evolvability_targets"] = evoTargets
@@ -386,7 +387,9 @@ class AnalysisHandler:
         structAnalyzer = StructureAnalyzer(network, self.netBuilder)
 
         # Compute and set network/giant level properties
-        network["Genotype_network_sizes"] = str(structAnalyzer.getComponentSizes())
+        network["Genotype_network_sizes"] = str(
+            sorted(structAnalyzer.getComponentSizes(), reverse=True)
+        )
         network["Number_of_genotype_networks"] = structAnalyzer.getNumComponents()
         network["Size_of_dominant_genotype_network"] = structAnalyzer.getDominantSize()
         network["Proportional_size_of_dominant_genotype_network"] = structAnalyzer.getPercentDominantSize()
@@ -462,7 +465,7 @@ class AnalysisHandler:
 
                     # Convert the set to list for easy output file writing
                     giant["Overlapping_genotype_sets"] = \
-                        list(giant["Overlapping_genotype_sets"])
+                        sorted(list(giant["Overlapping_genotype_sets"]))
 
                     # Calculate the ratio of No. of overlapping repertoires to
                     # the total No. of other repertoires

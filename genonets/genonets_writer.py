@@ -11,6 +11,7 @@
 import os
 import copy
 import warnings
+import collections
 
 from genonets_constants import ErrorCodes
 from genonets_exceptions import GenonetsError
@@ -20,7 +21,7 @@ from genonets_constants import GenonetsConstants as gc
 class Writer:
     @staticmethod
     def writeInParamsToFile(paramsDict, path):
-        fileName = path + "in_params.txt"
+        fileName = path + "in_params.csv"
 
         # If the required directories have not already been created
         if not os.path.exists(os.path.dirname(path)):
@@ -35,11 +36,15 @@ class Writer:
                 raise GenonetsError(ErrorCodes.CANNOT_CREATE_DIRECTORY,
                                     "Path - " + path)
 
+        paramsDict = collections.OrderedDict(
+            sorted(paramsDict.items(), key=lambda x: x[0])
+        )
+
         # Open the file
         try:
             with open(fileName, "w") as outFile:
                 # For each input parameter,
-                for param in paramsDict.keys():
+                for param in paramsDict:
                     outFile.write(param + ": " + paramsDict[param] + "\n")
         except Exception:
             print("Error: " +
@@ -149,7 +154,7 @@ class Writer:
             # Create the directories
             os.makedirs(os.path.dirname(path))
 
-        fileName = path + "Genotype_set_measures.txt"
+        fileName = path + "Genotype_set_measures.csv"
         dataFile = open(fileName, 'w')
 
         # Write the row of headers
@@ -192,7 +197,7 @@ class Writer:
 
         for repertoire in repertoires:
             # Create the file name
-            fileName = path + repertoire + "_genotype_measures.txt"
+            fileName = path + repertoire + "_genotype_measures.csv"
 
             # Open file to write
             with open(fileName, 'w') as dataFile:
@@ -220,12 +225,16 @@ class Writer:
 
         dataFile.write("\n")
 
-        sequences = network.vs["sequences"]
+        seq_index_pairs = [
+            (network.vs[i]["sequences"], i)
+            for i in range(len(network.vs["sequences"]))
+        ]
+        seq_index_pairs.sort(key=lambda x: x[0])
 
         # For each sequence,
-        for i in range(len(sequences)):
+        for s, i in seq_index_pairs:
             # Write the sequence
-            dataFile.write(sequences[i] + "\t")
+            dataFile.write(s + "\t")
             # For each attribute,
             for attribute in attributes:
                 # Write value to file
@@ -233,9 +242,22 @@ class Writer:
 
             dataFile.write("\n")
 
+        # sequences = network.vs["sequences"]
+
+        # # For each sequence,
+        # for i in range(len(sequences)):
+        #     # Write the sequence
+        #     dataFile.write(sequences[i] + "\t")
+        #     # For each attribute,
+        #     for attribute in attributes:
+        #         # Write value to file
+        #         dataFile.write(str(network.vs[i][attribute]) + "\t")
+        #
+        #     dataFile.write("\n")
+
     @staticmethod
     def writeOverlapToFile(overlapMat, repertoires, path):
-        fileName = path + "Genotype_set_overlap.txt"
+        fileName = path + "Genotype_set_overlap.csv"
 
         # If the required directories have not already been created
         if not os.path.exists(os.path.dirname(path)):

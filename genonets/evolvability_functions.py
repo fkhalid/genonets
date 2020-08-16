@@ -198,6 +198,10 @@ class EvolvabilityAnalyzer:
 
                     self.appendToTargets(strSeq, targetReps)
 
+        # Sort the list of sequences in each target repository
+        for r in targetReps:
+            targetReps[r].sort()
+
         return targetReps
 
     def appendToTargets(self, seq, targetReps):

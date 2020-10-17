@@ -20,7 +20,7 @@ from genonets_constants import GenonetsConstants as gc
 class Writer:
     @staticmethod
     def writeInParamsToFile(paramsDict, path):
-        fileName = path + "in_params.txt"
+        fileName = path + "in_params.csv"
 
         # If the required directories have not already been created
         if not os.path.exists(os.path.dirname(path)):
@@ -149,7 +149,7 @@ class Writer:
             # Create the directories
             os.makedirs(os.path.dirname(path))
 
-        fileName = path + "Genotype_set_measures.txt"
+        fileName = path + "Genotype_set_measures.csv"
         dataFile = open(fileName, 'w')
 
         # Write the row of headers
@@ -192,7 +192,7 @@ class Writer:
 
         for repertoire in repertoires:
             # Create the file name
-            fileName = path + repertoire + "_genotype_measures.txt"
+            fileName = path + repertoire + "_genotype_measures.csv"
 
             # Open file to write
             with open(fileName, 'w') as dataFile:
@@ -235,7 +235,7 @@ class Writer:
 
     @staticmethod
     def writeOverlapToFile(overlapMat, repertoires, path):
-        fileName = path + "Genotype_set_overlap.txt"
+        fileName = path + "Genotype_set_overlap.csv"
 
         # If the required directories have not already been created
         if not os.path.exists(os.path.dirname(path)):

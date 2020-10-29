@@ -10,8 +10,6 @@
 
 import csv
 
-from tqdm import tqdm
-
 from genonets_exceptions import GenonetsError
 from genonets_constants import ErrorCodes
 from genonets_constants import SupportedAlphabet
@@ -53,7 +51,7 @@ class InReader:
             raise GenonetsError(ErrorCodes.INCONSISTENT_HEADER)
 
         # For each data row in the file,
-        for row in tqdm(reader):
+        for row in reader:
             # Check for missing values in this row
             if any(row[col] in (None, "") for col in row.keys()):
                 in_file.close()

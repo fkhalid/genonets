@@ -17,9 +17,9 @@ from epistasis_functions import EpistasisAnalyzer
 from genonets_utils import Utils
 
 
-class Landscape :
+class Landscape:
     # Constructor
-    def __init__(self, network, netUtils, seqToEscrDict, delta, bitManip) :
+    def __init__(self, network, netUtils, seqToEscrDict, delta, bitManip):
         # Store reference to the network object
         self.network = network
 
@@ -43,8 +43,8 @@ class Landscape :
     # Peak analysis methods
     # ----------------------------------------------------------------
 
-    def getPeaks(self, recompute) :
-        return self.peakAnalyzer.getPeaks(recompute)
+    def getPeaks(self, recompute):
+        return self.peakAnalyzer.get_all_peaks(recompute)
 
     # ----------------------------------------------------------------
     # Path analysis methods
@@ -57,7 +57,7 @@ class Landscape :
     # Epistasis analysis methods
     # ----------------------------------------------------------------
 
-    def getEpistasis(self) :
+    def getEpistasis(self):
         return self.epiAnalyzer.getEpiAll()
 
     # ----------------------------------------------------------------

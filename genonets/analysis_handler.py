@@ -150,36 +150,15 @@ class AnalysisHandler:
         # Get peaks
         peaks = lscape.getPeaks(recompute=True)
 
+        # Convert sets to lists for a simpler output format
+        for peak_id in peaks:
+            peaks[peak_id] = list(peaks[peak_id])
+
         # Set the computed values as a network attribute
-        giant["Number_of_peaks"] = len(peaks)
+        giant['Peaks'] = peaks
+        giant['Number_of_peaks'] = len(peaks)
 
-        # Store a dict - {key=peakId, value=[sequences in the peak]}
-        giant["Peaks"] = {
-            peakId: peaks[peakId]["sequences"]
-            for peakId in peaks.keys()
-        }
-
-        # Check if any two peaks overlap
-        peak_ids = sorted(peaks.keys())
-        # print('No. of Peaks: ' + str(len(peaks)))
-        # print('No. of elements in each peak: ' + str(
-        #     [(pid, (len(peaks[pid]['sequences']))) for pid in peak_ids]
-        # ))
-        for i in peak_ids:
-            for j in peak_ids[i + 1:]:
-                sequences_i = set(peaks[i]['sequences'])
-                sequences_j = set(peaks[j]['sequences'])
-
-                intersection = sequences_i & sequences_j
-
-                if intersection:
-                    print('Overlap found')
-                    print('Peaks: ' + str(i) + ' -- ' + str(j))
-                    print('No. of common sequences: ' + str(len(intersection)))
-                    for seq in intersection:
-                        print(seq + ' -- ' + str(self.inDataDict[repertoire][seq]))
-
-        # For each vertex, add distance to summit as a vertex attribute
+        # For each genotype, compute and store its distance from the summit
         lscape.populateDistsToSummit()
 
     def paths(self, repertoire):

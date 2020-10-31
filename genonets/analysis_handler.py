@@ -154,7 +154,7 @@ class AnalysisHandler:
         for peak_id in peaks:
             peaks[peak_id] = list(peaks[peak_id])
 
-        # Set the computed values as a network attribute
+        # Set the computed values as network attributes
         giant['Peaks'] = peaks
         giant['Number_of_peaks'] = len(peaks)
 

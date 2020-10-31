@@ -1,10 +1,10 @@
-Creator "igraph version 0.7.1 Wed Oct 28 15:42:49 2020"
+Creator "igraph version 0.9.0-pre+0afacadd Fri Oct 30 18:48:38 2020"
 Version 1
 graph
 [
   directed 0
   Numberofpeaks 1
-  name "Tricky"
+  name "Test12"
   node
   [
     id 0

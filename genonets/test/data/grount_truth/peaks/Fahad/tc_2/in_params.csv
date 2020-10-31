@@ -1,8 +1,0 @@
-tau: -1.5
-includeIndels: False
-num_procs: 4
-inFilePath: genonets/test/data/inputs/input_tc_2.csv
-alphabetType: DNA
-outPath: genonets/test/data/grount_truth/tc_2/
-useReverseComplements: False
-verbose: True

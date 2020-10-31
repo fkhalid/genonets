@@ -176,7 +176,7 @@ class PathAnalyzer:
 
         # Place holder to keep track of the highest score
         # encountered inside the loop
-        maxYet = -0.5
+        maxYet = -0.5   # FIXME: what if we have values less than -0.5 in the dataset ????
         # For each escore in the list
         for i in range(len(escores) - 1):
             # If the current score is higher than the max so far,

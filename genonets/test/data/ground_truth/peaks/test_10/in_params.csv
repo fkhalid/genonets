@@ -1,0 +1,8 @@
+tau: 0.0
+includeIndels: False
+num_procs: 4
+inFilePath: issue_stepan_peaks_oct14_2020/test_data/tests_peaks_hana/test10_input.tsv
+alphabetType: DNA
+outPath: issue_stepan_peaks_oct14_2020/results/tests_hana/test_10/
+useReverseComplements: False
+verbose: True

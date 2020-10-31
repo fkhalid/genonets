@@ -1,0 +1,2 @@
+Genotype_set	Number_of_peaks	Peaks	
+Test8	2	{0: ['TTC', 'GTT', 'TTT'], 1: ['ACC', 'AAA', 'AAC', 'CGG', 'GGG', 'CCG', 'CCC']}	

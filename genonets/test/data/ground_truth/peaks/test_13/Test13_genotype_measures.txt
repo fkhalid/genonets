@@ -1,0 +1,10 @@
+Sequence	Distance from Summit	
+GTAC	3	
+GTTC	4	
+ACAC	1	
+GCAC	2	
+AAAA	1	
+AAAC	0	
+ACTA	3	
+ACTC	2	
+TCTC	3	

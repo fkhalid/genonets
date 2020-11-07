@@ -7,6 +7,12 @@ Documentation, including tutorials and API documentation, is available [here](ht
 
 ----
 
+### New in version 1.1.10
+
+New feature: If the `EPISTASIS` analysis is requested, the `Genotype_set_measures.txt` file now contains an additional 
+column titled `Epistasis squares`. Data format for the new column and other detail are available 
+[here](https://github.com/fkhalid/genonets/issues/18).
+
 ### New in version 1.1.9
 
 Bug fix: In light of the issue reported [here](https://github.com/fkhalid/genonets/issues/16), the algorithm for

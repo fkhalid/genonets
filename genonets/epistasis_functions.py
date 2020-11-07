@@ -144,6 +144,35 @@ class EpistasisAnalyzer:
 
         return epiClass
 
+    def get_epistasis_results(self):
+        # Prepare the epistasis-type to squares mapping
+        epi_map = {
+            'No epistasis': {},
+            'Simple sign': {},
+            'Magnitude sign': {},
+            'Reciprocal sign': {}
+        }
+
+        for i in range(len(self.squares)):
+            square_with_scores = [
+                (sequence, self.seqToEscrDict[sequence])
+                for sequence in self.squares[i]
+            ]
+
+            square_with_scores[-2], square_with_scores[-1] = \
+                square_with_scores[-1], square_with_scores[-2]
+
+            if self.sqrEpi[i] == epi.NO_EPISTASIS:
+                epi_map['No epistasis'][i] = square_with_scores
+            elif self.sqrEpi[i] == epi.SIGN:
+                epi_map['Simple sign'][i] = square_with_scores
+            elif self.sqrEpi[i] == epi.MAGNITUDE:
+                epi_map['Magnitude sign'][i] = square_with_scores
+            elif self.sqrEpi[i] == epi.RECIPROCAL_SIGN:
+                epi_map['Reciprocal sign'][i] = square_with_scores
+
+        return epi_map
+
     # ----------------------------
     # Squares
     # ----------------------------

@@ -243,6 +243,42 @@ class AnalysisHandler:
             # exception
             giant.vs["VtxToSqrs"] = [[]]
 
+        # # Prepare the epistasis-type to squares mapping
+        # epi_map = {
+        #     'No epistasis': {},
+        #     'Sign': {},
+        #     'Magnitude sign': {},
+        #     'Reciprocal sign': {}
+        # }
+        #
+        # from genonets_constants import EpistasisConstants as EC
+        #
+        # squares = lscape.epiAnalyzer.squares
+        # square_epi_types = lscape.epiAnalyzer.getSqrEpi()
+        #
+        # for i in range(len(squares)):
+        #     square_with_scores = [
+        #         (sequence, lscape.epiAnalyzer.seqToEscrDict[sequence])
+        #         for sequence in squares[i]
+        #     ]
+        #
+        #     square_with_scores[-2], square_with_scores[-1] = \
+        #         square_with_scores[-1], square_with_scores[-2]
+        #
+        #     if square_epi_types[i] == EC.NO_EPISTASIS:
+        #         epi_map['No epistasis'][i] = square_with_scores
+        #     elif square_epi_types[i] == EC.SIGN:
+        #         epi_map['Simple sign'][i] = square_with_scores
+        #     elif square_epi_types[i] == EC.MAGNITUDE:
+        #         epi_map['Magnitude sign'][i] = square_with_scores
+        #     elif square_epi_types[i] == EC.RECIPROCAL_SIGN:
+        #         epi_map['Reciprocal sign'][i] = square_with_scores
+
+        giant['Epistasis squares'] = \
+            lscape.epiAnalyzer.get_epistasis_results()
+
+        print(giant['Epistasis squares'])
+
     def robustness(self, repertoire):
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)

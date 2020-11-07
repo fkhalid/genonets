@@ -2,10 +2,19 @@
 
 from setuptools import setup
 
+# Read the contents of the README file
+import os
+this_directory = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(this_directory, 'README.md')) as f:
+    long_description = f.read()
+
 setup(
     name='genonets',
     version='1.1.10',
-    description='Framework for creating and analyzing genotype networks from data.',
+    description='Framework for creating and analyzing genotype networks from '
+                'data.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Fahad Khalid',
     author_email='fahad.khalid@ieu.uzh.ch',
     url='https://github.com/fkhalid/genonets',

@@ -135,8 +135,13 @@ class AnalysisHandler:
 
     def getLandscapeObj(self, giant, repertoire):
         # Get the landscape object
-        lscape = Landscape(giant, self.netBuilder, self.inDataDict[repertoire],
-                           self.deltaDict[repertoire], self.bitManip)
+        lscape = Landscape(
+            giant,
+            self.netBuilder,
+            self.inDataDict[repertoire],
+            self.deltaDict[repertoire],
+            self.bitManip
+        )
 
         return lscape
 
@@ -227,6 +232,10 @@ class AnalysisHandler:
         giant["Magnitude_epistasis"] = epistasis[Epi.MAGNITUDE]
         giant["Simple_sign_epistasis"] = epistasis[Epi.SIGN]
         giant["Reciprocal_sign_epistasis"] = epistasis[Epi.RECIPROCAL_SIGN]
+
+        # Map from epistasis type to squares
+        giant['Epistasis squares'] = \
+            lscape.epiAnalyzer.get_epistasis_results()
 
         # Vertex level attributes
 

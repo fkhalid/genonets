@@ -145,33 +145,63 @@ class EpistasisAnalyzer:
         return epiClass
 
     def get_epistasis_results(self):
+        """
+        Prepares and returns a mapping from epistasis type to squares.
+        The format is given in the return type description.
+
+        Note: This function has been added in order to resolve
+              issue 18 (https://github.com/fkhalid/genonets/issues/18).
+
+        :return: (dict) of form {
+                        epistasis_type: {
+                            square_id: [
+                                (genotype, score) tuples for all four
+                                genotypes in the square
+                            ],
+                            ...
+                        },
+                        ...
+                    }
+
+        """
+
         # Prepare the epistasis-type to squares mapping
-        epi_map = {
+        epistasis_type_to_squares_map = {
             'No epistasis': {},
             'Simple sign': {},
             'Magnitude sign': {},
             'Reciprocal sign': {}
         }
 
+        # For each square,
         for i in range(len(self.squares)):
+            # Reformat the square such that each element is a tuple of
+            # the form (genotype, score)
             square_with_scores = [
                 (sequence, self.seqToEscrDict[sequence])
                 for sequence in self.squares[i]
             ]
 
+            # Swap the last two elements so that each genotype is a
+            # 1-neighbor of the preceding genotype
             square_with_scores[-2], square_with_scores[-1] = \
                 square_with_scores[-1], square_with_scores[-2]
 
+            # Add the square to the corresponding type of epistasis
             if self.sqrEpi[i] == epi.NO_EPISTASIS:
-                epi_map['No epistasis'][i] = square_with_scores
+                epistasis_type_to_squares_map['No epistasis'][i] = \
+                    square_with_scores
             elif self.sqrEpi[i] == epi.SIGN:
-                epi_map['Simple sign'][i] = square_with_scores
+                epistasis_type_to_squares_map['Simple sign'][i] = \
+                    square_with_scores
             elif self.sqrEpi[i] == epi.MAGNITUDE:
-                epi_map['Magnitude sign'][i] = square_with_scores
+                epistasis_type_to_squares_map['Magnitude sign'][i] = \
+                    square_with_scores
             elif self.sqrEpi[i] == epi.RECIPROCAL_SIGN:
-                epi_map['Reciprocal sign'][i] = square_with_scores
+                epistasis_type_to_squares_map['Reciprocal sign'][i] = \
+                    square_with_scores
 
-        return epi_map
+        return epistasis_type_to_squares_map
 
     # ----------------------------
     # Squares

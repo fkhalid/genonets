@@ -11,6 +11,7 @@
 import json
 
 import igraph
+from tqdm import tqdm
 
 
 # Provides methods for constructing and manipulating genotype
@@ -62,15 +63,55 @@ class NetworkBuilder:
         # bitseqs cannot be stored in the graph.
         bitseqs = [self.bitManip.seqToBits(seq) for seq in sequences]
 
-        # Get a list of pairs of indices which represent paris of
-        # sequences that are 1-neighbors, i.e., only one mutation
-        # apart.
-        edges = [
-            (i, j)
-            for i in range(len(bitseqs) - 1)
-            for j in range(i + 1, len(bitseqs))
-            if self.bitManip.areNeighbors(bitseqs[i], bitseqs[j])
-        ]
+        if self.use_reverse_complements:
+            # Get a list of pairs of indices which represent paris of
+            # sequences that are 1-neighbors, i.e., only one mutation
+            # apart.
+            edges = [
+                (i, j)
+                for i in range(len(bitseqs) - 1)
+                for j in range(i + 1, len(bitseqs))
+                if self.bitManip.areNeighbors(bitseqs[i], bitseqs[j])
+            ]
+        else:
+            # List of edges
+            edges = []
+
+            # Set of all bit sequences
+            bit_seq_set = set(bitseqs)
+
+            # Map {bit sequence : index into the list of bit sequences}
+            seq_to_index = {
+                bitseqs[index]: index for index in range(len(bitseqs))
+            }
+
+            print('\n')
+
+            # FIXME: does not work with reverse complements ...
+            #   generate_neighbors can optionally generate RCS for all
+            #   neighbors
+            #   we can keep a set of RCs for each seq
+            #   when testing for intersection, we can also test for intersection
+            #   between neighbors and RCs.
+
+            # For each genotype,
+            for i in tqdm(range(len(bitseqs))):
+                # Generate all possible 1-neighbors
+                all_neighbors = set(
+                    self.bitManip.generateNeighbors(bitseqs[i]))
+
+                # Set of 1-neighbors that exist in the given set of
+                # all sequences
+                all_neighbors &= bit_seq_set
+
+                # Get indices
+                for n in all_neighbors:
+                    # Index of n in the list
+                    j = seq_to_index[n]
+
+                    # Create the edge
+                    if i < j:
+                        edges.append((i, j))
 
         # Connect the two with an edge
         network.add_edges(edges)

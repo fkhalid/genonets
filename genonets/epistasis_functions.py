@@ -8,6 +8,8 @@
     :license: MIT, see LICENSE for more details.
 """
 
+from tqdm import tqdm
+
 from genonets_constants import EpistasisConstants as epi
 
 
@@ -174,7 +176,7 @@ class EpistasisAnalyzer:
         }
 
         # For each square,
-        for i in range(len(self.squares)):
+        for i in tqdm(range(len(self.squares))):
             # Reformat the square such that each element is a tuple of
             # the form (genotype, score)
             square_with_scores = [
@@ -234,7 +236,7 @@ class EpistasisAnalyzer:
         sequences = self.network.vs["sequences"]
 
         # For each sequence in the network
-        for sequence in sequences:
+        for sequence in tqdm(sequences):
             # Get all 1-neighbor sequences
             neighbors = [self.network.vs[vid]["sequences"]
                          for vid in

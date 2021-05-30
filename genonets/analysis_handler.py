@@ -163,8 +163,8 @@ class AnalysisHandler:
         giant['Peaks'] = peaks
         giant['Number_of_peaks'] = len(peaks)
 
-        # For each genotype, compute and store its distance from the summit
-        lscape.populateDistsToSummit()
+        # # For each genotype, compute and store its distance from the summit
+        # lscape.populateDistsToSummit()
 
     def paths(self, repertoire):
         # Get the dominant genotype network for the repertoire

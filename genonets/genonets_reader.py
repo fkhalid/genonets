@@ -10,6 +10,8 @@
 
 import csv
 
+from tqdm import tqdm
+
 from genonets_exceptions import GenonetsError
 from genonets_constants import ErrorCodes
 from genonets_constants import SupportedAlphabet
@@ -32,7 +34,7 @@ class InReader:
         # Data structures to be returned
         data_dict = {}
         delta_dict = {}
-        genotypes = []      # List of unique genotypes across all genotype sets
+        genotypes = set()      # List of unique genotypes across all genotype sets
         genotype_sets = []  # List of genotype sets in the order in which they are read from file
 
         # Genotype length to be determined
@@ -51,7 +53,7 @@ class InReader:
             raise GenonetsError(ErrorCodes.INCONSISTENT_HEADER)
 
         # For each data row in the file,
-        for row in reader:
+        for row in tqdm(reader):
             # Check for missing values in this row
             if any(row[col] in (None, "") for col in row.keys()):
                 in_file.close()
@@ -136,7 +138,7 @@ class InReader:
                 if genotype not in genotypes:
                     # Add it to the list of unique sequences found in the
                     # input file
-                    genotypes.append(genotype)
+                    genotypes.add(genotype)
 
         in_file.close()
 

@@ -1,9 +1,14 @@
 # Genonets
 
-This package provides a high level interface for construction and analysis of genotype networks from data. Also,
-this is the Python package used by the [Genonets Server](http://ieu-genonets.uzh.ch/).
+This package provides a high level interface for construction and analysis of genotype networks 
+from data. It was used as the analysis backend for the Genonets Server.
 
-Documentation, including tutorials and API documentation, is available [here](http://ieu-genonets.uzh.ch/python_package).
+**Note:** The Genonets Server had to be shut down due to lack of funding for 
+web hosting services. Nevertheless, all analyses are still available via the 
+Genonets package via this repository. Unfortunately though, the visualization 
+features are no longer available. Within the next few weeks, this repository 
+will be updated to support Python 3 with significantly improved analyses. Along 
+with these changes, latest documentation will be provided.
 
 ----
 

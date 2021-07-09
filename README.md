@@ -146,5 +146,5 @@ features are no longer available. Within the next few weeks, this repository
 will be updated to support Python 3 with significantly improved analyses. Along 
 with these changes, the latest documentation will be provided.
 
-**Note:** Please [email us](mailto:genonets@outlook.com) for questions, comments, 
-suggestions, and/or feature requests.
+**Note:** Please [email us](mailto:genonets@outlook.com) for any questions 
+and/or comments.

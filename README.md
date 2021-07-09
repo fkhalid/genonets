@@ -1,16 +1,10 @@
 # Genonets
 
 This package provides a high level interface for construction and analysis of genotype networks 
-from data. It was used as the analysis backend for the Genonets Server.
+from data. It was also used as the analysis backend for the 
+[Genonets Server](#Genonets-Server-end-of-life).
 
-**Note:** The Genonets Server had to be shut down due to lack of funding for 
-web hosting services. Nevertheless, all analyses are still available via the 
-Genonets package via this repository. Unfortunately though, the visualization 
-features are no longer available. Within the next few weeks, this repository 
-will be updated to support Python 3 with significantly improved analyses. Along 
-with these changes, latest documentation will be provided.
-
-**Note:** Please [email us](genonets@outlook.com) for questions, comments, 
+**Note:** Please [email us](mailto:genonets@outlook.com) for questions, comments, 
 suggestions, and/or feature requests.
 
 ----
@@ -142,3 +136,12 @@ happens, follow these steps:
 3. `pip install python_igraph-0.7.1.post6-cp27-none-win32.whl`
 4. `pip install numpy-1.10.2+mkl-cp27-none-win32.whl`
 5. And finally, `pip install genonets`
+
+## Genonets Server end-of-life
+
+The Genonets Server had to be shut down due to lack of funding for web hosting 
+services. Nevertheless, all analyses are still available in the Genonets 
+package via this repository. Unfortunately though, the visualization 
+features are no longer available. Within the next few weeks, this repository 
+will be updated to support Python 3 with significantly improved analyses. Along 
+with these changes, the latest documentation will be provided.

@@ -12,7 +12,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 
 # -- Project information -----------------------------------------------------
@@ -31,9 +31,18 @@ release = '2.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'autoapi.extension',
     'sphinx.ext.duration',
     'sphinx.ext.autodoc',
 ]
+
+# Path to the genonets package relative to the docs root, so tha autoapi can
+# find sources for API docs
+autoapi_dirs = ['../../genonets']
+
+# Do not automatically generate all documentation, just those elements that are
+# explicitly requested via Sphinx directives
+autoapi_generate_api_docs = False
 
 autodoc_typehints = 'none'
 

@@ -12,14 +12,8 @@
 
 import os
 import sys
-import pathlib
+sys.path.insert(0, os.path.abspath('../'))
 
-if "READTHEDOCS" in os.environ:
-    src_folder = pathlib.Path(__file__).resolve().parent.parent / "genonets"
-    sys.path.append(str(src_folder))
-
-    print("Detected running on ReadTheDocs")
-    print(f"Added {src_folder} to sys.path")
 
 # -- Project information -----------------------------------------------------
 

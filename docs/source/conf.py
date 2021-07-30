@@ -33,7 +33,6 @@ release = '2.0'
 extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.autodoc',
-    'sphinx_autodoc_typehints',
 ]
 
 autodoc_typehints = 'none'

@@ -8,7 +8,7 @@ Python 2 was used as the backend for the
 ## Documentation
 
 Installation and usage instructions, as well as further documentation is 
-available here.
+available [here](https://genonets.readthedocs.io/).
 
 ## Genonets Server end-of-life
 

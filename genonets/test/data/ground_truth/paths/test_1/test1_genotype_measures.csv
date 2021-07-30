@@ -1,0 +1,6 @@
+Sequence	Shortest_path_length	Shortest_accessible_path_length	Accessible_paths_from	
+HYLG	2	2	1	
+LYLG	1	1	1	
+NYLG	3	3	1	
+WYLG	0	0	0	
+YYLG	3	-1	0	

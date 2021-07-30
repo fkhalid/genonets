@@ -10,6 +10,8 @@
 
 from array import array
 
+import numpy as np
+
 
 # Abstract base class that provides all methods for manipulation of arbitrary
 # character sequences as bits. Only concrete classes derived from this class
@@ -378,7 +380,8 @@ class AbstractBitSeqManipulator:
         # purposes: 1) To get the desired size, 2) To ensure there are
         # no ones, since left shifting ones at the left most index can
         # cause problems.
-        outputSequence = array('c', ['0' for _ in range(k)])
+        outputSequence = array('u', ['0' for _ in range(k)])
+        # outputSequence = np.array(['0' for _ in range(k)], dtype=str)
 
         # For each n-bit sequence (in a k-mer occupying n*k bits in an
         # integer),
@@ -393,7 +396,8 @@ class AbstractBitSeqManipulator:
 
             j -= 1
 
-        return outputSequence.tostring()
+        # return outputSequence.tostring()
+        return ''.join(outputSequence)
 
     # Extracts 'n' bits from 'bitSeq' starting at index 'i'.
     # Returns an integer that is a copy of only these bits.

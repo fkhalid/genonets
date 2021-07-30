@@ -1,8 +1,0 @@
-tau: 0.0
-includeIndels: False
-num_procs: 4
-inFilePath: genonets/test/data/inputs/peaks/test12_input.tsv
-alphabetType: DNA
-outPath: issue_16/results/test_12/
-useReverseComplements: False
-verbose: False

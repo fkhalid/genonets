@@ -9,20 +9,21 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import sys
 import json  # For proper list stringification
 
-from genonets_writer import Writer
-from genonets_filters import WriterFilter
-from path_functions import PathAnalyzer
-from landscape_functions import Landscape
-from overlap_functions import OverlapAnalyzer
-from structure_functions import StructureAnalyzer
-from robustness_functions import RobustnessAnalyzer
-from evolvability_functions import EvolvabilityAnalyzer
-from accessibility_functions import AccessibilityAnalyzer
-from genonets_constants import AnalysisConstants as Ac
-from genonets_constants import EpistasisConstants as Epi
+from genonets.writer import Writer
+from genonets.filters import WriterFilter
+from genonets.peak_functions import PeakAnalyzer
+from genonets.path_functions import PathAnalyzer
+from genonets.overlap_functions import OverlapAnalyzer
+from genonets.structure_functions import StructureAnalyzer
+from genonets.epistasis_functions import EpistasisAnalyzer
+from genonets.epistasis_functions import AlternateNetworkData
+from genonets.robustness_functions import RobustnessAnalyzer
+from genonets.evolvability_functions import EvolvabilityAnalyzer
+from genonets.accessibility_functions import AccessibilityAnalyzer
+from genonets.constants import AnalysisConstants as Ac
+from genonets.constants import EpistasisConstants as Epi
 
 
 class AnalysisHandler:
@@ -60,12 +61,16 @@ class AnalysisHandler:
         # Verbosity flag
         self.VERBOSE = self.caller.VERBOSE
 
+        self._alternate_bit_manip = self.caller.alternate_bit_manip
+        self._alternate_net_builder = self.caller.alternate_net_builder
+        self._rep_to_alternate_net_dict = self.caller.rep_to_alternate_net_dict
+        self._rep_to_alternate_giant_dict = self.caller.rep_to_alternate_giant_dict
+
         # Dictionary to store 'analysis type' to 'function'
         # mapping
         self.analysisToFunc = {
             Ac.PEAKS: self.peaks,
             Ac.PATHS: self.paths,
-            Ac.PATHS_RATIOS: self.paths_ratios,
             Ac.EPISTASIS: self.epistasis,
             Ac.ROBUSTNESS: self.robustness,
             Ac.EVOLVABILITY: self.evolvability,
@@ -79,7 +84,7 @@ class AnalysisHandler:
         # Flag to indicate whether or not the genotypes should be
         # considered double stranded, i.e., whether or not
         # reverse complements should be used in various analyses
-        self.isDoubleStranded = self.caller.cmdArgs.use_reverse_complements
+        self.isDoubleStranded = self.caller.cmd_args.use_reverse_complements
 
         # If 'Evolvability' analysis has been requested, initialize
         # data structures specific to 'Evolvability' analysis
@@ -120,7 +125,9 @@ class AnalysisHandler:
         # For each analysis type specified in the list,
         for analysis in analyses:
             if self.VERBOSE and not self.parallel:
-                sys.stdout.write(Ac.analysisToDesc[analysis] + " ... ")
+                print(
+                    f'{Ac.analysisToDesc[analysis]}', end=' ... \n', flush=True
+                )
 
             # Get a list of function names
             functions = self.getFuncsFor(analysis)
@@ -131,29 +138,18 @@ class AnalysisHandler:
                 function(repertoire)
 
         if self.VERBOSE and not self.parallel:
-            sys.stdout.write("Done.")
-
-    def getLandscapeObj(self, giant, repertoire):
-        # Get the landscape object
-        lscape = Landscape(
-            giant,
-            self.netBuilder,
-            self.inDataDict[repertoire],
-            self.deltaDict[repertoire],
-            self.bitManip
-        )
-
-        return lscape
+            print('Done.', flush=True)
 
     def peaks(self, repertoire):
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
-        # Get the landscape object
-        lscape = self.getLandscapeObj(giant, repertoire)
+        # Create the peak analyzer
+        analyzer = PeakAnalyzer(
+            giant, self.netBuilder, self.deltaDict[repertoire], self.VERBOSE)
 
         # Get peaks
-        peaks = lscape.getPeaks(recompute=True)
+        peaks = analyzer.get_all_peaks(recompute=True)
 
         # Convert sets to lists for a simpler output format
         for peak_id in peaks:
@@ -163,103 +159,92 @@ class AnalysisHandler:
         giant['Peaks'] = peaks
         giant['Number_of_peaks'] = len(peaks)
 
-        # For each genotype, compute and store its distance from the summit
-        lscape.populateDistsToSummit()
-
     def paths(self, repertoire):
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
-        # Get the landscape object
-        lscape = self.getLandscapeObj(giant, repertoire)
+        if giant.vcount() < 2:
+            print(f'Warning: Cancelling paths analysis. Paths can only be '
+                  f'computed if there are at least two vertices in the '
+                  f'network.')
 
-        # Get paths
-        lscape.getAccessiblePaths(0)
-
-        # Set the computed value as a network attribute
-        giant["Summit"] = lscape.pathAnalyzer.getSummitId()
-
-        # Vertex level attributes
-        allPathsToPeak = lscape.pathAnalyzer.getAllPathsToPeak()
-        giant.vs["pathsToSummit"] = [
-            allPathsToPeak[i]
-            for i in range(len(allPathsToPeak))
-        ]
-
-        # Add the count for each vertex as a vertex level attribute in giant
-        giant.vs["Accessible_paths_through"] = lscape.pathAnalyzer.getPathsThruVtxs()
-
-    def paths_ratios(self, repertoire):
-        # Get the dominant genotype network for the repertoire
-        giant = self.caller.dominant_network(repertoire)
+            return
 
         # 'PathAnalyzer' object
-        path_analyzer = PathAnalyzer(giant, self.netBuilder,
-                                     self.deltaDict[repertoire])
+        path_analyzer = PathAnalyzer(
+            giant,
+            self.netBuilder,
+            self.deltaDict[repertoire],
+            self.VERBOSE,
+            self.inDataDict[repertoire]
+        )
 
-        # Run shortest paths calculation for all paths; regardless of path length.
-        # This sets the 'max_path_length' value.
-        path_analyzer.getAccessiblePaths()
+        result_shortest_paths = path_analyzer.compute_shortest_paths()
+        result_indirect_paths = path_analyzer.compute_indirect_paths()
 
-        # Length of the longest path in the network
-        max_path_length = path_analyzer.max_path_length
+        giant["Summit"] = path_analyzer.summit_sequences
 
-        # Compute the ratio of accessible paths for all path lengths in range:
-        # [2, max_path_length].
-        # Set dict {path_length : ratio}
-        giant["Ratio_of_accessible_mutational_paths"] = {
-            i: path_analyzer.getAccessiblePaths(i)
-            for i in xrange(2, max_path_length + 1)
-        }
+        giant["Ratio_of_accessible_mutational_paths"] = result_shortest_paths[
+            "Ratio_of_accessible_mutational_paths"]
+        giant.vs["Accessible_paths_from"] = result_shortest_paths[
+            "Accessible_paths_from"]
+        giant.vs["Shortest_path_length"] = result_shortest_paths[
+            "Shortest_path_length"]
+
+        giant.vs["Shortest_accessible_path_length"] = result_indirect_paths
 
     def epistasis(self, repertoire):
-        # Get the dominant genotype network for the repertoire
+        # Dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
-        # Get the landscape object
-        lscape = self.getLandscapeObj(giant, repertoire)
+        alternate_net_data = None
 
-        # Get epistasis
-        epistasis = lscape.getEpistasis()
+        if self.caller.letter_to_neighbors:
+            self.caller.create_alternate_network(repertoire)
 
-        # Get the vertex to squares dict
-        vtxToSqrs, squares = lscape.epiAnalyzer.getVertexToSquaresDict()
+            self._rep_to_alternate_net_dict = \
+                self.caller.rep_to_alternate_net_dict
+            self._rep_to_alternate_giant_dict = \
+                self.caller.rep_to_alternate_giant_dict
+
+            alternate_net_data = AlternateNetworkData(
+                self._rep_to_alternate_giant_dict[repertoire],
+                self._alternate_bit_manip,
+                self._alternate_net_builder
+            )
+
+        # Epistasis analyzer
+        epi_analyzer = EpistasisAnalyzer(
+            network=giant,
+            net_utils=self.netBuilder,
+            genotype_to_score_map=self.inDataDict[repertoire],
+            delta=self.deltaDict[repertoire],
+            alternate_net_data=alternate_net_data,
+            verbose=self.VERBOSE,
+            save_squares=self.caller.cmd_args.save_squares,
+            out_dir=self.caller.cmd_args.output_path
+        )
+
+        # Compute epistasis
+        epistasis = epi_analyzer.compute_epistasis_ratios()
 
         # Set the computed values as network attributes
-        giant["Squares_list"] = json.dumps(squares)
-        giant["SqrEpi_list"] = json.dumps(lscape.epiAnalyzer.getSqrEpi())
-        giant["Number_of_squares"] = len(lscape.epiAnalyzer.squares)
-        giant["Magnitude_epistasis"] = epistasis[Epi.MAGNITUDE]
-        giant["Simple_sign_epistasis"] = epistasis[Epi.SIGN]
-        giant["Reciprocal_sign_epistasis"] = epistasis[Epi.RECIPROCAL_SIGN]
-
-        # Map from epistasis type to squares
-        giant['Epistasis squares'] = \
-            lscape.epiAnalyzer.get_epistasis_results()
-
-        # Vertex level attributes
-
-        # Can't traverse an empty dict
-        if len(vtxToSqrs) > 0:
-            # Since vtxToSqrs is a dict, it is important to convert it into an ordered
-            # list for correct mapping to vertices
-            giant.vs["VtxToSqrs"] = [vtxToSqrs[i] for i in range(len(vtxToSqrs))]
-        else:
-            # Empty list. This makes it possible for the user to distinguish between
-            # no squares associated with a vertex, and epistasis function was not
-            # called at all
-            # Note: Has to be a nested empty list, since otherwise igraph throws an
-            # exception
-            giant.vs["VtxToSqrs"] = [[]]
+        giant['Number_of_squares'] = epi_analyzer.num_squares
+        giant['Magnitude_epistasis'] = epistasis[Epi.MAGNITUDE]
+        giant['Simple_sign_epistasis'] = epistasis[Epi.SIGN]
+        giant['Reciprocal_sign_epistasis'] = epistasis[Epi.RECIPROCAL_SIGN]
 
     def robustness(self, repertoire):
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
         # Construct a RobustnessAnalyzer object
-        robAnalyzer = RobustnessAnalyzer(giant,
-                                         self.netBuilder,
-                                         self.isDoubleStranded)
+        robAnalyzer = RobustnessAnalyzer(
+            giant,
+            self.netBuilder,
+            self.isDoubleStranded,
+            self.VERBOSE
+        )
 
         # Compute repertoire robustness and set it as a network
         # attribute
@@ -271,68 +256,120 @@ class AnalysisHandler:
     # Data structure initializations that need only be done once for
     # evolvability analysis of all repertoires.
     def init_evolvability(self):
-        self.seqToRepDict_evo = EvolvabilityAnalyzer.updateSeqToRepDict(
-            self.seqToRepDict, self.repToGiantDict)
+        if self.caller.cmd_args.use_all_components:
+            # Use the entire entire network
+            self.seqToRepDict_evo = self.seqToRepDict
+        else:
+            # Use only the dominant network, i.e, the giant component
+            self.seqToRepDict_evo = EvolvabilityAnalyzer.updateSeqToRepDict(
+                self.seqToRepDict, self.repToGiantDict
+            )
 
         if self.isDoubleStranded:
             self.rcToSeqDict = EvolvabilityAnalyzer.buildRcToSeqDict(
-                self.seqToRepDict_evo, self.bitManip)
+                self.seqToRepDict_evo, self.bitManip
+            )
 
         self.bitsToSeqDict = EvolvabilityAnalyzer.buildBitsToSeqDict(
-            self.seqToRepDict_evo, self.rcToSeqDict, self.bitManip,
-            self.isDoubleStranded)
+            self.seqToRepDict_evo,
+            self.rcToSeqDict,
+            self.bitManip,
+            self.isDoubleStranded
+        )
 
     def evolvability(self, repertoire):
-        # Get the dominant genotype network for the repertoire
-        giant = self.caller.dominant_network(repertoire)
+        # Evolvability analysis only makes sense if there are at least two
+        # repertoires
+        if len(self.repToNetDict) < 2:
+            print('Cancelling evolvability analysis, as it requires at '
+                  'least two genotype sets')
+            return
+
+        if self.caller.cmd_args.use_all_components:
+            # Use the entire entire network
+            network = self.caller.genotype_network(repertoire)
+        else:
+            # Use only the dominant network, i.e, the giant component
+            network = self.caller.dominant_network(repertoire)
 
         # Construct a EvolvabilityAnalyzer object
-        evoAnalyzer = EvolvabilityAnalyzer(giant,
-                                           self.inDataDict,
-                                           self.seqToRepDict_evo,
-                                           self.repToGiantDict,
-                                           self.rcToSeqDict,
-                                           self.bitsToSeqDict,
-                                           self.netBuilder,
-                                           self.isDoubleStranded)
+        evolvability_analyzer = EvolvabilityAnalyzer(
+            network,
+            self.inDataDict,
+            self.seqToRepDict_evo,
+            self.repToGiantDict,
+            self.rcToSeqDict,
+            self.bitsToSeqDict,
+            self.netBuilder,
+            self.isDoubleStranded,
+            self.VERBOSE
+        )
 
         # Compute repertoire evolvability and set it as a network
         # attribute
-        repertoireEvo, targetRepertoires = evoAnalyzer.getReportoireEvo()
-        giant["Evolvability"] = repertoireEvo
+        repertoire_evolvability, target_repertoires = \
+            evolvability_analyzer.getReportoireEvo()
+        network["Evolvability"] = repertoire_evolvability
 
         # Stringify the list, since pythons lists cannot be written to GML.
-        giant["Evolvability_targets"] = json.dumps(targetRepertoires)
+        network["Evolvability_targets"] = json.dumps(sorted(target_repertoires))
 
         # Set evolvability values for all vertices, i.e., sequences
-        evoTuples = evoAnalyzer.getEvoAll()
+        evolvability_tuples = evolvability_analyzer.getEvoAll()
 
-        evoScores = [evoTuples[i][0] for i in range(len(evoTuples))]
-        evoTargets = [evoTuples[i][1] for i in range(len(evoTuples))]
-
-        giant.vs["Evolvability"] = evoScores
-        giant.vs["Evolves_to_genotypes_in"] = [
-            evoTargets[i].keys()
-            for i in range(len(evoTargets))
+        evolvability_scores = [
+            evolvability_tuples[i][0] for i in range(len(evolvability_tuples))
         ]
-        giant.vs["Evolvability_targets"] = evoTargets
+        evolvability_targets = [
+            evolvability_tuples[i][1] for i in range(len(evolvability_tuples))
+        ]
+
+        network.vs["Evolvability"] = evolvability_scores
+        network.vs["Evolves_to_genotypes_in"] = [
+            sorted([*evolvability_targets[i]])
+            for i in range(len(evolvability_targets))
+        ]
+        network.vs["Evolvability_targets"] = evolvability_targets
+
+        network['Interface_edges'] = evolvability_analyzer.compute_external_mutation_types(
+            target_repertoires=target_repertoires,
+            targets_per_genotype=evolvability_targets
+        )
 
     def accessibility(self, repertoire):
+        # Accessibility analysis only makes sense if there are at least
+        # two repertoires
+        if len(self.repToGiantDict) < 2:
+            print('Cancelling accessibility analysis, as it requires at '
+                  'least two genotype sets')
+            return
+
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
         # Create an AccessibilityAnalyzer object
-        accAnalyzer = AccessibilityAnalyzer(repertoire, giant,
-                                            self.repToGiantDict,
-                                            self.inDataDict,
-                                            self.netBuilder,
-                                            self.bitManip,
-                                            self.isDoubleStranded)
+        accAnalyzer = AccessibilityAnalyzer(
+            repertoire,
+            giant,
+            self.repToGiantDict,
+            self.inDataDict,
+            self.netBuilder,
+            self.bitManip,
+            self.isDoubleStranded,
+            self.VERBOSE
+        )
 
         # Compute repertoire accessibility and set it as a network attribute
         giant["Accessibility"] = accAnalyzer.getAccessibility()
 
     def neighborAbundance(self, repertoire):
+        # Neighbor abundance analysis only makes sense if there are at least
+        # two repertoires
+        if len(self.repToGiantDict) < 2:
+            print('Cancelling neighbor abundance analysis, as it requires at '
+                  'least two genotype sets')
+            return
+
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
@@ -342,13 +379,21 @@ class AnalysisHandler:
                                             self.inDataDict,
                                             self.netBuilder,
                                             self.bitManip,
-                                            self.isDoubleStranded)
+                                            self.isDoubleStranded,
+                                            self.VERBOSE)
 
         # Compute repertoire neighborhood abundance and set it as a network
         # attribute
         giant["Neighbor_abundance"] = accAnalyzer.getNeighborAbundance()
 
     def phenotypicDiversity(self, repertoire):
+        # Phenotypic diversity analysis only makes sense if there are at least
+        # two repertoires
+        if len(self.repToGiantDict) < 2:
+            print('Cancelling phenotypic diversity analysis, as it requires at '
+                  'least two genotype sets')
+            return
+
         # Get the dominant genotype network for the repertoire
         giant = self.caller.dominant_network(repertoire)
 
@@ -358,7 +403,8 @@ class AnalysisHandler:
                                             self.inDataDict,
                                             self.netBuilder,
                                             self.bitManip,
-                                            self.isDoubleStranded)
+                                            self.isDoubleStranded,
+                                            self.VERBOSE)
 
         # Compute phenotypic diversity and set it as a network attribute
         giant["Diversity_index"] = accAnalyzer.getPhenotypicDivesity()
@@ -371,7 +417,7 @@ class AnalysisHandler:
         giant = self.caller.dominant_network(repertoire)
 
         # Create the structure analyzer object
-        structAnalyzer = StructureAnalyzer(network, self.netBuilder)
+        structAnalyzer = StructureAnalyzer(network, self.netBuilder, self.VERBOSE)
 
         # Compute and set network/giant level properties
         network["Genotype_network_sizes"] = str(structAnalyzer.getComponentSizes())
@@ -379,13 +425,15 @@ class AnalysisHandler:
         network["Size_of_dominant_genotype_network"] = structAnalyzer.getDominantSize()
         network["Proportional_size_of_dominant_genotype_network"] = structAnalyzer.getPercentDominantSize()
         giant["Edge_density"] = structAnalyzer.getEdgeDensity()
-        giant["Diameter"] = structAnalyzer.getDiameter()
+        # if self.VERBOSE:
+        #     print('Retrieving diameter ...')
+        # giant["Diameter"] = structAnalyzer.getDiameter()
         giant["Average_clustering_coefficient_of_dominant_genotype_network"] = structAnalyzer.getAvgClstrCoeff()
         giant["Assortativity"] = structAnalyzer.getAssortativity()
 
-        # The list of vertex Ids needs to be stringified, since otherwise these
-        # cannot be written to GML.
-        giant["diameterPath_list"] = json.dumps(structAnalyzer.getDiameterPath())
+        # # The list of vertex Ids needs to be stringified, since otherwise these
+        # # cannot be written to GML.
+        # giant["diameterPath_list"] = json.dumps(structAnalyzer.getDiameterPath())
 
         # Compute and set vertex level properties
         giant.vs["Coreness"] = structAnalyzer.getCoreness()
@@ -450,7 +498,7 @@ class AnalysisHandler:
 
                     # Convert the set to list for easy output file writing
                     giant["Overlapping_genotype_sets"] = \
-                        list(giant["Overlapping_genotype_sets"])
+                        sorted(list(giant["Overlapping_genotype_sets"]))
 
                     # Calculate the ratio of No. of overlapping repertoires to
                     # the total No. of other repertoires
@@ -465,5 +513,8 @@ class AnalysisHandler:
             # If overlap matrix was populated,
             if self.overlapMatrix:
                 # Write matrix to file
-                Writer.writeOverlapToFile(self.overlapMatrix, repertoires,
-                                          self.caller.cmdArgs.outPath)
+                Writer.writeOverlapToFile(
+                    self.overlapMatrix,
+                    repertoires,
+                    self.caller.cmd_args.output_path
+                )

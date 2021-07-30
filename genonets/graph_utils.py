@@ -11,6 +11,7 @@
 import json
 
 import igraph
+from tqdm import tqdm
 
 
 # Provides methods for constructing and manipulating genotype
@@ -18,7 +19,7 @@ import igraph
 # type.
 class NetworkBuilder:
     # Constructor
-    def __init__(self, seqBitManip, use_reverse_complements):
+    def __init__(self, seqBitManip, use_reverse_complements, verbose):
         # Store reference to the sequence/bit manipulator object
         # in use
         self.bitManip = seqBitManip
@@ -26,6 +27,8 @@ class NetworkBuilder:
         # Flog to indicate whether or not reverse complements should
         # be used
         self.use_reverse_complements = use_reverse_complements
+
+        self._verbose = verbose
 
     # Return 'True' if the source sequence is connected to the target
     # sequence, and 'False' otherwise.
@@ -62,15 +65,58 @@ class NetworkBuilder:
         # bitseqs cannot be stored in the graph.
         bitseqs = [self.bitManip.seqToBits(seq) for seq in sequences]
 
-        # Get a list of pairs of indices which represent paris of
-        # sequences that are 1-neighbors, i.e., only one mutation
-        # apart.
-        edges = [
-            (i, j)
-            for i in range(len(bitseqs) - 1)
-            for j in range(i + 1, len(bitseqs))
-            if self.bitManip.areNeighbors(bitseqs[i], bitseqs[j])
-        ]
+        if self.use_reverse_complements:
+            # Get a list of pairs of indices which represent paris of
+            # sequences that are 1-neighbors, i.e., only one mutation
+            # apart.
+            edges = [
+                (i, j)
+                for i in range(len(bitseqs) - 1)
+                for j in range(i + 1, len(bitseqs))
+                if self.bitManip.areNeighbors(bitseqs[i], bitseqs[j])
+            ]
+        else:
+            # List of edges
+            edges = []
+
+            # Set of all bit sequences
+            bit_seq_set = set(bitseqs)
+
+            # Map {bit sequence : index into the list of bit sequences}
+            seq_to_index = {
+                bitseqs[index]: index for index in range(len(bitseqs))
+            }
+
+            if self._verbose:
+                print('\n')
+
+            # FIXME: does not work with reverse complements ...
+            #   generate_neighbors can optionally generate RCS for all
+            #   neighbors
+            #   we can keep a set of RCs for each seq
+            #   when testing for intersection, we can also test for intersection
+            #   between neighbors and RCs.
+
+            iterable = tqdm(range(len(bitseqs))) if self._verbose else range(len(bitseqs))
+
+            # For each genotype,
+            for i in iterable:
+                # Generate all possible 1-neighbors
+                all_neighbors = set(
+                    self.bitManip.generateNeighbors(bitseqs[i]))
+
+                # Set of 1-neighbors that exist in the given set of
+                # all sequences
+                all_neighbors &= bit_seq_set
+
+                # Get indices
+                for n in all_neighbors:
+                    # Index of n in the list
+                    j = seq_to_index[n]
+
+                    # Create the edge
+                    if i < j:
+                        edges.append((i, j))
 
         # Connect the two with an edge
         network.add_edges(edges)
@@ -93,7 +139,7 @@ class NetworkBuilder:
             # 'list(allNeighbors)' creates a new list object
             for neighbor in list(all_neighbors):
                 # Reverse complement of the neighbor
-                rc = self.bitManip.getReverseComplement(neighbor)
+                rc = self.bitManip.get_reverse_complement(neighbor)
 
                 # If the reverse complement is not the same as the neighbor,
                 # and the reverse complement is already in the list of
@@ -114,7 +160,7 @@ class NetworkBuilder:
             # Add the reverse complement of each neighbor to the
             # list of neighbors
             neighbors_within_net.extend([
-                self.bitManip.getReverseComplement(neighbor)
+                self.bitManip.get_reverse_complement(neighbor)
                 for neighbor in neighbors_within_net
             ])
 
@@ -164,7 +210,7 @@ class NetworkBuilder:
             if sequence_neighbors:
                 # Compute reverse complements of sequence neighbors
                 sequence_neighbors_rc = set([
-                    self.bitManip.getReverseComplement(n)
+                    self.bitManip.get_reverse_complement(n)
                     for n in sequence_neighbors
                 ])
 

@@ -1,0 +1,14 @@
+Codon alphabet: None
+Genetic code input file: None
+Genonets input file: genonets/test/data/inputs/rna/genonets_input_rna-human.txt
+Genotype alphabet: RNA
+Include indels for Codons: False
+Include indels for Genotypes: True
+No. of parallel processes: 1
+Output path: results/rna/human/with_indels/
+Store epistasis squares: False
+Tau: 0.35
+Use all components for evolvability: False
+Use reverse complements for codons: False
+Use reverse complements for genotypes: False
+Verbose: True

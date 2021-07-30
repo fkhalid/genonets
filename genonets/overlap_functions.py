@@ -11,7 +11,8 @@
 
 class OverlapAnalyzer:
     # Constructor
-    def __init__(self, repToGiantDict, repertoires, bitManip, isDoubleStranded, ordering_function):
+    def __init__(self, repToGiantDict, repertoires, bitManip, isDoubleStranded,
+                 ordering_function):
         # Copy of dict: key=repertoire, value=giant
         self.repToGiantDict = repToGiantDict
 
@@ -34,7 +35,7 @@ class OverlapAnalyzer:
             print("Overlap computation triggered with only one repertoire!")
             print("Overlap can only be calculated with 2 or more repertoires.")
 
-            return None, None
+            return None, None, None
 
         # Overlap dict for all repertoires. Dict{rep : {seq : [target reps]}}
         allOverlap = {
@@ -91,7 +92,7 @@ class OverlapAnalyzer:
         if self.isDoubelStranded:
             # Reverse complements of 'seqs2' in bit format
             rc_seqs2 = [
-                self.bitManip.getReverseComplement(self.bitManip.seqToBits(s))
+                self.bitManip.get_reverse_complement(self.bitManip.seqToBits(s))
                 for s in seqs2
             ]
 

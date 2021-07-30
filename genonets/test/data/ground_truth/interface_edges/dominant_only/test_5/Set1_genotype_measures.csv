@@ -1,0 +1,3 @@
+Sequence	Evolvability	Evolvability_targets	Evolves_to_genotypes_in	
+AAA	1.0	{'Set2': ['GAA']}	['Set2']	
+AAC	1.0	{'Set2': ['GAA', 'GAC']}	['Set2']	

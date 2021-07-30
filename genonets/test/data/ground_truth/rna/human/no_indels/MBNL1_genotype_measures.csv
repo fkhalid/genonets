@@ -1,0 +1,5 @@
+Sequence	Robustness	Evolvability	Evolvability_targets	Evolves_to_genotypes_in	Overlaps_with_genotypes_in	Coreness	Clustering_coefficient	Shortest_path_length	Shortest_accessible_path_length	Accessible_paths_from	
+GCUAGCU	0.047619047619047616	0.014705882352941176	{'SAMD4A': ['GCUGGCU']}	['SAMD4A']	[]	1	nan	1	1	1	
+GCUUGCA	0.09523809523809523	0.04411764705882353	{'hnRNPLL': ['ACUUGCA', 'GCAUGCA'], 'A2BP1': ['GAUUGCA', 'GCAUGCA'], 'SAMD4A': ['GCUGGCA']}	['A2BP1', 'SAMD4A', 'hnRNPLL']	['A2BP1']	2	1.0	1	1	1	
+GCUUGCG	0.09523809523809523	0.058823529411764705	{'RBM4': ['GCGUGCG'], 'ZC3H10': ['GCGUGCG'], 'SAMD4A': ['GCUGGCG'], 'A2BP1': ['GCAUGCG']}	['A2BP1', 'RBM4', 'SAMD4A', 'ZC3H10']	[]	2	1.0	1	1	1	
+GCUUGCU	0.14285714285714285	0.04411764705882353	{'A2BP1': ['GCAUGCU'], 'PTBP1': ['UCUUGCU'], 'SAMD4A': ['GCUGGCU']}	['A2BP1', 'PTBP1', 'SAMD4A']	[]	2	0.3333333333333333	0	0	0	

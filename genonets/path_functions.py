@@ -8,187 +8,205 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import igraph
+from tqdm import tqdm
 
-# from memory_profiler import profile
-
-from genonets_utils import Utils
+from genonets.utils import Utils
 
 
 class PathAnalyzer:
     # Constructor
-    def __init__(self, network, netUtils, delta):
+    def __init__(self, network, netUtils, delta, verbose, genotype_to_score_map):
         # Reference to the network on which to perform this
         # analysis
-        self.network = network
+        self._network = network
 
         # Get a reference to the NetworkUtils object
-        self.netUtils = netUtils
+        self._net_utils = netUtils
 
         # Get a reference to the BitSeqManipulator in use
-        self.bitManip = netUtils.bitManip
+        self._bit_manip = self._net_utils.bitManip
 
         # Keep a copy of the delta value
-        self.delta = delta
+        self._delta = delta
+
+        # Flag to indicate whether output should be verbose
+        self._verbose = verbose
+
+        # Map: {key=genotype: value=escore}
+        self._genotype_to_score_map = genotype_to_score_map
 
         # Summit vertex, to be populated later.
-        self.summitId = None
+        self._summit_sequences = self._compute_summits()
 
-        # Longest mutational path in the network (among all shortest paths)
-        self.max_path_length = 0
+        # TODO: Factor this out from all analyses that require it, so that is
+        #   computed only once per gentoype set ...
+        # Neighbor map
+        if self._verbose:
+            print('\nConstructing neighbor map ...')
+            iterable = tqdm(self._network.vs['sequences'])
+        else:
+            iterable = self._network.vs['sequences']
+        self._neighbor_map = {
+            s: set(self._net_utils.getNeighborSequences(s, self._network))
+            for s in iterable
+        }
 
-        # Dict to store all accessible paths. {vertexId : [paths]}
-        self.allPathsToPeak = self.initPathsToPeak()
+    @property
+    def summit_sequences(self):
+        return self._summit_sequences
 
-    def initPathsToPeak(self):
-        return {vId: [] for vId in range(len(self.network.vs["sequences"]))}
+    def _compute_summits(self):
+        sorted_tuples = Utils.getSortedSeqEscArr(
+            self._network,
+            self._bit_manip.seqLength,
+            sortOrder="ascending"
+        )
 
-    def getSummitId(self):
-        return self.summitId
+        # Highest score
+        max_score = sorted_tuples[-1]['escore']
 
-    def getAllPathsToPeak(self):
-        return self.allPathsToPeak
-
-    def getPathsThruVtxs(self):
-        # List: Each element is the No. of paths through the vertex Id
-        # 		corresponding to the index
-        pathsThruVtx = [0 for i in range(self.network.vcount())]
-
-        # Go through accessible paths corresponding to each vertex
-        for vtxId in range(self.network.vcount()):
-            # Get the list of accessible paths for this vertex
-            vtxPaths = self.network.vs[vtxId]["pathsToSummit"]
-
-            # For each path,
-            for path in vtxPaths:
-                # For each vertex in the path,
-                for vtx in path:
-                    # Increment the No. of paths that go through
-                    # this vertex
-                    pathsThruVtx[vtx] += 1
-
-        return pathsThruVtx
-
-    # Get the ratio of accessible paths to all paths of the
-    # given length.
-    def getAccessiblePaths(self, pathLength=0):
-        # Stats for the entire network
-        totalPaths = 0  # Total mutational paths (only shortest)
-        allAccPaths = 0  # No. of accessible paths (only shortest)
-
-        # Get the sequence with the highest score. This sequence
-        # will represent the global peak. All paths use this
-        # sequence as the target.
-        summit = Utils.getSeqWithMaxScore(self.network, self.bitManip.seqLength)
-
-        # Get the vertex object that represents the summit
-        trgtVrtx = self.netUtils.getVertex(summit, self.network)
-
-        # Store a copy of the summit
-        self.summitId = trgtVrtx.index
-
-        # Get a list of all sequences in the network
-        sequences = self.network.vs["sequences"]
-        # Remove the target itself
-        sequences.remove(summit)
-
-        # For each sequence in the network
-        for source in sequences:
-            # If we only need to calculate all accessible paths, regardless
-            # of the path length,
-            if pathLength == 0:
-                # Get all shortest paths as well as all accessible
-                # shortest paths from source to summit
-                self.getShortestAccPaths(source, trgtVrtx, pathLength)
-            else:   # Ratios should be calculated
-                shrtPaths, accPaths = self.getShortestAccPaths(source,
-                                                               trgtVrtx,
-                                                               pathLength + 1)
-
-                # If at least one shortest path of length == 'pathLength' was
-                # found,
-                if shrtPaths:
-                    # Increment the counts
-                    totalPaths += float(len(shrtPaths))
-                    allAccPaths += float(len(accPaths))
-
-        try:
-            return float(allAccPaths) / float(totalPaths)
-        except ZeroDivisionError:
-            return 0
-
-    # From within all shortest paths between source sequence and the
-    # given target vertex, computes all accessible paths.
-    # For computation, returns only those paths that are of the given
-    # length. However, all accessible paths are stored regardless of
-    # size. This is then used in the visualization.
-    # @profile
-    def getShortestAccPaths(self, source, trgtVrtx, pathLength):
-        # Get the source and target vertices
-        srcVrtx = self.netUtils.getVertex(source, self.network)
-
-        # Get all shortest paths between source and target
-        allShrtPaths = self.network.get_all_shortest_paths(srcVrtx,
-                                                           trgtVrtx,
-                                                           mode=igraph.OUT)
-
-        # If we only need to calculate all accessible paths, regardless
-        # of the path length,
-        if pathLength == 0:
-            # Get all shortest accessible paths
-            shrtAccPaths = [
-                self.network.vs[path].indices
-                for path in allShrtPaths
-                if self.isAccessible(path)
-            ]
-
-            # Store the paths
-            self.allPathsToPeak[srcVrtx.index].extend(shrtAccPaths)
-
-            # Update the value of the longest path
-            if len(allShrtPaths[0]) > self.max_path_length:
-                self.max_path_length = len(allShrtPaths[0])
-
-            return None, None
-        else:   # If only paths of 'path length' are required,
-            # If the shortest path length is the same as the required
-            # length,
-            if len(allShrtPaths[0]) == pathLength:
-                allShrtAccPaths = [
-                    self.network.vs[path]["sequences"]
-                    for path in allShrtPaths
-                    if self.isAccessible(path)
-                ]
+        # Find the minimal index i such that sortedArr[i]['escore'] = maxScore
+        i = -1
+        while True:
+            if sorted_tuples[i-1]['escore'] == max_score:
+                i -= 1
             else:
-                # We did not find a path of the required length
-                allShrtPaths = None
-                allShrtAccPaths = None
-
-            return allShrtPaths, allShrtAccPaths
-
-    # Determines whether the given path is an accessible path, i.e.,
-    # scores on this path increase monotonously.
-    def isAccessible(self, path):
-        isAcc = True
-
-        # Get a list of escores for the sequences in the path
-        escores = self.network.vs[path]["escores"]
-
-        # Place holder to keep track of the highest score
-        # encountered inside the loop
-        maxYet = -0.5   # FIXME: what if we have values less than -0.5 in the dataset ????
-        # For each escore in the list
-        for i in range(len(escores) - 1):
-            # If the current score is higher than the max so far,
-            if escores[i] > maxYet:
-                # Assign current escore to max
-                maxYet = escores[i]
-
-            # If the next sequence in the path is in a lower bin,
-            if maxYet - self.delta > escores[i + 1]:
-                # The increase in e-score is not monotonous. Hence,
-                # the path is not accessible.
-                isAcc = False
                 break
 
-        return isAcc
+        return [x['sequence'] for x in sorted_tuples[i:]]
+
+    def compute_shortest_paths(self):
+        queue = []
+
+        visited = {genotype: False for genotype in self._neighbor_map}
+        shortest_path_length = {genotype: 0 for genotype in self._neighbor_map}
+        min_scores_on_acc_paths = {genotype: {} for genotype in self._neighbor_map}
+        num_accessible_paths = {genotype: 0 for genotype in self._neighbor_map}
+        num_inaccessible_paths = {genotype: 0 for genotype in self._neighbor_map}
+
+        # the global peak(s)
+        for summit in self._summit_sequences:
+            visited[summit] = True
+
+        # score of the global peak(s)
+        global_max = self._genotype_to_score_map[self._summit_sequences[0]]
+
+        # add all neighbours of summit to the queue, update the helper arrays
+        for summit in self._summit_sequences:
+            neighbours = self._neighbor_map[summit]
+            for N in neighbours:
+                if not visited[N]:
+                    queue.append(N)
+                    shortest_path_length[N] = 1
+                    min_scores_on_acc_paths[N] = {global_max: 1}
+                    visited[N] = True
+
+        # process the rest of the network using BFS
+        while queue:
+            # get the first element
+            V = queue.pop(0)
+            V_score = self._genotype_to_score_map[V]
+
+            # update the number of accessible and inaccessible paths
+            # and create a list with minimal scores (including V) of all
+            # accessible paths from summit to V
+            for min_score_on_path, count in min_scores_on_acc_paths[V].items():
+                if V_score <= min_score_on_path + self._delta:
+                    num_accessible_paths[V] += count
+                else:
+                    num_inaccessible_paths[V] += count
+
+
+            # add all not yet discovered neighbours of V to the queue, update
+            # the helper arrays
+            neighbours = self._neighbor_map[V]
+            for N in neighbours:
+                # N discovered for the first time
+                if not visited[N]:
+                    queue.append(N)
+                    shortest_path_length[N] = shortest_path_length[V] + 1
+                    visited[N] = True
+                # if N->V is part of some shortest paths N->summit
+                if shortest_path_length[N] == shortest_path_length[V] + 1:
+                    # update the minimal scores seen on all paths going from
+                    # summit to N
+                    for min_score_on_path, count in min_scores_on_acc_paths[V].items():
+                        if V_score <= min_score_on_path + self._delta:
+                            tmp_min_score = min(min_score_on_path, V_score)
+                            if tmp_min_score in min_scores_on_acc_paths[N]:
+                                min_scores_on_acc_paths[N][tmp_min_score] += count
+                            else:
+                                min_scores_on_acc_paths[N][tmp_min_score] = count
+                    # update the number of inaccessible paths N->summit
+                    num_inaccessible_paths[N] += num_inaccessible_paths[V]
+
+        # compute the ratios of accessible paths
+        max_path_length = max(shortest_path_length.values())
+        ratio_accessible = {}
+        for i in range(2, max_path_length + 1):
+            num_accessible = sum([
+                num_accessible_paths[k]
+                for k in num_accessible_paths
+                if shortest_path_length[k] == i
+            ])
+            num_inaccessible = sum([
+                num_inaccessible_paths[k]
+                for k in num_inaccessible_paths
+                if shortest_path_length[k] == i
+            ])
+            ratio_accessible[i] = num_accessible / (num_accessible + num_inaccessible)
+
+        results = {
+            "Ratio_of_accessible_mutational_paths": ratio_accessible,
+            "Accessible_paths_from": list(num_accessible_paths.values()),
+            "Shortest_path_length": list(shortest_path_length.values())
+        }
+
+        return results
+
+    def compute_indirect_paths(self):
+        visited = {genotype: False for genotype in self._neighbor_map}
+        shortest_path_length = {genotype: -1 for genotype in self._neighbor_map}
+        maximal_min_score_on_acc_path = {genotype: [] for genotype in self._neighbor_map}
+        queue = []
+
+        # the summit sequence(s)
+        for summit in self._summit_sequences:
+            visited[summit] = True
+            shortest_path_length[summit] = 0
+
+        # score of the global peak
+        global_max = self._genotype_to_score_map[self._summit_sequences[0]]
+        for summit in self._summit_sequences:
+            maximal_min_score_on_acc_path[summit] = global_max
+
+        # add the summit(s) to the queue
+        for summit in self._summit_sequences:
+            queue.append([summit, 0, global_max])
+
+        # process the rest of the network
+        while queue:
+            # get the first element
+            V, path_length, min_score = queue.pop(0)
+
+            # get all neighbors of V
+            neighbours = self._neighbor_map[V]
+            for N in neighbours:
+                N_score = self._genotype_to_score_map[N]
+
+                # we add N to the queue if:
+                # 1. N not yet visited and the path after adding the (V, N)
+                # edge is accessible
+                # 2. N already visited but the min_score on the current path is
+                # larger (i.e., we might be able to
+                #   discover some new accessible paths)
+                cond1 = not visited[N] and min_score >= N_score - self._delta
+                cond2 = visited[N] and min(min_score, N_score) > maximal_min_score_on_acc_path[N]
+                if cond1 or cond2:
+                    queue.append([N, path_length + 1, min(min_score, N_score)])
+                    maximal_min_score_on_acc_path[N] = min(min_score, N_score)
+                    if cond1:
+                        visited[N] = True
+                        shortest_path_length[N] = path_length + 1
+
+        return list(shortest_path_length.values())

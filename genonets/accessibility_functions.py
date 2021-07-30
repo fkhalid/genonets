@@ -8,11 +8,13 @@
     :license: MIT, see LICENSE for more details.
 """
 
+from tqdm import tqdm
+
 
 class AccessibilityAnalyzer:
     # Constructor
     def __init__(self, repertoire, network, repToGiantDict, dataDict,
-                 netBuilder, bitManip, isDoubleStranded):
+                 netBuilder, bitManip, isDoubleStranded, verbose):
         # Repertoire name
         self.repertoire = repertoire
 
@@ -38,14 +40,20 @@ class AccessibilityAnalyzer:
         # considered for genotypes.
         self.isDoubelStranded = isDoubleStranded
 
+        self._verbose = verbose
+
     # Computes the accessibility value for the given repertoire.
     # Ref: Cowperthwaite et al. (2008) PLoS Comp. Biol.
     def getAccessibility(self):
+        # if self._verbose:
+        #     print('\nCalculating accessibility ...')
+
         # Value to be calculated and returned
         accessibility = 0
 
         # Get the list of targets
-        targets = self.dataDict.keys()
+        targets = [*self.dataDict]
+        # targets = self.dataDict.keys()
 
         # Remove the repertoire under consideration from the list of targets
         targets.remove(self.repertoire)
@@ -60,12 +68,14 @@ class AccessibilityAnalyzer:
         if self.isDoubelStranded:
             # Extend the list of sequences with their reverse complements
             sequences.extend([
-                self.bitManip.getReverseComplement(seq)
+                self.bitManip.get_reverse_complement(seq)
                 for seq in sequences
             ])
 
+        iterable = tqdm(targets) if self._verbose else targets
+
         # For each target, compute F(j,i)
-        for target in targets:
+        for target in iterable:
             # Get the genotype network for this target
             targetNet = self.repToGiantDict[target]
 
@@ -91,6 +101,9 @@ class AccessibilityAnalyzer:
     # Computes the neighbor abundance for the given repertoire.
     # Ref: Cowperthwaite et al. (2008) PLoS Comp. Biol.
     def getNeighborAbundance(self):
+        # if self._verbose:
+        #     print('\nCalculating neighbor abundance ...')
+
         # Value to be calculated and returned
         abundance = 0
 
@@ -98,13 +111,16 @@ class AccessibilityAnalyzer:
         extNeighbors = self.netBuilder.getAllExtNeighbors(self.network)
 
         # Get the list of targets
-        targets = self.dataDict.keys()
+        targets = [*self.dataDict]
+        # targets = self.dataDict.keys()
 
         # Remove the repertoire under consideration from the list of targets
         targets.remove(self.repertoire)
 
+        iterable = tqdm(targets) if self._verbose else targets
+
         # For each target, compute F(i, j)
-        for target in targets:
+        for target in iterable:
             # Get target sequences in bit format
             targetSeqs = [
                 self.bitManip.seqToBits(seq) for seq in
@@ -115,7 +131,7 @@ class AccessibilityAnalyzer:
             if self.isDoubelStranded:
                 # Extend the list of sequences with their reverse complements
                 targetSeqs.extend([
-                    self.bitManip.getReverseComplement(seq)
+                    self.bitManip.get_reverse_complement(seq)
                     for seq in targetSeqs
                 ])
 
@@ -142,6 +158,9 @@ class AccessibilityAnalyzer:
     # Computes the E-statistic value for the given repertoire.
     # Ref: Cowperthwaite et al. (2008) PLoS Comp. Biol.
     def getPhenotypicDivesity(self):
+        # if self._verbose:
+        #     print('\nCalculating phenotypic diversity ...')
+
         # Value to be calculated and returned
         diversity = 0
 
@@ -149,13 +168,16 @@ class AccessibilityAnalyzer:
         extNeighbors = self.netBuilder.getAllExtNeighbors(self.network)
 
         # Get the list of targets
-        targets = self.dataDict.keys()
+        targets = [*self.dataDict]
+        # targets = self.dataDict.keys()
 
         # Remove the repertoire under consideration from the list of targets
         targets.remove(self.repertoire)
 
+        iterable = tqdm(targets) if self._verbose else targets
+
         # For each target, compute F(i, j)
-        for target in targets:
+        for target in iterable:
             # Get target sequences in bit format
             targetSeqs = [
                 self.bitManip.seqToBits(seq) for seq in
@@ -166,7 +188,7 @@ class AccessibilityAnalyzer:
             if self.isDoubelStranded:
                 # Extend the list of sequences with their reverse complements
                 targetSeqs.extend([
-                    self.bitManip.getReverseComplement(seq)
+                    self.bitManip.get_reverse_complement(seq)
                     for seq in targetSeqs
                 ])
 

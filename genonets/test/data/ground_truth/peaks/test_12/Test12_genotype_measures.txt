@@ -1,5 +1,0 @@
-Sequence	Distance from Summit	
-AAAA	0	
-AAAC	1	
-ACTC	3	
-ACAC	2	

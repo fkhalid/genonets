@@ -24,7 +24,19 @@
 
 """
 
-from genonets_utils import Utils
+import collections
+
+import igraph
+from tqdm import tqdm
+
+from genonets.utils import Utils
+
+
+GenotypeScorePair = collections.namedtuple(
+    'GenotypeScorePair',
+    ['genotype', 'score']
+)
+GenotypeScorePair.__doc__ = """Represents a genotype-score tuple."""
 
 
 class PeakAnalyzer:
@@ -35,7 +47,7 @@ class PeakAnalyzer:
 
     """
 
-    def __init__(self, network, net_utils, delta):
+    def __init__(self, network, net_utils, delta, verbose):
         """
         Initializes the object.
 
@@ -51,16 +63,23 @@ class PeakAnalyzer:
         """
 
         self._delta = delta
+        self._verbose = verbose
         self._network = network
         self._net_utils = net_utils
 
         # Reference to the BitSeqManipulator in use
         self._bit_manip = net_utils.bitManip
 
-        # Map { genotype: {all 1-neighbors} }
+        if self._verbose:
+            print('\nConstructing neighbor map ...')
+            iterable = tqdm(network.vs['sequences'])
+        else:
+            iterable = network.vs['sequences']
+
+        # Neighbor map
         self._neighbor_map = {
             s: set(self._net_utils.getNeighborSequences(s, self._network))
-            for s in network.vs['sequences']
+            for s in iterable
         }
 
         # Set of elements that have already been processed, either individually
@@ -117,13 +136,20 @@ class PeakAnalyzer:
         """
 
         if not self._peaks or recompute:
-            # Structured array of tuples (genotype, score), sorted in
-            # descending order of scores
-            genotype_score_pairs = Utils.getSortedSeqEscArr(
-                self._network,
-                self._bit_manip.seqLength,
-                sortOrder='descending'
-            )
+            # Zip genotypes and scores into tuples
+            pairs = list(zip(
+                self._network.vs['sequences'],
+                self._network.vs['escores']
+            ))
+
+            # Sort the list in descending order of scores
+            pairs.sort(key=lambda x: x[1], reverse=True)
+
+            # Convert the pairs into named tuples
+            genotype_score_pairs = [
+                GenotypeScorePair(genotype=x[0], score=x[1])
+                for x in pairs
+            ]
 
             # Identify peaks
             self._peaks = self._build_peaks(genotype_score_pairs)
@@ -148,9 +174,15 @@ class PeakAnalyzer:
 
         peaks = {}
 
-        for i in xrange(len(elements)):
+        if self._verbose:
+            print('\nPeaks ...')
+            elements_it = tqdm(range(len(elements)))
+        else:
+            elements_it = range(len(elements))
+
+        for i in elements_it:
             # If the current element has already been processed,
-            if elements[i]['sequence'] in self._processed_genotypes:
+            if elements[i].genotype in self._processed_genotypes:
                 # Move on to the next element
                 continue
 
@@ -182,14 +214,14 @@ class PeakAnalyzer:
             # Mark all elements in the neutral zone as processed, i.e., there
             # is no need to process each one individually
             self._processed_genotypes.update({
-                e['sequence'] for e in neutral_zone
+                e.genotype for e in neutral_zone
             })
 
         return peaks
 
     def _build_score_band(self, index_of_focal, elements):
         """
-        Returns a list of elements that fall within the noise determined score 
+        Returns a list of elements that fall within the noise determined score
         band for the given focal element (excluding elements that have already
         been processed), where the focal element is identified by the given
         index.
@@ -198,29 +230,29 @@ class PeakAnalyzer:
                 list of all elements.
         :param elements: (numpy.array) Array of (genotype, score) tuples
                 corresponding to all genotypes in the network in consideration.
-        
+
         :return: (list) Elements for which the score lies within the band of
                 the focal element, and which have not been processed already.
-        
+
         """
 
-        score_band = []
+        score_band = set()
         focal_element = elements[index_of_focal]
 
         # Starting from the element succeeding the focal element,
-        for i in xrange(index_of_focal + 1, len(elements)):
+        for i in range(index_of_focal + 1, len(elements)):
             # If the score lies within the band,
-            if elements[i]['escore'] >= focal_element['escore'] - self._delta:
+            if elements[i].score >= focal_element.score - self._delta:
                 # If the current element has already been processed, it means
                 # that it is either part of an existing peak, or an existing
                 # non-peak. It can only be indirectly connected to the current
                 # score band via an existing peak, or via an existing non-peak.
                 # Either way, we can safely ignore it, as other checks should
                 # be sufficient to accurately categorize the current score band.
-                if elements[i]['sequence'] in self._processed_genotypes:
+                if elements[i].genotype in self._processed_genotypes:
                     pass
                 else:
-                    score_band.append(elements[i])
+                    score_band.add(elements[i])
             else:
                 # Once we've reached an element which lies in a lower band, we
                 # know that the remaining elements will also lie in lower
@@ -235,37 +267,37 @@ class PeakAnalyzer:
 
         The neutral zone consists of all elements that satisfy the following
         conditions:
-            1) The element lies within the score band for the given focal 
+            1) The element lies within the score band for the given focal
                element.
             2) The element is either a 1-neighbor of the focal element, or it
                is indirectly connected to the focal element, such that all
                elements that constitute the path between this element and the
                focal element lie within the score band of the focal element.
-        
+
         :param focal_element: (tuple) of form (genotype, score) corresponding
                 to the element for which the score band was constructed.
         :param score_band: (list) of (genotype, score) tuples, where each
                 tuple represents a genotype for which the score lies in the
                 score band for the focal element.
-        
+
         :return: (list) The neutral zone.
-        
+
         """
 
         # 1-neighbors of the focal element
-        neighbors_of_focal = self._get_neighbors_of(focal_element['sequence'])
+        neighbors_of_focal = self._neighbor_map[focal_element.genotype]
 
         # Elements in the given score band that are also in the neighborhood of
         # the focal element. These are by definition already part of the neutral
         # zone.
         neutral_zone = [
             item for item in score_band
-            if item['sequence'] in neighbors_of_focal
+            if item.genotype in neighbors_of_focal
         ]
 
         # Elements in the given score band that are not 1-neighbors of the
         # focal element
-        band_non_neighbors = [e for e in score_band if e not in neutral_zone]
+        band_non_neighbors = {e for e in score_band if e not in neutral_zone}
 
         # Perform a breadth-first search of the neutral zone to find those
         # elements in band-non-neighbors that might be indirectly connected
@@ -302,16 +334,14 @@ class PeakAnalyzer:
             # Set of members of score-band-non-neighbors that are found to be
             # indirect neighbors of the focal element, and should therefore be
             # removed from the list of score-band-non-neighbors
-            non_neighbors_to_remove = []
+            non_neighbors_to_remove = set()
 
             # For each member of score-band-non-neighbors,
             for non_neighbor in band_non_neighbors:
                 # Flag to indicate whether the non-neighbor is connected to the
                 # ith element in the neutral zone,
-                are_connected = self._are_neighbors(
-                    neutral_zone[i]['sequence'],
-                    non_neighbor['sequence']
-                )
+                are_connected = non_neighbor.genotype in self._neighbor_map[
+                    neutral_zone[i].genotype]
 
                 # If the two are connected,
                 if are_connected:
@@ -320,14 +350,11 @@ class PeakAnalyzer:
 
                     # Mark the non-neighbor, so that it is removed from the
                     # set of score-band-non-neighbors after the for loop.
-                    non_neighbors_to_remove.append(non_neighbor)
+                    non_neighbors_to_remove.add(non_neighbor)
 
             # Remove those elements from the set of score-band-non-neighbors
             # that have already been added to the neutral zone
-            band_non_neighbors = [
-                e for e in band_non_neighbors
-                if e not in non_neighbors_to_remove
-            ]
+            band_non_neighbors -= non_neighbors_to_remove
 
             # Move on to the next element in the neutral zone
             i += 1
@@ -349,7 +376,7 @@ class PeakAnalyzer:
 
         for element in neutral_zone:
             # All 1-neighbors of the element
-            neighbors = self._get_neighbors_of(element['sequence'])
+            neighbors = self._neighbor_map[element.genotype]
 
             # If any neighbor has already been processed,
             if not neighbors.isdisjoint(self._processed_genotypes):
@@ -369,29 +396,4 @@ class PeakAnalyzer:
 
         """
 
-        return {e['sequence'] for e in neutral_zone}
-
-    def _get_neighbors_of(self, genotype):
-        """
-        Returns all 1-neighbors of the given genotype.
-
-        :param genotype: (str) Genotype for which to return the neighbors.
-
-        :return: (set) All 1-neighbors of the given genotype.
-
-        """
-
-        return self._neighbor_map[genotype]
-
-    def _are_neighbors(self, g_1, g_2):
-        """
-        Checks if g_2 is a 1-neighbor of g_1.
-
-        :param g_1: (str) The first genotype.
-        :param g_2: (str) The second genotype.
-
-        :return: (bool) 'True' if g_2 is a 1-neighbor of g_1. 'False' otherwise.
-
-        """
-
-        return True if g_2 in self._get_neighbors_of(g_1) else False
+        return {e.genotype for e in neutral_zone}

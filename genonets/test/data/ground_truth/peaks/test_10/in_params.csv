@@ -1,8 +1,14 @@
-tau: 0.0
-includeIndels: False
-num_procs: 4
-inFilePath: issue_stepan_peaks_oct14_2020/test_data/tests_peaks_hana/test10_input.tsv
-alphabetType: DNA
-outPath: issue_stepan_peaks_oct14_2020/results/tests_hana/test_10/
-useReverseComplements: False
-verbose: True
+Codon alphabet: None
+Genetic code input file: None
+Genonets input file: issues/peaks/test_10/test10_input.tsv
+Genotype alphabet: DNA
+Include indels for Codons: False
+Include indels for Genotypes: False
+No. of parallel processes: 1
+Output path: results/peaks/test_10/
+Store epistasis squares: False
+Tau: 0.0
+Use all components for evolvability: False
+Use reverse complements for codons: False
+Use reverse complements for genotypes: False
+Verbose: True

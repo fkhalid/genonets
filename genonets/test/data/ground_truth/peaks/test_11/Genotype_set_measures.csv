@@ -1,2 +1,2 @@
 Genotype_set	Number_of_peaks	Peaks	
-Test11	3	{0: ['CCT', 'CCC'], 1: ['AAA', 'AAC'], 2: ['GAG', 'GGG', 'GGA']}	
+Test11	3	{0: ['AAC', 'AAA'], 1: ['CCC', 'CCT'], 2: ['GGG', 'GAG', 'GGA']}	

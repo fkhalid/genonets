@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "genonets"
+version = "2.0"
+description = "Framework for creating and analyzing genotype networks from."
+authors = ["Fahad Khalid <genonets@outlook.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/fkhalid/genonets"
+repository = "https://github.com/fkhalid/genonets"
+packages = [
+    { include = "genonets" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+numpy = "^1.19"
+tqdm = "^4.49.0"
+python-igraph = "0.8.2"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.4"
+black = "^19.10b0"
+pytest = "^6.2.2"
+coverage = "^5.5"
+sphinx = "4.1.2"
+
+[build-system]
+requires = ["poetry>=1.0"]
+build-backend = "poetry.masonry.api"

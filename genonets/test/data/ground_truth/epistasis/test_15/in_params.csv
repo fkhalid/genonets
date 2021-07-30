@@ -1,0 +1,14 @@
+Codon alphabet: None
+Genetic code input file: None
+Genonets input file: issues/epistasis/tests_epistasis/test15_input.tsv
+Genotype alphabet: Protein
+Include indels for Codons: False
+Include indels for Genotypes: False
+No. of parallel processes: 1
+Output path: results/epistasis/automated/test_15/
+Store epistasis squares: False
+Tau: 0.0
+Use all components for evolvability: False
+Use reverse complements for codons: False
+Use reverse complements for genotypes: False
+Verbose: True

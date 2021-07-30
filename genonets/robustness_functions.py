@@ -9,11 +9,12 @@
 """
 
 import numpy as np
+from tqdm import tqdm
 
 
 class RobustnessAnalyzer:
     # Constructor
-    def __init__(self, network, netBuilder, is_double_stranded):
+    def __init__(self, network, netBuilder, is_double_stranded, verbose):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -32,6 +33,8 @@ class RobustnessAnalyzer:
         # populated when required
         self.robustnessVals = None
 
+        self._verbose = verbose
+
     # Returns the arithmetic mean of the all values in the
     # robustness list.
     def getAvgRobustness(self):
@@ -42,13 +45,21 @@ class RobustnessAnalyzer:
     # consist of robustness values for all sequences represented by
     # vertices of the given network.
     def getRobustnessAll(self, recompute=False):
+        if self._verbose:
+            print('\n')
+
         # If either the robustness values have not been computed already,
         # or the caller has explicitly requested re-computing,
         if not self.robustnessVals or recompute:
+            if self._verbose:
+                iterable = tqdm(self.network.vs["sequences"])
+            else:
+                iterable = self.network.vs["sequences"]
+
             # Get robustness values for all sequences in the network
             self.robustnessVals = [
                 self.getGenotypeRobustness(seq)
-                for seq in self.network.vs["sequences"]
+                for seq in iterable
             ]
 
         return self.robustnessVals
@@ -59,11 +70,8 @@ class RobustnessAnalyzer:
     # Wagner, Proc. R. Soc. B 2008 275 91-100;
     # DOI: 10.1098/rspb.2007.1137. Published 7 January 2008
     def getGenotypeRobustness(self, sequence):
-        # Get the vertex that corresponds to this sequence
-        vertex = self.netBuilder.getVertex(sequence, self.network)
-
-        # Get vertex degree
-        degree = self.network.degree(vertex)
+        # Degree of the vertex corresponding to the sequence
+        degree = self.network.degree(sequence)
 
         # Get a list of all possible 1-neighbors for this sequence
         allNeighbors = self.bitManip.generateNeighbors(
@@ -72,7 +80,7 @@ class RobustnessAnalyzer:
         # If reverse complements should be considered,
         if self.is_double_stranded:
             # Reverse complement of the focal genotype
-            rc = self.bitManip.getReverseComplement(
+            rc = self.bitManip.get_reverse_complement(
                 self.bitManip.seqToBits(sequence))
 
             # If the reverse complement is also a 1-mutant,
@@ -84,7 +92,7 @@ class RobustnessAnalyzer:
             # considered separate neighbors
             for neighbor in list(allNeighbors):
                 # Reverse complement of the neighbor
-                rc_n = self.bitManip.getReverseComplement(neighbor)
+                rc_n = self.bitManip.get_reverse_complement(neighbor)
 
                 # If the reverse complement is not the same as the neighbor,
                 # and the reverse complement is already in the list of

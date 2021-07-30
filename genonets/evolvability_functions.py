@@ -8,12 +8,16 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import sys
+
+from tqdm import tqdm
+
 
 class EvolvabilityAnalyzer:
     # Constructor
     def __init__(self, network, dataDict, seqToRepDict, repToGiantDict,
                  rcToSeqDict, bitsToSeqDict, netBuilder,
-                 isDoubleStranded):
+                 isDoubleStranded, verbose):
         # Reference to the network on which to perform this
         # analysis
         self.network = network
@@ -47,22 +51,36 @@ class EvolvabilityAnalyzer:
         # Reference to the list of evolvability values for all sequences
         self.evoTuples = None
 
+        self._verbose = verbose
+
+        self._counter = 0
+
     @staticmethod
     def updateSeqToRepDict(seqToRepDict_original, repToGiantDict):
         # Make a deep copy of the dict
         seqToRepDict = seqToRepDict_original.copy()
 
         # For each sequence key in the dict,
-        for seq in seqToRepDict.keys():
+        for seq in seqToRepDict:
             # Update the list of repertoires corresponding to this
             # sequence with only those repertoires for which this
             # sequence exists in the giant.
             seqToRepDict[seq] = [
                 rep for rep in seqToRepDict[seq]
-                if seq in repToGiantDict[rep].vs["sequences"]
+                if EvolvabilityAnalyzer.is_sequence_in_network(seq, repToGiantDict[rep])
             ]
 
         return seqToRepDict
+
+    @staticmethod
+    def is_sequence_in_network(sequence, network):
+        try:
+            network.vs.find(sequence)
+            vertex_exists = True
+        except ValueError:
+            vertex_exists = False
+
+        return vertex_exists
 
     @staticmethod
     def buildRcToSeqDict(seqToRepDict, bm):
@@ -72,7 +90,7 @@ class EvolvabilityAnalyzer:
         # For each sequence key in the dict,
         for seq in seqToRepDict.keys():
             # Compute the reverse complement
-            rcBitSeq = bm.getReverseComplement(
+            rcBitSeq = bm.get_reverse_complement(
                 bm.seqToBits(seq))
 
             # With the reverse complement bit sequence as the key,
@@ -125,19 +143,29 @@ class EvolvabilityAnalyzer:
             return 0, targets
 
     def getEvoAll(self, recompute=False):
+        if self._verbose:
+            iterable = tqdm(self.network.vs['sequences'])
+        else:
+            iterable = self.network.vs['sequences']
+
         # If either the evolvability values have not been computed already,
         # or the caller has explicitly requested re-computing,
         if not self.evoTuples or recompute:
             # Get tuples: (evo, targetRepsDict) for all sequences in the network
-            self.evoTuples = [
-                self.getSeqEvo(seq)
-                for seq in self.network.vs["sequences"]
-            ]
+            self.evoTuples = [self.getSeqEvo(seq) for seq in iterable]
+
+        self._counter = 0
 
         return self.evoTuples
 
     # Returns evolvability score for the given sequence
     def getSeqEvo(self, sequence):
+        # if self._verbose:
+        #     sys.stdout.write(str(self._counter) + '\r')
+        #     sys.stdout.flush()
+
+        self._counter += 1
+
         # Get a list of sequences that are 1-neighbors, but not part of the
         # genotype network
         externNeighbors = self.netBuilder.getExternalNeighbors(sequence, self.network)
@@ -198,6 +226,10 @@ class EvolvabilityAnalyzer:
 
                     self.appendToTargets(strSeq, targetReps)
 
+        # Sort the list of sequences in each target repository
+        for r in targetReps:
+            targetReps[r].sort()
+
         return targetReps
 
     def appendToTargets(self, seq, targetReps):
@@ -213,3 +245,111 @@ class EvolvabilityAnalyzer:
                 targetReps[repertoire] = []
 
             targetReps[repertoire].append(seq)
+
+    def compute_external_mutation_types(
+            self,
+            target_repertoires,
+            targets_per_genotype):
+
+        """
+        For each genotype set, i.e., repertoire, goes through each genotype
+        within the genotype set. If the genotype has one or more external
+        neighbors, computes and records the mutation type against each external
+        neighbor.
+
+        :param target_repertoires: (list of strings) Names of all genotype sets
+                in which there is at least one external neighbor.
+        :param targets_per_genotype: (list) Each element is a dict, where the
+                key is the name of a target genotype set and the value is a
+                list of genotype targets within the target set. E.g.,
+                    [{'Set2': ['AAG']}, {'Set2': ['AAG', 'ACC']}]
+
+        :return: (dict) Keys are names of target genotypes sets with at least
+                one external neighbor. Each value is a dict, where keys are
+                mutation types and values are counts of the types.
+
+        """
+
+        # Dict to return: Mutation statistics per repertoire
+        mutation_statistics = {
+            repertoire: {} for repertoire in target_repertoires
+        }
+
+        # For each genotype in the network,
+        for i in range(self.network.vcount()):
+            # If the corresponding dict is not empty, i.e., at least one
+            # external neighbor exists,
+            if targets_per_genotype[i]:
+                # Get the bit sequence for the source genotype
+                bit_source_genotype = self.bm.seqToBits(
+                    self.network.vs[i]['sequences']
+                )
+
+                self._update_mutation_statistics_for(
+                    bit_source_genotype=bit_source_genotype,
+                    genotype_targets=targets_per_genotype[i],
+                    mutation_statistics=mutation_statistics
+                )
+
+        # Sort the dict so that the target repertoires are in lexicographical
+        # order
+        mutation_statistics = {
+            k: v for k, v in sorted(
+                mutation_statistics.items(), key=lambda item: item[0]
+            )
+        }
+
+        # Sort the mutation types in lexicographical order
+        for repertoire in mutation_statistics:
+            mutation_statistics[repertoire] = {
+                k: v for k, v in sorted(
+                    mutation_statistics[repertoire].items(),
+                    key=lambda item: item[0]
+                )
+            }
+
+        return mutation_statistics
+
+    def _update_mutation_statistics_for(
+            self,
+            bit_source_genotype,
+            genotype_targets,
+            mutation_statistics):
+
+        """
+        Updates mutation_statistics by computing the statistics for the given
+        genotype.
+
+        :param bit_source_genotype: (int) Bit value corresponding to the source
+                genotype.
+        :param genotype_targets: (list) Each element is a dict, where the
+                key is the name of a target genotype set and the value is a
+                list of genotype targets within the target set. E.g.,
+                    [{'Set2': ['AAG']}, {'Set2': ['AAG', 'ACC']}]
+        :param mutation_statistics: (dict) The dict with statistics to be
+                updated. (dict) Keys are names of target genotypes sets with at
+                least one external neighbor. Each value is a dict, where keys
+                are mutation types and values are counts of the types.
+
+        :return: (dict) Updated mutation_statistics.
+
+        """
+
+        # For each target repertoire to which this genotype can evolve,
+        for repertoire in genotype_targets:
+            # If the target repertoire has at least one genotype to
+            # which the source genotype can evolve,
+            if repertoire:
+                # For each genotype in the current target repertoire,
+                for target_genotype in genotype_targets[repertoire]:
+                    # Determine the mutation type
+                    mutation_type = self.bm.get_mutation_type(
+                        bit_source_genotype,
+                        self.bm.seqToBits(target_genotype)
+                    )
+
+                    # Update the statistics
+                    if mutation_type in mutation_statistics[repertoire]:
+                        mutation_statistics[repertoire][mutation_type] += 1
+                    else:
+                        mutation_statistics[repertoire][mutation_type] = 1

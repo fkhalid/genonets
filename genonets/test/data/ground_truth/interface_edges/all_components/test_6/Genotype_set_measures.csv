@@ -1,0 +1,3 @@
+Genotype_set	Evolvability	Evolvability_targets	Interface_edges	
+Set1	1.0	["Set2"]	{'Set2': {'AG': 2}}	
+Set2	1.0	["Set1"]	{'Set1': {'GA': 2}}	

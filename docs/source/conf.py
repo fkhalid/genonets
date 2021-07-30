@@ -12,6 +12,8 @@
 
 import os
 import sys
+
+# Path to the genonets source package relative to docs/source
 sys.path.insert(0, os.path.abspath('../../'))
 
 
@@ -44,7 +46,7 @@ autoapi_dirs = ['../../genonets']
 # explicitly requested via Sphinx directives
 autoapi_generate_api_docs = False
 
-autodoc_typehints = 'none'
+# autodoc_typehints = 'none'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

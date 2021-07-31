@@ -38,7 +38,7 @@ Then install Genonets using the following command:
 
 .. code-block:: console
 
-   $ pip install git+https://github.com/fkhalid/genonets.git
+   $ pip install genonets
 
 .. note::
 
@@ -73,7 +73,7 @@ program can be used to process the sample input file as follows.
 
 .. code-block:: console
 
-   $ python -u -m genonets.sample.minimal --alphabet=DNA --input-file=input.csv --tau=0.35 --output-path=results --verbose
+   $ python -u -m genonets.sample.minimal --alphabet=DNA --input-file=input.csv --include-indels --tau=0.35 --output-path=results --verbose
 
 This creates a directory called :code:`results` in which all the result files
 are written.

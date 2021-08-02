@@ -1,7 +1,0 @@
-Sequence	Shortest_path_length	Shortest_accessible_path_length	Accessible_paths_from	
-AAAAA	1	1	1	
-AAAAC	0	0	0	
-AAACC	1	1	1	
-AACCC	2	2	1	
-ACCCC	1	1	1	
-CCCCC	0	0	0	

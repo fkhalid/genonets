@@ -1,2 +1,0 @@
-Sequence	Robustness	Evolvability	Evolvability_targets	Evolves_to_genotypes_in	Overlaps_with_genotypes_in	Coreness	Clustering_coefficient	
-UCAUCCA	0.0	0.029411764705882353	{'RBM41': ['UCAUACA'], 'hnRNPLL': ['UCAUGCA']}	['RBM41', 'hnRNPLL']	[]	0	nan	

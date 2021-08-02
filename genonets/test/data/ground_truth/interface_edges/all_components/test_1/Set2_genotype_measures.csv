@@ -1,4 +1,0 @@
-Sequence	Evolvability	Evolvability_targets	Evolves_to_genotypes_in	
-AAG	1.0	{'Set1': ['AAA', 'AAC']}	['Set1']	
-ACC	1.0	{'Set1': ['AAC']}	['Set1']	
-ACG	0.0	{}	[]	

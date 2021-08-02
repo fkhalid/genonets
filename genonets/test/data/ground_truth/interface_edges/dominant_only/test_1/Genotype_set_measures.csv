@@ -1,3 +1,0 @@
-Genotype_set	Evolvability	Evolvability_targets	Interface_edges	
-Set1	1.0	["Set2"]	{'Set2': {'AC': 1, 'AG': 1, 'CG': 1}}	
-Set2	1.0	["Set1"]	{'Set1': {'CA': 1, 'GA': 1, 'GC': 1}}	

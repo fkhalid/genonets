@@ -272,7 +272,7 @@ class FileComparator:
 
 
 def compare_genotype_set_measures(source_dir, target_dir):
-    filename = 'Genotype_set_measures.csv'
+    filename = 'Genotype_set_measures.tsv'
 
     f1 = os.path.join(source_dir, filename)
     f2 = os.path.join(target_dir, filename)
@@ -332,7 +332,7 @@ def compare_genotype_measures(source_dir, target_dir):
 
 def compare_overlap_results(source_dir, target_dir):
     files_match = True
-    filename = 'Genotype_set_overlap.csv'
+    filename = 'Genotype_set_overlap.tsv'
 
     if filename not in os.listdir(source_dir):
         print('Overlap measures not found in the source directory.')

@@ -1,0 +1,14 @@
+Codon alphabet: RNA
+Genetic code input file: issues/paths/paths_tests/code_standard.tsv
+Genonets input file: issues/paths/paths_tests/test3_input.tsv
+Genotype alphabet: Protein
+Include indels for Codons: False
+Include indels for Genotypes: False
+No. of parallel processes: 1
+Output path: results/paths/automated/test_3/
+Store epistasis squares: False
+Tau: 0.0
+Use all components for evolvability: False
+Use reverse complements for codons: False
+Use reverse complements for genotypes: False
+Verbose: True

@@ -1,0 +1,2 @@
+Sequence	Robustness	Evolvability	Evolvability_targets	Evolves_to_genotypes_in	Overlaps_with_genotypes_in	Coreness	Clustering_coefficient	
+AUCUUGC	0.0	0.1323529411764706	{'PTBP1': ['AUCUUUC'], 'ELAVL1': ['AUUUUGC'], 'CPEB2': ['AUUUUGC'], 'U2AF2': ['AUUUUGC'], 'CPEB4': ['AUUUUGC'], 'HNRNPCL1': ['AUUUUGC'], 'RALY': ['AUUUUGC'], 'HNRNPC': ['AUUUUGC'], 'TIA1': ['AUUUUGC']}	['CPEB2', 'CPEB4', 'ELAVL1', 'HNRNPC', 'HNRNPCL1', 'PTBP1', 'RALY', 'TIA1', 'U2AF2']	[]	0	nan	

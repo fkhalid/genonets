@@ -1,0 +1,6 @@
+	Ascl2	Bcl6b	Foxa2	Mafb	Bbx
+Ascl2	NaN	0	0	0	0
+Bcl6b	0	NaN	0	0	0
+Foxa2	0	0	NaN	4	3
+Mafb	0	0	4	NaN	0
+Bbx	0	0	3	0	NaN

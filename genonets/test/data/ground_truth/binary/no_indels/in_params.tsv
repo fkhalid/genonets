@@ -1,0 +1,14 @@
+Codon alphabet: None
+Genetic code input file: None
+Genonets input file: genonets/test/data/inputs/binary/input_binary_small.tsv
+Genotype alphabet: Binary
+Include indels for Codons: False
+Include indels for Genotypes: False
+No. of parallel processes: 1
+Output path: results/binary/no_indels/
+Store epistasis squares: False
+Tau: -1.0
+Use all components for evolvability: False
+Use reverse complements for codons: False
+Use reverse complements for genotypes: False
+Verbose: True

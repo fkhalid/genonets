@@ -30,7 +30,7 @@ python-igraph = "0.8.2"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.4"
-black = "^19.10b0"
+black = "^24.3"
 pytest = "^6.2.2"
 coverage = "^5.5"
 sphinx = "4.1.2"

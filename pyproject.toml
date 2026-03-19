@@ -23,10 +23,11 @@ packages = [
 exclude = ["genonets/test"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 numpy = "^1.19"
 tqdm = "^4.49.0"
 python-igraph = "0.8.2"
+urllib3 = "^2.6.3"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.4"

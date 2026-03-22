@@ -4,35 +4,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Environment
 
-This project uses a pyenv virtualenv named `genonets`. Activate it before running any commands:
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management. Set up the environment with:
 
 ```bash
-pyenv activate genonets
+uv sync --dev
 ```
 
 ## Commands
 
 ```bash
-# Install dependencies
-poetry install
+# Install all dependencies (including dev)
+uv sync --dev
 
 # Run all tests
-pytest genonets/test/
+uv run pytest genonets/test/
 
 # Run a single test file
-pytest genonets/test/test_rna.py
+uv run pytest genonets/test/test_rna.py
 
 # Run a single test by name
-pytest genonets/test/test_rna.py::TestRna::test_robustness
+uv run pytest genonets/test/test_rna.py::TestRNA::test_no_indels
 
 # Lint
-pylint genonets/
+uv run pylint genonets/
 
 # Format
-black genonets/
+uv run black genonets/
 
 # Test coverage
-coverage run -m pytest genonets/test/ && coverage report
+uv run coverage run -m pytest genonets/test/ && uv run coverage report
 
 # Build docs
 cd docs && make html

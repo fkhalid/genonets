@@ -1,42 +1,46 @@
-[tool.poetry]
+[project]
 name = "genonets"
 version = "2.0"
-description = "Framework for creating and analyzing genotype networks from."
-authors = ["Fahad Khalid <genonets@outlook.com>"]
-license = "MIT"
+description = "Framework for creating and analyzing genotype networks."
+authors = [{ name = "Fahad Khalid", email = "genonets@outlook.com" }]
+license = { text = "MIT" }
 readme = "README.md"
-homepage = "https://github.com/fkhalid/genonets"
-repository = "https://github.com/fkhalid/genonets"
-documentation = "https://genonets.readthedocs.io"
+requires-python = ">=3.10"
 keywords = ["genonets", "genotype", "phenotype", "network"]
 classifiers = [
     "Environment :: Console",
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Development Status :: 5 - Production/Stable",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-packages = [
-    { include = "genonets" }
+dependencies = [
+    "numpy>=1.19",
+    "tqdm>=4.49.0",
+    "igraph>=0.10",
+    "urllib3>=2.6.3",
 ]
-exclude = ["genonets/test"]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-numpy = "^1.19"
-tqdm = "^4.49.0"
-igraph = ">=0.10"
-urllib3 = "^2.6.3"
+[project.urls]
+Homepage = "https://github.com/fkhalid/genonets"
+Repository = "https://github.com/fkhalid/genonets"
+Documentation = "https://genonets.readthedocs.io"
 
-[tool.poetry.dev-dependencies]
-pylint = "^2.4"
-black = {version = "^26.3.1", python = ">=3.10"}
-pytest = "^6.2.2"
-coverage = "^5.5"
-sphinx = "4.1.2"
-pandas = "^1.1.3"
+[dependency-groups]
+dev = [
+    "pylint>=2.4",
+    "black>=26.3.1",
+    "pytest>=6.2.2",
+    "coverage>=5.5",
+    "sphinx==4.1.2",
+    "pandas>=1.1.3",
+]
 
 [build-system]
-requires = ["poetry>=1.0"]
-build-backend = "poetry.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["genonets"]
+exclude = ["genonets/test"]

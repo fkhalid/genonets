@@ -19,7 +19,7 @@ dependencies = [
     "numpy>=1.19",
     "tqdm>=4.49.0",
     "igraph>=0.10",
-    "urllib3>=2.6.3",
+    "urllib3>=2.7.0",
 ]
 
 [project.urls]
